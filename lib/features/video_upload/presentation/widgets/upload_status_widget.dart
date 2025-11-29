@@ -7,12 +7,14 @@ class UploadStatusWidget extends StatelessWidget {
   final VideoFile? uploadedVideo;
   final String? errorMessage;
   final VoidCallback? onRetry;
+  final VoidCallback? onStartAnalysis;
 
   const UploadStatusWidget({
     super.key,
     this.uploadedVideo,
     this.errorMessage,
     this.onRetry,
+    this.onStartAnalysis,
   });
 
   @override
@@ -62,28 +64,24 @@ class UploadStatusWidget extends StatelessWidget {
           
           const SizedBox(height: 16),
           
-          // Next steps
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '動画の解析を開始できます',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ],
+          // Analysis start button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onStartAnalysis,
+              icon: onStartAnalysis == null 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome),
+              label: Text(onStartAnalysis == null ? '解析中...' : '動画解析を開始'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
           ),
         ],

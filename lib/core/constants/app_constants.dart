@@ -1,7 +1,9 @@
 /// Application-wide constants
 class AppConstants {
-  // API Configuration
+  // Gemini API configuration
   static const String geminiApiBaseUrl = 'https://generativelanguage.googleapis.com';
+  static const String geminiModel = 'gemini-3-pro-preview';
+  static const String geminiApiVersion = 'v1beta';
   
   // File constraints
   static const int maxVideoSizeBytes = 100 * 1024 * 1024; // 100MB
@@ -14,7 +16,7 @@ class AppConstants {
   static const double largePadding = 24.0;
   
   // Network
-  static const int networkTimeoutSeconds = 30;
+  static const int networkTimeoutSeconds = 300;
   static const int maxRetryAttempts = 3;
   
   // Storage

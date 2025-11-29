@@ -7,12 +7,14 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/result.dart';
 import '../../../video_upload/domain/entities/video_file.dart';
 import '../../domain/entities/manual_step.dart';
+import '../../domain/services/gemini_service.dart' as domain;
 
 /// Service for interacting with Gemini API for video analysis
-class GeminiService {
+class GeminiService implements domain.GeminiService {
   final ApiClient _apiClient;
   final String _apiKey;
   
@@ -26,15 +28,27 @@ class GeminiService {
   /// Requirements: 2.1, 2.2, 2.3, 2.4
   Future<Result<List<ManualStep>>> analyzeVideo(VideoFile videoFile) async {
     try {
+      print('🎬 Analyzing video: ${videoFile.name} (${videoFile.sizeInBytes} bytes)');
+      
+      // Temporary: Use mock data for testing while API issues are resolved
+      const bool useMockData = false; // Set to false when API is working
+      
+      if (useMockData) {
+        print('🧪 Using mock data');
+        return _generateMockSteps(videoFile);
+      }
+      
       // Validate video file
       final validationResult = _validateVideoFile(videoFile);
       if (validationResult.isFailure) {
+        print('❌ Validation failed: ${validationResult.failure!.message}');
         return Result.failure(validationResult.failure!);
       }
 
       // Prepare video for upload
       final videoBytes = await _readVideoFile(videoFile.path);
       if (videoBytes == null) {
+        print('❌ Failed to read video file');
         return Result.failure(
           const ApiFailure('Failed to read video file'),
         );
@@ -43,6 +57,7 @@ class GeminiService {
       // Call Gemini API with retry mechanism
       final analysisResult = await _callGeminiApiWithRetry(videoBytes, videoFile);
       if (analysisResult.isFailure) {
+        print('❌ API call failed: ${analysisResult.failure!.message}');
         return Result.failure(analysisResult.failure!);
       }
 
@@ -51,13 +66,16 @@ class GeminiService {
       
       // Validate step count (max 20 steps as per requirement 2.2)
       if (steps.length > AppConstants.maxManualSteps) {
+        print('❌ Too many steps: ${steps.length} > ${AppConstants.maxManualSteps}');
         return Result.failure(
           ApiFailure('Too many steps extracted: ${steps.length}. Maximum allowed: ${AppConstants.maxManualSteps}'),
         );
       }
 
+      print('✅ Analysis completed: ${steps.length} steps');
       return Result.success(steps);
     } catch (e) {
+      print('❌ Analysis failed: $e');
       return Result.failure(
         ApiFailure('Video analysis failed: $e'),
       );
@@ -111,34 +129,40 @@ class GeminiService {
 
     while (attempts < AppConstants.maxRetryAttempts) {
       attempts++;
+      print('🔄 Attempt $attempts/${AppConstants.maxRetryAttempts}');
       
       try {
         final result = await _callGeminiApi(videoBytes, videoFile);
         if (result.isSuccess) {
+          print('✅ API call successful');
           return result;
         }
         
+        print('❌ API call failed: ${result.failure!.message}');
         lastException = Exception(result.failure!.message);
         
         // Wait before retry (exponential backoff)
         if (attempts < AppConstants.maxRetryAttempts) {
-          await Future.delayed(Duration(seconds: attempts * 2));
+          final waitTime = attempts * 2;
+          print('⏳ Waiting ${waitTime}s before retry...');
+          await Future.delayed(Duration(seconds: waitTime));
         }
       } catch (e) {
+        print('❌ Exception on attempt $attempts: $e');
         lastException = e is Exception ? e : Exception(e.toString());
         
         // Wait before retry
         if (attempts < AppConstants.maxRetryAttempts) {
-          await Future.delayed(Duration(seconds: attempts * 2));
+          final waitTime = attempts * 2;
+          print('⏳ Waiting ${waitTime}s before retry...');
+          await Future.delayed(Duration(seconds: waitTime));
         }
       }
     }
 
-    return Result.failure(
-      ApiFailure(
-        'Failed to analyze video after $attempts attempts: ${lastException?.toString() ?? "Unknown error"}',
-      ),
-    );
+    final errorMessage = 'Failed after $attempts attempts: ${lastException?.toString() ?? "Unknown error"}';
+    print('❌ Final failure: $errorMessage');
+    return Result.failure(ApiFailure(errorMessage));
   }
 
   /// Makes the actual API call to Gemini
@@ -147,46 +171,10 @@ class GeminiService {
     VideoFile videoFile,
   ) async {
     try {
-      final url = '${AppConstants.geminiApiBaseUrl}/v1beta/models/gemini-1.5-pro:generateContent?key=$_apiKey';
+      final url = '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/${AppConstants.geminiModel}:generateContent';
+      print('🌐 API Endpoint: $url');
       
-      // Encode video as base64
-      final base64Video = base64Encode(videoBytes);
-      
-      // Prepare request body
-      final requestBody = {
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': _buildAnalysisPrompt(),
-              },
-              {
-                'inline_data': {
-                  'mime_type': _getMimeType(videoFile.format),
-                  'data': base64Video,
-                }
-              }
-            ]
-          }
-        ],
-        'generationConfig': {
-          'temperature': 0.1,
-          'topK': 32,
-          'topP': 1,
-          'maxOutputTokens': 4096,
-        }
-      };
-
-      // Make API call
-      final response = await _apiClient.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: requestBody,
-      );
-
-      return Result.success(response);
+      return await _makeApiRequest(url, videoBytes, videoFile);
     } catch (e) {
       if (e is ApiException) {
         return Result.failure(ApiFailure(e.message, code: e.code));
@@ -195,32 +183,100 @@ class GeminiService {
     }
   }
 
+  /// Makes the actual HTTP request to a specific endpoint
+  Future<Result<Map<String, dynamic>>> _makeApiRequest(
+    String url,
+    List<int> videoBytes,
+    VideoFile videoFile,
+  ) async {
+    print('📤 Making API request...');
+    
+    // Encode video as base64
+    final base64Video = base64Encode(videoBytes);
+    
+    // Prepare request body
+    final requestBody = {
+      'contents': [
+        {
+          'parts': [
+            {
+              'text': _buildAnalysisPrompt(),
+            },
+            {
+              'inline_data': {
+                'mime_type': _getMimeType(videoFile.format),
+                'data': base64Video,
+              }
+            }
+          ]
+        }
+      ],
+      'generationConfig': {
+        'temperature': 0.1,
+        'topK': 32,
+        'topP': 1,
+        'maxOutputTokens': 4096,
+      }
+    };
+
+    // Log request details
+    print('📋 Request Details:');
+    print('  URL: $url');
+    print('  MIME Type: ${_getMimeType(videoFile.format)}');
+    print('  Video Size: ${videoBytes.length} bytes');
+    print('  Base64 Size: ${base64Video.length} characters');
+    print('  Request Body Size: ${jsonEncode(requestBody).length} characters');
+    
+    // Make API call
+    final response = await _apiClient.post(
+      url,
+      headers: {
+        'X-Goog-Api-Key': _apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: requestBody,
+    );
+
+    // Log response details
+    print('📥 Response Details:');
+    print('  Response Keys: ${response.keys.toList()}');
+    if (response.containsKey('candidates')) {
+      print('  Candidates Count: ${(response['candidates'] as List).length}');
+    }
+    if (response.containsKey('error')) {
+      print('  Error: ${response['error']}');
+    }
+    
+    return Result.success(response);
+  }
+
   /// Builds the analysis prompt for Gemini
   String _buildAnalysisPrompt() {
     return '''
-Analyze this video and extract step-by-step instructions for creating a manual. 
+この動画を分析して、マニュアル作成のためのステップバイステップの手順を抽出してください。
 
-Please provide a JSON response with the following structure:
+以下の構造でJSONレスポンスを提供してください：
 {
-  "title": "Brief title for the manual",
+  "title": "マニュアルの簡潔なタイトル",
   "steps": [
     {
-      "title": "Step title",
-      "description": "Detailed description of what to do in this step",
+      "title": "ステップのタイトル",
+      "description": "このステップで何をするかの詳細な説明",
       "timestamp": 1500
     }
   ]
 }
 
-Requirements:
-- Extract maximum ${AppConstants.maxManualSteps} steps
-- Each step should have a clear title and detailed description
-- Timestamp should be in milliseconds indicating when this action occurs in the video
-- Focus on actionable steps that a user can follow
-- Descriptions should be clear and concise
-- Order steps chronologically based on the video timeline
+要件：
+- 最大${AppConstants.maxManualSteps}ステップまで抽出
+- 各ステップには明確なタイトルと詳細な説明を含める
+- タイムスタンプは動画内でそのアクションが発生する時間をミリ秒で表示
+- ユーザーが実行可能なアクションに焦点を当てる
+- 説明は明確で簡潔にする
+- 動画のタイムラインに基づいて時系列順に並べる
+- すべてのテキストは日本語で記述する
 
-Return only the JSON response, no additional text.
+純粋なJSONのみを返してください。コードブロック（```json）や追加のテキストは含めないでください。
 ''';
   }
 
@@ -262,8 +318,28 @@ Return only the JSON response, no additional text.
         throw const ApiException('No text in Gemini response');
       }
 
-      // Parse JSON from text response
-      final jsonResponse = jsonDecode(textPart) as Map<String, dynamic>;
+      print('📄 Raw Response Text:');
+      print(textPart);
+
+      // Clean the response text (remove code blocks if present)
+      String cleanedText = textPart.trim();
+      
+      // Remove markdown code blocks if present
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replaceFirst('```json', '').trim();
+      }
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replaceFirst('```', '').trim();
+      }
+      if (cleanedText.endsWith('```')) {
+        cleanedText = cleanedText.substring(0, cleanedText.length - 3).trim();
+      }
+      
+      print('📄 Cleaned Response Text:');
+      print(cleanedText);
+
+      // Parse JSON from cleaned text response
+      final jsonResponse = jsonDecode(cleanedText) as Map<String, dynamic>;
       
       // Validate required fields
       if (!jsonResponse.containsKey('steps')) {
@@ -303,5 +379,49 @@ Return only the JSON response, no additional text.
       }
       throw ApiException('Failed to parse Gemini response: $e');
     }
+  }
+
+  /// Generates mock steps for testing purposes
+  Result<List<ManualStep>> _generateMockSteps(VideoFile videoFile) {
+    print('🎭 モックデータを生成中...');
+    
+    const uuid = Uuid();
+    final steps = <ManualStep>[
+      ManualStep(
+        id: uuid.v4(),
+        title: 'アプリケーションを起動する',
+        description: '対象のアプリケーションをダブルクリックして起動し、メイン画面が表示されるまで待ちます。',
+        timestamp: 1000,
+        stepNumber: 1,
+        isProcessed: false,
+      ),
+      ManualStep(
+        id: uuid.v4(),
+        title: 'メニューから機能を選択する',
+        description: '画面上部のメニューバーから「ファイル」→「新規作成」を選択します。',
+        timestamp: 5000,
+        stepNumber: 2,
+        isProcessed: false,
+      ),
+      ManualStep(
+        id: uuid.v4(),
+        title: '設定を変更する',
+        description: '設定ダイアログで必要なオプションを変更し、「適用」ボタンをクリックして保存します。',
+        timestamp: 10000,
+        stepNumber: 3,
+        isProcessed: false,
+      ),
+      ManualStep(
+        id: uuid.v4(),
+        title: '操作を完了する',
+        description: '変更内容を確認し、「OK」ボタンをクリックして操作を完了します。',
+        timestamp: 15000,
+        stepNumber: 4,
+        isProcessed: false,
+      ),
+    ];
+    
+    print('✅ ${steps.length}個のモックステップを生成しました');
+    return Result.success(steps);
   }
 }

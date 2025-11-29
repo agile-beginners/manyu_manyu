@@ -48,12 +48,17 @@ class ApiClient {
           )
           .timeout(const Duration(seconds: AppConstants.networkTimeoutSeconds));
       
+      print('📥 HTTP ${response.statusCode} - Body: ${response.body.length} chars');
+      
       return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkException('No internet connection');
-    } on HttpException {
-      throw const NetworkException('HTTP error occurred');
+    } on SocketException catch (e) {
+      print('🔌 SocketException: ${e.message}');
+      throw NetworkException('No internet connection: ${e.message}');
+    } on HttpException catch (e) {
+      print('🌐 HttpException: $e');
+      throw NetworkException('HTTP error occurred: ${e.message}');
     } catch (e) {
+      print('❌ Network error: $e');
       throw NetworkException('Network error: $e');
     }
   }
@@ -171,9 +176,18 @@ class ApiClient {
     } else {
       String errorMessage = 'HTTP ${response.statusCode}';
       
+      print('🚨 Error ${response.statusCode}: ${response.body}');
+      
       try {
         final errorBody = jsonDecode(response.body) as Map<String, dynamic>;
         errorMessage = errorBody['message'] ?? errorMessage;
+        
+        if (errorBody.containsKey('error')) {
+          final error = errorBody['error'];
+          if (error is Map && error.containsKey('message')) {
+            errorMessage = error['message'];
+          }
+        }
       } catch (_) {
         // Use default error message if parsing fails
       }

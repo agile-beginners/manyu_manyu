@@ -30,13 +30,19 @@ class GeminiImageService {
     required int stepNumber,
   }) async {
     try {
+      print('🖼️ 画像アノテーション開始: ステップ$stepNumber');
+      print('📁 元画像パス: $originalImagePath');
+      print('📝 ステップタイトル: $stepTitle');
+      
       // Read the original image
       final imageBytes = await _readImageFile(originalImagePath);
       if (imageBytes == null) {
+        print('❌ 元画像の読み込みに失敗');
         return Result.failure(
           const ApiFailure('Failed to read original image file'),
         );
       }
+      print('✅ 元画像読み込み完了: ${imageBytes.length} bytes');
 
       // Generate annotated image using Gemini
       final result = await _generateImageWithGemini(
@@ -47,6 +53,7 @@ class GeminiImageService {
       );
 
       if (result.isFailure) {
+        print('⚠️ Gemini画像生成失敗、元画像を使用: ${result.failure!.message}');
         // Fallback: return original image path if generation fails
         return Result.success(originalImagePath);
       }
@@ -58,8 +65,10 @@ class GeminiImageService {
         stepNumber,
       );
 
+      print('✅ アノテーション完了: $annotatedImagePath');
       return Result.success(annotatedImagePath);
     } catch (e) {
+      print('❌ アノテーション処理でエラー: $e');
       // Fallback: return original image path on any error
       return Result.success(originalImagePath);
     }
@@ -70,10 +79,14 @@ class GeminiImageService {
     try {
       final file = File(path);
       if (!await file.exists()) {
+        print('❌ 画像ファイルが存在しません: $path');
         return null;
       }
-      return await file.readAsBytes();
+      final bytes = await file.readAsBytes();
+      print('📖 画像ファイル読み込み: ${bytes.length} bytes');
+      return bytes;
     } catch (e) {
+      print('❌ 画像ファイル読み込みエラー: $e');
       return null;
     }
   }
@@ -86,10 +99,12 @@ class GeminiImageService {
     required int stepNumber,
   }) async {
     try {
-      final url = '${AppConstants.geminiApiBaseUrl}/v1beta/models/gemini-1.5-pro:generateContent?key=$_apiKey';
+      final url = '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/gemini-2.5-flash-image:generateContent';
+      print('🌐 画像生成API エンドポイント: $url');
       
       // Encode image as base64
       final base64Image = base64Encode(imageBytes);
+      print('🔄 Base64エンコード完了: ${base64Image.length} 文字');
       
       // Create prompt for image annotation
       final prompt = _buildImageAnnotationPrompt(
@@ -115,26 +130,48 @@ class GeminiImageService {
             ]
           }
         ],
-        'generationConfig': {
-          'temperature': 0.1,
-          'topK': 32,
-          'topP': 1,
-          'maxOutputTokens': 4096,
-        }
+        // 'generationConfig': {
+        //   'temperature': 0.1,
+        //   'topK': 32,
+        //   'topP': 1.0,
+        //   'maxOutputTokens': 4096,
+        // },
       };
 
+      // Log request details
+      print('📋 リクエスト詳細:');
+      print('  URL: $url');
+      print('  画像サイズ: ${imageBytes.length} bytes');
+      print('  Base64サイズ: ${base64Image.length} 文字');
+      print('  リクエストボディサイズ: ${jsonEncode(requestBody).length} 文字');
+      print('  プロンプト長: ${prompt.length} 文字');
+      print('  リクエストボディ: ${requestBody}');
+
       // Make API call
+      print('📤 Gemini画像生成API呼び出し中...');
       final response = await _apiClient.post(
         url,
         headers: {
           'Content-Type': 'application/json',
+          'X-Goog-Api-Key': _apiKey
         },
         body: requestBody,
       );
 
+      // Log response details
+      print('📥 レスポンス詳細:');
+      print('  レスポンスキー: ${response.keys.toList()}');
+      if (response.containsKey('candidates')) {
+        print('  候補数: ${(response['candidates'] as List).length}');
+      }
+      if (response.containsKey('error')) {
+        print('  エラー: ${response['error']}');
+      }
+
       // Parse response and extract generated image
       return _parseImageGenerationResponse(response);
     } catch (e) {
+      print('❌ 画像生成API呼び出しエラー: $e');
       if (e is ApiException) {
         return Result.failure(ApiFailure(e.message, code: e.code));
       }
@@ -148,47 +185,88 @@ class GeminiImageService {
     required String stepDescription,
     required int stepNumber,
   }) {
-    return '''
-Please analyze this screenshot and create an annotated version that helps users understand the step-by-step instructions.
+    final prompt = '''
+このスクリーンショットを分析して、ステップバイステップの手順を理解しやすくするアノテーション付きバージョンを作成してください。
 
-Step $stepNumber: $stepTitle
-Description: $stepDescription
+ステップ$stepNumber: $stepTitle
+説明: $stepDescription
 
-Please add visual annotations to this image:
-1. Add red arrows pointing to important UI elements mentioned in the description
-2. Add red circles or rectangles to highlight clickable areas
-3. Add step number "$stepNumber" in a red circle in the top-left corner
-4. Add text labels with clear, readable font to explain what to click or interact with
-5. Use bright, contrasting colors (red, orange) for annotations to make them clearly visible
+この画像に以下の視覚的アノテーションを追加してください：
+1. 説明で言及されている重要なUI要素を指す赤い矢印を追加
+2. クリック可能な領域を強調する赤い円または四角形を追加
+3. 左上角に赤い円でステップ番号「$stepNumber」を追加
+4. クリックまたは操作する内容を説明する明確で読みやすいフォントのテキストラベルを追加
+5. アノテーションには明確に見える明るい対比色（赤、オレンジ）を使用
 
-The goal is to make this image a clear, instructional guide that someone can follow to complete this step.
+目標は、この画像を誰かがこのステップを完了するために従うことができる明確な指導ガイドにすることです。
 
-Return the annotated image that clearly shows where the user should focus their attention.
+ユーザーが注意を向けるべき場所を明確に示すアノテーション付き画像を返してください。
+
+純粋な画像のみを返してください。テキストやコードブロックは含めないでください。
 ''';
+    
+    print('📝 画像アノテーションプロンプト:');
+    print(prompt);
+    
+    return prompt;
   }
 
   /// Parses Gemini image generation response
   Future<Result<List<int>>> _parseImageGenerationResponse(Map<String, dynamic> response) async {
     try {
-      // Note: This is a simplified implementation
-      // In reality, Gemini API's image generation response format may be different
-      // This would need to be adjusted based on the actual API response structure
+      print('🔍 画像生成レスポンス解析中...');
+      print('📄 生レスポンス: ${jsonEncode(response)}');
       
       final candidates = response['candidates'] as List<dynamic>?;
       if (candidates == null || candidates.isEmpty) {
+        print('❌ レスポンスに候補がありません');
         throw const ApiException('No candidates in Gemini response');
       }
 
       final content = candidates[0]['content'] as Map<String, dynamic>?;
       if (content == null) {
+        print('❌ レスポンスにコンテンツがありません');
         throw const ApiException('No content in Gemini response');
+      }
+
+      print('📋 コンテンツキー: ${content.keys.toList()}');
+
+      // Check for inline_data with image
+      final parts = content['parts'] as List<dynamic>?;
+      if (parts != null && parts.isNotEmpty) {
+        for (final part in parts) {
+          if (part is Map<String, dynamic> && part.containsKey('inline_data')) {
+            final inlineData = part['inline_data'] as Map<String, dynamic>;
+            if (inlineData.containsKey('data') && inlineData.containsKey('mime_type')) {
+              final mimeType = inlineData['mime_type'] as String;
+              final data = inlineData['data'] as String;
+              
+              print('✅ 画像データ発見:');
+              print('  MIME Type: $mimeType');
+              print('  データサイズ: ${data.length} 文字');
+              
+              if (mimeType.startsWith('image/')) {
+                try {
+                  final imageBytes = base64Decode(data);
+                  print('✅ Base64デコード完了: ${imageBytes.length} bytes');
+                  return Result.success(imageBytes);
+                } catch (e) {
+                  print('❌ Base64デコードエラー: $e');
+                  throw ApiException('Failed to decode base64 image: $e');
+                }
+              }
+            }
+          }
+        }
       }
 
       // For now, we'll return a placeholder since the actual image generation
       // API structure needs to be verified with real Gemini API documentation
-      throw const ApiException('Image generation not yet implemented - using fallback');
+      print('⚠️ 画像データが見つからない、フォールバックを使用');
+      throw const ApiException('Image data not found in response - using fallback');
       
     } catch (e) {
+      print('❌ 画像生成レスポンス解析エラー: $e');
       if (e is ApiException) {
         rethrow;
       }
@@ -203,6 +281,8 @@ Return the annotated image that clearly shows where the user should focus their 
     int stepNumber,
   ) async {
     try {
+      print('💾 生成画像を保存中...');
+      
       // Create annotated images directory
       final originalFile = File(originalImagePath);
       final directory = originalFile.parent;
@@ -210,6 +290,7 @@ Return the annotated image that clearly shows where the user should focus their 
       
       if (!await annotatedDir.exists()) {
         await annotatedDir.create(recursive: true);
+        print('📁 アノテーション用ディレクトリ作成: ${annotatedDir.path}');
       }
 
       // Generate new filename
@@ -222,8 +303,13 @@ Return the annotated image that clearly shows where the user should focus their 
       final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
       await annotatedFile.writeAsBytes(imageBytes);
       
+      print('✅ アノテーション画像保存完了:');
+      print('  パス: ${annotatedFile.path}');
+      print('  サイズ: ${imageBytes.length} bytes');
+      
       return annotatedFile.path;
     } catch (e) {
+      print('❌ アノテーション画像保存エラー: $e');
       throw ApiException('Failed to save annotated image: $e');
     }
   }
@@ -236,6 +322,8 @@ Return the annotated image that clearly shows where the user should focus their 
     int stepNumber,
   ) async {
     try {
+      print('🔄 シンプルアノテーション作成（フォールバック）');
+      
       // For now, just copy the original image with a new name
       // In a real implementation, you might use a package like image
       // to add simple overlays
@@ -246,6 +334,7 @@ Return the annotated image that clearly shows where the user should focus their 
       
       if (!await annotatedDir.exists()) {
         await annotatedDir.create(recursive: true);
+        print('📁 フォールバック用ディレクトリ作成: ${annotatedDir.path}');
       }
 
       final originalName = originalFile.uri.pathSegments.last;
@@ -256,8 +345,10 @@ Return the annotated image that clearly shows where the user should focus their 
       final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
       await originalFile.copy(annotatedFile.path);
       
+      print('✅ フォールバック画像作成完了: ${annotatedFile.path}');
       return annotatedFile.path;
     } catch (e) {
+      print('❌ フォールバック画像作成エラー: $e');
       // Ultimate fallback: return original path
       return originalImagePath;
     }
