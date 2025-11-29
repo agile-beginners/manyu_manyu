@@ -9,27 +9,27 @@ class StepListWidget extends StatefulWidget {
   final Manual manual;
   final Function(ManualStep) onStepTap;
   final Function(List<String>) onStepReorder;
-  
+
   const StepListWidget({
     super.key,
     required this.manual,
     required this.onStepTap,
     required this.onStepReorder,
   });
-  
+
   @override
   State<StepListWidget> createState() => _StepListWidgetState();
 }
 
 class _StepListWidgetState extends State<StepListWidget> {
   bool _isReorderMode = false;
-  
+
   void _toggleReorderMode() {
     setState(() {
       _isReorderMode = !_isReorderMode;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (widget.manual.steps.isEmpty) {
@@ -60,7 +60,7 @@ class _StepListWidgetState extends State<StepListWidget> {
         ),
       );
     }
-    
+
     return Column(
       children: [
         // Header with step count and reorder toggle
@@ -81,7 +81,7 @@ class _StepListWidgetState extends State<StepListWidget> {
             ],
           ),
         ),
-        
+
         // Steps list
         Expanded(
           child: _isReorderMode ? _buildReorderableList() : _buildNormalList(),
@@ -89,7 +89,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       ],
     );
   }
-  
+
   Widget _buildNormalList() {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -100,7 +100,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       },
     );
   }
-  
+
   Widget _buildReorderableList() {
     return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -109,17 +109,17 @@ class _StepListWidgetState extends State<StepListWidget> {
         if (newIndex > oldIndex) {
           newIndex -= 1;
         }
-        
+
         final steps = List<ManualStep>.from(widget.manual.steps);
         final item = steps.removeAt(oldIndex);
         steps.insert(newIndex, item);
-        
+
         // Update step numbers and get step IDs in new order
         final reorderedStepIds = <String>[];
         for (int i = 0; i < steps.length; i++) {
           reorderedStepIds.add(steps[i].id);
         }
-        
+
         widget.onStepReorder(reorderedStepIds);
       },
       itemBuilder: (context, index) {
@@ -128,7 +128,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       },
     );
   }
-  
+
   Widget _buildStepCard(ManualStep step, int index, {Key? key}) {
     return Card(
       key: key,
@@ -159,9 +159,9 @@ class _StepListWidgetState extends State<StepListWidget> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Step content
               Expanded(
                 child: Column(
@@ -176,9 +176,9 @@ class _StepListWidgetState extends State<StepListWidget> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Step description
                     Text(
                       step.description,
@@ -188,60 +188,88 @@ class _StepListWidgetState extends State<StepListWidget> {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
-                    // Step metadata
-                    Row(
+
+                    // Step metadata (wraps to avoid overflow on narrow widths)
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatTimestamp(step.timestamp),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (step.imagePath != null || step.annotatedImagePath != null) ...[
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.image,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '画像あり',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 14,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                        ],
-                        if (step.isProcessed) ...[
-                          const SizedBox(width: 16),
-                          Icon(
-                            Icons.check_circle,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '処理済み',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatTimestamp(step.timestamp),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
+                          ],
+                        ),
+                        if (step.imagePath != null ||
+                            step.annotatedImagePath != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.image,
+                                size: 14,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '画像あり',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
                           ),
-                        ],
+                        if (step.isProcessed)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '処理済み',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // Step image thumbnail (if available)
               if (step.annotatedImagePath != null || step.imagePath != null)
                 Container(
@@ -260,7 +288,7 @@ class _StepListWidgetState extends State<StepListWidget> {
                     child: _buildStepImage(step),
                   ),
                 ),
-              
+
               // Reorder handle (only in reorder mode)
               if (_isReorderMode)
                 const Padding(
@@ -273,10 +301,10 @@ class _StepListWidgetState extends State<StepListWidget> {
       ),
     );
   }
-  
+
   Widget _buildStepImage(ManualStep step) {
     final imagePath = step.annotatedImagePath ?? step.imagePath;
-    
+
     if (imagePath == null) {
       return Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -286,7 +314,7 @@ class _StepListWidgetState extends State<StepListWidget> {
         ),
       );
     }
-    
+
     // Check if it's a local file
     if (File(imagePath).existsSync()) {
       return Image.file(
@@ -303,7 +331,7 @@ class _StepListWidgetState extends State<StepListWidget> {
         },
       );
     }
-    
+
     // If it's a network image or asset
     return Image.network(
       imagePath,
@@ -319,7 +347,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       },
     );
   }
-  
+
   String _formatTimestamp(int timestampMs) {
     final duration = Duration(milliseconds: timestampMs);
     final minutes = duration.inMinutes;
