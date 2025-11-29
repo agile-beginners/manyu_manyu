@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:share_plus/share_plus.dart';
 import '../../../manual_generation/domain/entities/manual_step.dart';
 import '../providers/manual_edit_providers.dart';
 import '../widgets/manual_header_widget.dart';
@@ -62,13 +62,39 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () {
-              // Manual save trigger (auto-save handles most cases)
+              final notifier = ref.read(manualEditNotifierProvider.notifier);
+              final manual = ref.read(manualEditNotifierProvider).value;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('変更は自動的に保存されています'),
+                  content: Text('PDFを生成しています...'),
                   duration: Duration(seconds: 2),
                 ),
               );
+
+              notifier.exportManual(widget.manualId).then((result) {
+                result.fold(
+                  (failure) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('PDF出力に失敗しました: ${failure.message}'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  (path) {
+                    Share.shareXFiles([
+                      XFile(path),
+                    ], text: manual?.title ?? 'マニュアル');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('PDFを保存しました: $path'),
+                        duration: const Duration(seconds: 5),
+                        action: SnackBarAction(label: 'OK', onPressed: () {}),
+                      ),
+                    );
+                  },
+                );
+              });
             },
           ),
           IconButton(
