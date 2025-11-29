@@ -90,43 +90,64 @@ class VideoAnalysisService {
         }
 
         // Step 3: Update steps with extracted image paths and annotate images
-        final processedSteps = <ManualStep>[];
+        final imagePathsForSteps = List<String?>.generate(
+          steps.length,
+          (index) => index < extractedImagePaths.length
+              ? extractedImagePaths[index]
+              : null,
+        );
+
+        // Step 4: Annotate images in parallel (Requirements 4.1, 4.2, 4.3)
+        final annotationFutures = <Future<String?>>[];
         for (int i = 0; i < steps.length; i++) {
           final step = steps[i];
-          String? imagePath;
-          String? annotatedImagePath;
+          final imagePath = imagePathsForSteps[i];
 
-          // Assign extracted image path if available
-          if (i < extractedImagePaths.length) {
-            imagePath = extractedImagePaths[i];
+          if (imagePath == null) {
+            annotationFutures.add(Future.value(null));
+            continue;
+          }
 
-            // Step 4: Annotate image using Nano Banana API (Requirements 4.1, 4.2, 4.3)
+          annotationFutures.add(() async {
             try {
-              final annotationResult = await _imageAnnotationService.generateAnnotatedImage(
+              final annotationResult =
+                  await _imageAnnotationService.generateAnnotatedImage(
                 originalImagePath: imagePath,
                 stepTitle: step.title,
                 stepDescription: step.description,
                 stepNumber: step.stepNumber,
               );
 
-              if (annotationResult.isSuccess) {
-                annotatedImagePath = annotationResult.data!;
-              } else {
-                // Fallback: use original image if annotation fails (Requirement 4.4)
-                annotatedImagePath = imagePath;
-                print('Image annotation failed for step ${step.stepNumber}: ${annotationResult.failure!.message}');
+              if (annotationResult.isSuccess &&
+                  annotationResult.data != null) {
+                return annotationResult.data!;
               }
+
+              final failureMessage =
+                  annotationResult.failure?.message ?? 'Unknown error';
+              print(
+                'Image annotation failed for step ${step.stepNumber}: $failureMessage',
+              );
+              // Fallback: use original image if annotation fails (Requirement 4.4)
+              return imagePath;
             } catch (e) {
               // Fallback: use original image on any error (Requirement 4.4)
-              annotatedImagePath = imagePath;
               print('Image annotation error for step ${step.stepNumber}: $e');
+              return imagePath;
             }
-          }
+          }());
+        }
+
+        final annotatedImagePaths = await Future.wait(annotationFutures);
+
+        final processedSteps = <ManualStep>[];
+        for (int i = 0; i < steps.length; i++) {
+          final step = steps[i];
 
           // Create updated step with image paths
           final processedStep = step.copyWith(
-            imagePath: imagePath,
-            annotatedImagePath: annotatedImagePath,
+            imagePath: imagePathsForSteps[i],
+            annotatedImagePath: annotatedImagePaths[i],
             isProcessed: true,
           );
 

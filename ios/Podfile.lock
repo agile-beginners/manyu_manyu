@@ -95,15 +95,15 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
-  file_picker: 07c75322ede1d47ec9bb4ac82b27c94d3598251a
+  file_picker: 15fd9539e4eb735dc54bae8c0534a7a9511a03de
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
-  printing: 54ff03f28fe9ba3aa93358afb80a8595a071dd07
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  printing: 233e1b73bd1f4a05615548e9b5a324c98588640b
   SDWebImage: d0184764be51240d49c761c37f53dd017e1ccaaf
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
-  video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
-  video_thumbnail: b637e0ad5f588ca9945f6e2c927f73a69a661140
+  video_player_avfoundation: 7c6c11d8470e1675df7397027218274b6d2360b3
+  video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
 
 PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 
