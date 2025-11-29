@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
+import 'features/video_upload/presentation/screens/video_upload_screen.dart';
 
 void main() {
   runApp(
@@ -61,19 +62,19 @@ class HomePage extends StatelessWidget {
         title: const Text('Video Manual Generator'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: const Center(
+      body: Center(
         child: Padding(
-          padding: EdgeInsets.all(AppConstants.defaultPadding),
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.video_library,
                 size: 80,
                 color: Colors.blue,
               ),
-              SizedBox(height: AppConstants.largePadding),
-              Text(
+              const SizedBox(height: AppConstants.largePadding),
+              const Text(
                 'Video Manual Generator',
                 style: TextStyle(
                   fontSize: 24,
@@ -81,8 +82,8 @@ class HomePage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppConstants.defaultPadding),
-              Text(
+              const SizedBox(height: AppConstants.defaultPadding),
+              const Text(
                 'Upload a video to automatically generate step-by-step manuals using AI',
                 style: TextStyle(
                   fontSize: 16,
@@ -90,15 +91,17 @@ class HomePage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppConstants.largePadding * 2),
-              Text(
-                'Features will be implemented in upcoming tasks',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
+              const SizedBox(height: AppConstants.largePadding * 2),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const VideoUploadScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.upload_file),
+                label: const Text('動画をアップロード'),
               ),
             ],
           ),

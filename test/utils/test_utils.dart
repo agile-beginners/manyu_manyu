@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:faker/faker.dart';
 
 /// Test utilities for property-based testing
@@ -46,23 +47,25 @@ class TestUtils {
     required Size size,
     TargetPlatform? platform,
   }) {
-    return MaterialApp(
-      theme: ThemeData(
-        platform: platform,
-      ),
-      home: MediaQuery(
-        data: MediaQueryData(
-          size: size,
-          devicePixelRatio: 1.0,
-          textScaler: const TextScaler.linear(1.0),
-          platformBrightness: Brightness.light,
-          accessibleNavigation: false,
-          invertColors: false,
-          disableAnimations: false,
-          boldText: false,
-          highContrast: false,
+    return ProviderScope(
+      child: MaterialApp(
+        theme: ThemeData(
+          platform: platform,
         ),
-        child: child,
+        home: MediaQuery(
+          data: MediaQueryData(
+            size: size,
+            devicePixelRatio: 1.0,
+            textScaler: const TextScaler.linear(1.0),
+            platformBrightness: Brightness.light,
+            accessibleNavigation: false,
+            invertColors: false,
+            disableAnimations: false,
+            boldText: false,
+            highContrast: false,
+          ),
+          child: child,
+        ),
       ),
     );
   }
