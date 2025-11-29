@@ -52,3 +52,6 @@ scripts/run_dev_local.sh
 .env.production
 .env.development
 config/api_keys.dart
+
+# FVM Version Cache
+.fvm/
