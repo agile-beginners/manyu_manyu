@@ -192,13 +192,16 @@ class _StepListWidgetState extends State<StepListWidget> {
               ),
               if (hasImage) ...[
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 200,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: _buildStepImage(step),
-                  ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = constraints.maxWidth.isFinite
+                        ? constraints.maxWidth
+                        : MediaQuery.sizeOf(context).width;
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: _buildStepImage(step, maxWidth),
+                    );
+                  },
                 ),
               ],
               const SizedBox(height: 12),
@@ -269,32 +272,39 @@ class _StepListWidgetState extends State<StepListWidget> {
     );
   }
 
-  Widget _buildStepImage(ManualStep step) {
+  Widget _buildStepImage(ManualStep step, double maxWidth) {
     final imagePath = step.annotatedImagePath ?? step.imagePath;
+    final backgroundColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
-    if (imagePath == null) {
+    Widget buildPlaceholder(IconData icon) {
       return Container(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        width: maxWidth,
+        height: 200,
+        color: backgroundColor,
+        alignment: Alignment.center,
         child: Icon(
-          Icons.image_not_supported,
+          icon,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       );
     }
 
+    if (imagePath == null) {
+      return buildPlaceholder(Icons.image_not_supported);
+    }
+
     // Check if it's a local file
     if (File(imagePath).existsSync()) {
       return Container(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        alignment: Alignment.center,
+        width: maxWidth,
+        color: backgroundColor,
         child: Image.file(
           File(imagePath),
-          fit: BoxFit.contain,
+          width: maxWidth,
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
           errorBuilder: (context, error, stackTrace) {
-            return Icon(
-              Icons.broken_image,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            );
+            return buildPlaceholder(Icons.broken_image);
           },
         ),
       );
@@ -302,16 +312,15 @@ class _StepListWidgetState extends State<StepListWidget> {
 
     // If it's a network image or asset
     return Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      alignment: Alignment.center,
+      width: maxWidth,
+      color: backgroundColor,
       child: Image.network(
         imagePath,
-        fit: BoxFit.contain,
+        width: maxWidth,
+        fit: BoxFit.fitWidth,
+        alignment: Alignment.topCenter,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(
-            Icons.broken_image,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          );
+          return buildPlaceholder(Icons.broken_image);
         },
       ),
     );
