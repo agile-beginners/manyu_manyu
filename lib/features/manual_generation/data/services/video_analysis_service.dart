@@ -8,6 +8,7 @@ import '../../domain/entities/manual_step.dart';
 import '../../domain/repositories/manual_repository.dart';
 import '../../domain/services/gemini_service.dart';
 import '../../domain/services/image_annotation_service.dart';
+import '../../domain/value_objects/manual_generation_progress_stage.dart';
 import 'image_extraction_service.dart';
 
 /// Service that orchestrates the complete video analysis process
@@ -39,6 +40,7 @@ class VideoAnalysisService {
   Future<Result<Manual>> analyzeVideoAndCreateManual(
     VideoFile videoFile, {
     String? customTitle,
+    void Function(ManualGenerationProgressStage stage)? onProgress,
   }) async {
     try {
       // Create initial manual with generating status
@@ -61,6 +63,8 @@ class VideoAnalysisService {
 
       try {
         // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
+        onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
+
         final analysisResult = await _geminiService.analyzeVideo(videoFile);
         if (analysisResult.isFailure) {
           // Update manual status to failed
@@ -76,6 +80,8 @@ class VideoAnalysisService {
         final steps = analysisResult.data!;
 
         // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
+        onProgress?.call(ManualGenerationProgressStage.generatingImages);
+
         final imageExtractionResult = await _imageExtractionService.extractImagesFromVideo(
           videoPath: videoFile.path,
           steps: steps,
@@ -167,6 +173,8 @@ class VideoAnalysisService {
           return Result.failure(updateResult.failure!);
         }
 
+        onProgress?.call(ManualGenerationProgressStage.completed);
+
         return Result.success(completedManual);
       } catch (e) {
         // Update manual status to failed on any error
@@ -190,7 +198,10 @@ class VideoAnalysisService {
   /// Retries analysis for a failed manual
   /// 
   /// Requirements: 2.4 - Retry option for failed API calls
-  Future<Result<Manual>> retryAnalysis(String manualId) async {
+  Future<Result<Manual>> retryAnalysis(
+    String manualId, {
+    void Function(ManualGenerationProgressStage stage)? onProgress,
+  }) async {
     try {
       // Get existing manual
       final manualResult = await _manualRepository.getManual(manualId);
@@ -229,7 +240,11 @@ class VideoAnalysisService {
       await _manualRepository.updateManual(generatingManual);
 
       // Retry analysis
-      return analyzeVideoAndCreateManual(videoFile, customTitle: manual.title);
+      return analyzeVideoAndCreateManual(
+        videoFile,
+        customTitle: manual.title,
+        onProgress: onProgress,
+      );
     } catch (e) {
       return Result.failure(
         ApiFailure('Failed to retry analysis: $e'),

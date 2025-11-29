@@ -7,14 +7,14 @@ import '../../../video_upload/domain/entities/video_file.dart';
 import '../../data/repositories/manual_repository_impl.dart';
 import '../../data/services/gemini_image_service.dart';
 import '../../data/services/gemini_service.dart' as data_gemini;
-import '../../domain/services/gemini_service.dart';
 import '../../data/services/image_extraction_service.dart';
 import '../../data/services/nano_banana_service.dart';
 import '../../data/services/video_analysis_service.dart';
-import '../../domain/entities/manual.dart';
 import '../../domain/repositories/manual_repository.dart';
-
+import '../../domain/services/gemini_service.dart';
 import '../../domain/services/image_annotation_service.dart';
+import '../../domain/value_objects/manual_generation_progress_stage.dart';
+import '../states/video_analysis_state.dart';
 
 /// Provider for ManualRepository
 final manualRepositoryProvider = Provider<ManualRepository>((ref) {
@@ -81,21 +81,29 @@ final videoAnalysisServiceProvider = Provider<VideoAnalysisService>((ref) {
 });
 
 /// State notifier for video analysis
-class VideoAnalysisNotifier extends StateNotifier<AsyncValue<Manual?>> {
+class VideoAnalysisNotifier extends StateNotifier<VideoAnalysisState> {
   final VideoAnalysisService _videoAnalysisService;
   
-  VideoAnalysisNotifier(this._videoAnalysisService) : super(const AsyncValue.data(null));
-  
+  VideoAnalysisNotifier(this._videoAnalysisService)
+      : super(const VideoAnalysisState.initial());
+
   /// Starts video analysis
-  Future<void> analyzeVideo(VideoFile videoFile, {String? customTitle}) async {
-    state = const AsyncValue.loading();
-    
+  Future<void> analyzeVideo(
+    VideoFile videoFile, {
+    String? customTitle,
+  }) async {
+    state = const VideoAnalysisState(
+      phase: VideoAnalysisPhase.analyzingVideo,
+      isProcessing: true,
+      latestNonErrorPhase: VideoAnalysisPhase.analyzingVideo,
+    );
+
     try {
       print('🚀 Starting video analysis for: ${videoFile.name}');
       
       // Pre-flight network check (temporarily disabled for testing)
       print('🔍 Running pre-flight network check...');
-      final networkDiagnostics = await NetworkInfo.runNetworkDiagnostics();
+      final _ = await NetworkInfo.runNetworkDiagnostics();
       
       // Temporarily skip network checks to test if the issue is with the pre-flight check
       print('⚠️ Skipping network pre-flight checks for testing...');
@@ -117,29 +125,57 @@ class VideoAnalysisNotifier extends StateNotifier<AsyncValue<Manual?>> {
       final result = await _videoAnalysisService.analyzeVideoAndCreateManual(
         videoFile,
         customTitle: customTitle,
+        onProgress: (progressStage) {
+          final progressState = VideoAnalysisState.fromProgress(progressStage);
+          state = state.copyWith(
+            phase: progressState.phase,
+            isProcessing: progressState.isProcessing,
+            clearManual:
+                progressStage == ManualGenerationProgressStage.analyzingVideo,
+            clearError: true,
+            latestNonErrorPhase: progressState.latestNonErrorPhase,
+          );
+        },
       );
       
       if (result.isSuccess) {
         print('🎉 Video analysis completed successfully');
-        state = AsyncValue.data(result.data);
+        state = state.copyWith(
+          phase: VideoAnalysisPhase.completed,
+          isProcessing: false,
+          manual: result.data,
+          clearError: true,
+          latestNonErrorPhase: VideoAnalysisPhase.completed,
+        );
       } else {
         print('❌ Video analysis failed: ${result.failure!.message}');
-        state = AsyncValue.error(result.failure!.message, StackTrace.current);
+        state = state.copyWith(
+          phase: VideoAnalysisPhase.error,
+          isProcessing: false,
+          errorMessage: result.failure!.message,
+          clearManual: true,
+        );
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       print('💥 Video analysis exception: $e');
-      state = AsyncValue.error(e, stackTrace);
+      state = state.copyWith(
+        phase: VideoAnalysisPhase.error,
+        isProcessing: false,
+        errorMessage: e.toString(),
+        clearManual: true,
+      );
     }
   }
   
   /// Resets the analysis state
   void reset() {
-    state = const AsyncValue.data(null);
+    state = const VideoAnalysisState.initial();
   }
 }
 
 /// Provider for VideoAnalysisNotifier
-final videoAnalysisNotifierProvider = StateNotifierProvider<VideoAnalysisNotifier, AsyncValue<Manual?>>((ref) {
+final videoAnalysisNotifierProvider =
+    StateNotifierProvider<VideoAnalysisNotifier, VideoAnalysisState>((ref) {
   final videoAnalysisService = ref.watch(videoAnalysisServiceProvider);
   return VideoAnalysisNotifier(videoAnalysisService);
 });
@@ -147,5 +183,5 @@ final videoAnalysisNotifierProvider = StateNotifierProvider<VideoAnalysisNotifie
 /// Provider for checking if analysis is in progress
 final isAnalysisInProgressProvider = Provider<bool>((ref) {
   final analysisState = ref.watch(videoAnalysisNotifierProvider);
-  return analysisState.isLoading;
+  return analysisState.isProcessing;
 });

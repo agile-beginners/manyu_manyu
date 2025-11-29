@@ -5,6 +5,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../manual_editing/presentation/screens/manual_edit_screen.dart';
 import '../../../manual_generation/domain/entities/manual.dart';
 import '../../../manual_generation/presentation/providers/video_analysis_providers.dart';
+import '../../../manual_generation/presentation/states/video_analysis_state.dart';
 import '../providers/video_upload_providers.dart';
 import '../widgets/file_selection_widget.dart';
 import '../widgets/upload_progress_widget.dart';
@@ -63,50 +64,117 @@ class VideoUploadScreen extends ConsumerWidget {
       builder: (context) => Consumer(
         builder: (context, ref, child) {
           final analysisState = ref.watch(videoAnalysisNotifierProvider);
+          final notifier = ref.read(videoAnalysisNotifierProvider.notifier);
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
 
-          return AlertDialog(
-            title: const Text('動画解析中'),
-            content: analysisState.when(
-              loading: () => const Column(
+          Widget buildProcessingBody({
+            required Widget indicator,
+            required String message,
+          }) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _AnalysisProgressSteps(state: analysisState),
+                const SizedBox(height: 24),
+                Center(child: indicator),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            );
+          }
+
+          if (analysisState.hasCompleted && analysisState.manual != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) {
+                return;
+              }
+              Navigator.of(context).pop();
+              _navigateToManualEdit(context, ref, analysisState.manual!);
+            });
+          }
+
+          String titleText;
+          Widget content;
+          List<Widget> actions = [];
+
+          switch (analysisState.phase) {
+            case VideoAnalysisPhase.analyzingVideo:
+              titleText = '動画の解析中';
+              content = buildProcessingBody(
+                indicator: const CircularProgressIndicator(),
+                message: 'Geminiが動画のステップを解析しています...',
+              );
+              break;
+            case VideoAnalysisPhase.generatingImages:
+              titleText = '説明画像の生成中';
+              content = buildProcessingBody(
+                indicator: const CircularProgressIndicator(),
+                message: 'ステップごとの説明画像を作成しています...',
+              );
+              break;
+            case VideoAnalysisPhase.completed:
+              titleText = 'マニュアル生成完了';
+              content = buildProcessingBody(
+                indicator: Icon(
+                  Icons.check_circle,
+                  color: colorScheme.primary,
+                  size: 48,
+                ),
+                message: 'マニュアルの生成が完了しました。画面遷移中です。',
+              );
+              break;
+            case VideoAnalysisPhase.error:
+              titleText = '解析エラー';
+              content = Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('動画を解析しています...'),
-                ],
-              ),
-              data: (manual) {
-                if (manual != null) {
-                  // Analysis completed successfully
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.of(context).pop();
-                    _navigateToManualEdit(context, ref, manual);
-                  });
-                }
-                return const SizedBox.shrink();
-              },
-              error: (error, stackTrace) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error, color: Colors.red, size: 48),
+                  _AnalysisProgressSteps(state: analysisState),
+                  const SizedBox(height: 24),
+                  Icon(
+                    Icons.error_outline,
+                    color: colorScheme.error,
+                    size: 48,
+                  ),
                   const SizedBox(height: 16),
-                  Text('解析エラー: $error'),
+                  Text(
+                    '解析エラー: ${analysisState.errorMessage ?? "不明なエラーが発生しました"}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.error,
+                    ),
+                  ),
                 ],
-              ),
-            ),
-            actions: analysisState.when(
-              loading: () => [],
-              data: (_) => [],
-              error: (_, __) => [
+              );
+              actions = [
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    ref.read(videoAnalysisNotifierProvider.notifier).reset();
+                    notifier.reset();
                   },
                   child: const Text('閉じる'),
                 ),
-              ],
-            ),
+              ];
+              break;
+            case VideoAnalysisPhase.idle:
+              titleText = 'マニュアル生成の準備中';
+              content = buildProcessingBody(
+                indicator: const CircularProgressIndicator(),
+                message: 'マニュアル生成を準備しています...',
+              );
+              break;
+          }
+
+          return AlertDialog(
+            title: Text(titleText),
+            content: content,
+            actions: actions,
           );
         },
       ),
@@ -200,6 +268,211 @@ class VideoUploadScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AnalysisProgressSteps extends StatelessWidget {
+  const _AnalysisProgressSteps({required this.state});
+
+  final VideoAnalysisState state;
+
+  int _phaseToIndex(VideoAnalysisPhase phase) {
+    switch (phase) {
+      case VideoAnalysisPhase.analyzingVideo:
+        return 0;
+      case VideoAnalysisPhase.generatingImages:
+        return 1;
+      case VideoAnalysisPhase.completed:
+        return 2;
+      case VideoAnalysisPhase.idle:
+      case VideoAnalysisPhase.error:
+        return -1;
+    }
+  }
+
+  bool _isStepCompleted({
+    required int stepIndex,
+    required bool isFullyCompleted,
+    required int activeIndex,
+  }) {
+    if (activeIndex < 0) return false;
+    if (isFullyCompleted) {
+      return activeIndex >= stepIndex;
+    }
+    return activeIndex > stepIndex;
+  }
+
+  bool _isStepActive({
+    required int stepIndex,
+    required bool isFullyCompleted,
+    required int activeIndex,
+  }) {
+    if (isFullyCompleted || activeIndex < 0) {
+      return false;
+    }
+    return activeIndex == stepIndex;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final steps = <VideoAnalysisPhase>[
+      VideoAnalysisPhase.analyzingVideo,
+      VideoAnalysisPhase.generatingImages,
+      VideoAnalysisPhase.completed,
+    ];
+
+    final labels = <VideoAnalysisPhase, String>{
+      VideoAnalysisPhase.analyzingVideo: '動画の解析中',
+      VideoAnalysisPhase.generatingImages: '説明画像の生成中',
+      VideoAnalysisPhase.completed: 'マニュアル生成完了',
+    };
+
+    final activeIndex = _phaseToIndex(state.displayPhase);
+    final bool isFullyCompleted = state.phase == VideoAnalysisPhase.completed;
+    final disabledColor = theme.disabledColor;
+
+    final timelineSegments = <Widget>[];
+    final labelSegments = <Widget>[];
+
+    for (var i = 0; i < steps.length; i++) {
+      final stepPhase = steps[i];
+      final stepCompleted = _isStepCompleted(
+        stepIndex: i,
+        isFullyCompleted: isFullyCompleted,
+        activeIndex: activeIndex,
+      );
+      final stepActive = _isStepActive(
+        stepIndex: i,
+        isFullyCompleted: isFullyCompleted,
+        activeIndex: activeIndex,
+      );
+
+      final Widget circle = AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: stepCompleted
+              ? colorScheme.primary
+              : stepActive
+                  ? colorScheme.primaryContainer
+                  : colorScheme.surface,
+          border: Border.all(
+            color: stepCompleted || stepActive
+                ? colorScheme.primary
+                : disabledColor.withOpacity(0.5),
+            width: 2,
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: stepCompleted
+              ? Icon(
+                  Icons.check,
+                  size: 18,
+                  color: colorScheme.onPrimary,
+                )
+              : Text(
+                  '${i + 1}',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                        color: stepActive
+                            ? colorScheme.onPrimaryContainer
+                            : disabledColor,
+                        fontWeight:
+                            stepActive ? FontWeight.w700 : FontWeight.w600,
+                      ) ??
+                      TextStyle(
+                        color: stepActive
+                            ? colorScheme.onPrimaryContainer
+                            : disabledColor,
+                        fontSize: 16,
+                        fontWeight:
+                            stepActive ? FontWeight.w700 : FontWeight.w600,
+                      ),
+                ),
+        ),
+      );
+
+      timelineSegments.add(circle);
+
+      if (i < steps.length - 1) {
+        final connectorCompleted = _isStepCompleted(
+          stepIndex: i,
+          isFullyCompleted: isFullyCompleted,
+          activeIndex: activeIndex,
+        );
+
+        timelineSegments.add(
+          Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              height: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: connectorCompleted
+                    ? colorScheme.primary
+                    : disabledColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        );
+      }
+
+      final labelStyle = theme.textTheme.labelMedium?.copyWith(
+            color: stepCompleted || stepActive
+                ? colorScheme.primary
+                : disabledColor.withOpacity(0.9),
+            fontWeight: stepActive ? FontWeight.w700 : FontWeight.w500,
+          ) ??
+          TextStyle(
+            color: stepCompleted || stepActive
+                ? colorScheme.primary
+                : disabledColor.withOpacity(0.9),
+            fontSize: 12,
+            fontWeight: stepActive ? FontWeight.w700 : FontWeight.w500,
+          );
+
+      labelSegments.add(
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              labels[stepPhase]!,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: labelStyle,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: timelineSegments,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: labelSegments,
+          ),
+        ),
+      ],
     );
   }
 }
