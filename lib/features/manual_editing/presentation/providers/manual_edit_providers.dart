@@ -6,8 +6,10 @@ import '../../../manual_generation/data/repositories/manual_repository_impl.dart
 import '../../../manual_generation/domain/entities/manual.dart';
 import '../../../manual_generation/domain/entities/manual_step.dart';
 import '../../../manual_generation/domain/repositories/manual_repository.dart';
+import '../../../manual_generation/domain/services/pdf_export_service.dart';
 import '../../data/services/manual_edit_service_impl.dart';
 import '../../domain/services/manual_edit_service.dart';
+import '../../../manual_generation/data/services/pdf_export_service_impl.dart';
 
 /// Provider for ManualRepository
 final manualRepositoryProvider = Provider<ManualRepository>((ref) {
@@ -18,6 +20,11 @@ final manualRepositoryProvider = Provider<ManualRepository>((ref) {
 final manualEditServiceProvider = Provider<ManualEditService>((ref) {
   final repository = ref.watch(manualRepositoryProvider);
   return ManualEditServiceDataImpl(repository);
+});
+
+/// Provider for PdfExportService
+final pdfExportServiceProvider = Provider<PdfExportService>((ref) {
+  return PdfExportServiceImpl();
 });
 
 /// Provider for getting a specific manual by ID
@@ -48,8 +55,10 @@ final allManualsProvider = FutureProvider<List<Manual>>((ref) async {
 class ManualEditNotifier extends StateNotifier<AsyncValue<Manual?>> {
   final ManualEditService _editService;
   final ManualRepository _repository;
+  final PdfExportService _pdfExportService;
   
-  ManualEditNotifier(this._editService, this._repository) : super(const AsyncValue.data(null));
+  ManualEditNotifier(this._editService, this._repository, this._pdfExportService)
+      : super(const AsyncValue.data(null));
   
   /// Loads a manual by ID
   Future<void> loadManual(String manualId) async {
@@ -186,13 +195,36 @@ class ManualEditNotifier extends StateNotifier<AsyncValue<Manual?>> {
   Result<bool> validateStep(ManualStep step) {
     return _editService.validateStep(step);
   }
+
+  /// Exports the current manual to PDF and returns the saved file path
+  Future<Result<String>> exportManual(String manualId) async {
+    try {
+      Manual? manual = state.value;
+      if (manual == null) {
+        final manualResult = await _repository.getManual(manualId);
+        if (manualResult.isFailure) {
+          return Result.failure(manualResult.failure!);
+        }
+        manual = manualResult.data;
+      }
+
+      if (manual == null) {
+        return const Result.failure(StorageFailure('Manual not found'));
+      }
+
+      return _pdfExportService.exportManual(manual);
+    } catch (e) {
+      return Result.failure(PdfGenerationFailure('Failed to export manual: $e'));
+    }
+  }
 }
 
 /// Provider for ManualEditNotifier
 final manualEditNotifierProvider = StateNotifierProvider<ManualEditNotifier, AsyncValue<Manual?>>((ref) {
   final editService = ref.watch(manualEditServiceProvider);
   final repository = ref.watch(manualRepositoryProvider);
-  return ManualEditNotifier(editService, repository);
+  final pdfExportService = ref.watch(pdfExportServiceProvider);
+  return ManualEditNotifier(editService, repository, pdfExportService);
 });
 
 /// Provider for tracking editing state of individual fields
