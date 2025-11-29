@@ -151,117 +151,117 @@ class VideoUploadScreen extends ConsumerWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // File selection section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '動画ファイルを選択',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    FileSelectionWidget(
-                      selectedFile: uploadState.selectedFile,
-                      onFileSelected: (file) {
-                        uploadNotifier.selectFile(file);
-                      },
-                      isEnabled: !uploadState.isUploading,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Upload progress section
-            if (uploadState.isUploading || uploadState.uploadProgress > 0)
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // File selection section
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: UploadProgressWidget(
-                    progress: uploadState.uploadProgress,
-                    isUploading: uploadState.isUploading,
-                  ),
-                ),
-              ),
-
-            const SizedBox(height: 16),
-
-            // Upload status section
-            if (uploadState.errorMessage != null ||
-                uploadState.uploadedVideo != null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      final isAnalysisInProgress = ref.watch(
-                        isAnalysisInProgressProvider,
-                      );
-
-                      return UploadStatusWidget(
-                        uploadedVideo: uploadState.uploadedVideo,
-                        errorMessage: uploadState.errorMessage,
-                        onRetry: () {
-                          if (uploadState.selectedFile != null) {
-                            uploadNotifier.uploadVideo(
-                              uploadState.selectedFile!,
-                            );
-                          }
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '動画ファイルを選択',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      FileSelectionWidget(
+                        selectedFile: uploadState.selectedFile,
+                        onFileSelected: (file) {
+                          uploadNotifier.selectFile(file);
                         },
-                        onStartAnalysis:
-                            uploadState.uploadedVideo != null &&
-                                !isAnalysisInProgress
-                            ? () {
-                                _startVideoAnalysis(
-                                  context,
-                                  ref,
-                                  uploadState.uploadedVideo!,
-                                );
-                              }
-                            : null,
-                      );
-                    },
+                        isEnabled: !uploadState.isUploading,
+                      ),
+                    ],
                   ),
                 ),
               ),
 
-            const Spacer(),
+              const SizedBox(height: 16),
 
-            // Upload button
-            ElevatedButton(
-              onPressed:
-                  uploadState.selectedFile != null && !uploadState.isUploading
-                  ? () {
-                      uploadNotifier.uploadVideo(uploadState.selectedFile!);
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              // Upload progress section
+              if (uploadState.isUploading || uploadState.uploadProgress > 0)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: UploadProgressWidget(
+                      progress: uploadState.uploadProgress,
+                      isUploading: uploadState.isUploading,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
+              // Upload status section
+              if (uploadState.errorMessage != null ||
+                  uploadState.uploadedVideo != null)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final isAnalysisInProgress = ref.watch(
+                          isAnalysisInProgressProvider,
+                        );
+
+                        return UploadStatusWidget(
+                          uploadedVideo: uploadState.uploadedVideo,
+                          errorMessage: uploadState.errorMessage,
+                          onRetry: () {
+                            if (uploadState.selectedFile != null) {
+                              uploadNotifier.uploadVideo(
+                                uploadState.selectedFile!,
+                              );
+                            }
+                          },
+                          onStartAnalysis:
+                              uploadState.uploadedVideo != null &&
+                                  !isAnalysisInProgress
+                              ? () {
+                                  _startVideoAnalysis(
+                                    context,
+                                    ref,
+                                    uploadState.uploadedVideo!,
+                                  );
+                                }
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+              // Upload button
+              ElevatedButton(
+                onPressed:
+                    uploadState.selectedFile != null && !uploadState.isUploading
+                    ? () {
+                        uploadNotifier.uploadVideo(uploadState.selectedFile!);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: uploadState.isUploading
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('アップロード中...'),
+                        ],
+                      )
+                    : const Text('アップロード開始', style: TextStyle(fontSize: 16)),
               ),
-              child: uploadState.isUploading
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 8),
-                        Text('アップロード中...'),
-                      ],
-                    )
-                  : const Text('アップロード開始', style: TextStyle(fontSize: 16)),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
