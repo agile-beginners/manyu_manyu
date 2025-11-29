@@ -11,19 +11,16 @@ import '../widgets/step_edit_dialog.dart';
 /// Screen for editing manual content
 class ManualEditScreen extends ConsumerStatefulWidget {
   final String manualId;
-  
-  const ManualEditScreen({
-    super.key,
-    required this.manualId,
-  });
-  
+
+  const ManualEditScreen({super.key, required this.manualId});
+
   @override
   ConsumerState<ManualEditScreen> createState() => _ManualEditScreenState();
 }
 
 class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
   Timer? _autoSaveTimer;
-  
+
   @override
   void initState() {
     super.initState();
@@ -32,13 +29,13 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
       ref.read(manualEditNotifierProvider.notifier).loadManual(widget.manualId);
     });
   }
-  
+
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
     super.dispose();
   }
-  
+
   void _showStepEditDialog(ManualStep step) {
     showDialog(
       context: context,
@@ -46,13 +43,14 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
         manualId: widget.manualId,
         step: step,
         onSave: (updatedStep) {
-          ref.read(manualEditNotifierProvider.notifier)
+          ref
+              .read(manualEditNotifierProvider.notifier)
               .updateStep(widget.manualId, updatedStep);
         },
       ),
     );
   }
-  
+
   void _showAddStepDialog() {
     // For now, we'll show a simple dialog to add a new step
     // In a real implementation, this might involve more complex logic
@@ -70,11 +68,11 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final manualState = ref.watch(manualEditNotifierProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('マニュアル編集'),
@@ -95,18 +93,54 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
             icon: const Icon(Icons.preview),
             onPressed: () {
               // Navigate to preview screen
-              Navigator.of(context).pushNamed(
-                '/manual-preview',
-                arguments: widget.manualId,
-              );
+              Navigator.of(
+                context,
+              ).pushNamed('/manual-preview', arguments: widget.manualId);
             },
           ),
         ],
       ),
       body: manualState.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        data: (manual) {
+          if (manual == null) {
+            return const Center(child: Text('マニュアルが見つかりません'));
+          }
+
+          return Column(
+            children: [
+              // Manual header with title and description editing
+              ManualHeaderWidget(
+                manual: manual,
+                onTitleChanged: (newTitle) {
+                  ref
+                      .read(manualEditNotifierProvider.notifier)
+                      .updateManualTitle(widget.manualId, newTitle);
+                },
+                onDescriptionChanged: (newDescription) {
+                  ref
+                      .read(manualEditNotifierProvider.notifier)
+                      .updateManualDescription(widget.manualId, newDescription);
+                },
+              ),
+
+              const Divider(),
+
+              // Steps list
+              Expanded(
+                child: StepListWidget(
+                  manual: manual,
+                  onStepTap: _showStepEditDialog,
+                  onStepReorder: (stepIds) {
+                    ref
+                        .read(manualEditNotifierProvider.notifier)
+                        .reorderSteps(widget.manualId, stepIds);
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+
         error: (error, stackTrace) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +164,8 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  ref.read(manualEditNotifierProvider.notifier)
+                  ref
+                      .read(manualEditNotifierProvider.notifier)
                       .loadManual(widget.manualId);
                 },
                 child: const Text('再試行'),
@@ -138,44 +173,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
             ],
           ),
         ),
-        data: (manual) {
-          if (manual == null) {
-            return const Center(
-              child: Text('マニュアルが見つかりません'),
-            );
-          }
-          
-          return Column(
-            children: [
-              // Manual header with title and description editing
-              ManualHeaderWidget(
-                manual: manual,
-                onTitleChanged: (newTitle) {
-                  ref.read(manualEditNotifierProvider.notifier)
-                      .updateManualTitle(widget.manualId, newTitle);
-                },
-                onDescriptionChanged: (newDescription) {
-                  ref.read(manualEditNotifierProvider.notifier)
-                      .updateManualDescription(widget.manualId, newDescription);
-                },
-              ),
-              
-              const Divider(),
-              
-              // Steps list
-              Expanded(
-                child: StepListWidget(
-                  manual: manual,
-                  onStepTap: _showStepEditDialog,
-                  onStepReorder: (stepIds) {
-                    ref.read(manualEditNotifierProvider.notifier)
-                        .reorderSteps(widget.manualId, stepIds);
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+        loading: () => const Center(child: CircularProgressIndicator()),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddStepDialog,
