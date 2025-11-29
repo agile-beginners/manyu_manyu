@@ -85,7 +85,7 @@ void main() {
         // Arrange
         when(mockManualRepository.saveManual(any))
             .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any))
+        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
             .thenAnswer((_) async => Result.success(testSteps));
         when(mockManualRepository.updateManual(any))
             .thenAnswer((_) async => const Result.success(null));
@@ -102,7 +102,7 @@ void main() {
 
         // Verify interactions
         verify(mockManualRepository.saveManual(any)).called(1);
-        verify(mockGeminiService.analyzeVideo(testVideoFile)).called(1);
+        verify(mockGeminiService.analyzeVideo(testVideoFile, manualInfo: null)).called(1);
         verify(mockManualRepository.updateManual(any)).called(1);
       });
 
@@ -110,7 +110,7 @@ void main() {
         // Arrange
         when(mockManualRepository.saveManual(any))
             .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any))
+        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
             .thenAnswer((_) async => Result.failure(const ApiFailure('Analysis failed')));
         when(mockManualRepository.updateManual(any))
             .thenAnswer((_) async => const Result.success(null));
@@ -143,7 +143,7 @@ void main() {
         expect(result.failure!.message, 'Save failed');
 
         // Verify that Gemini service was not called
-        verifyNever(mockGeminiService.analyzeVideo(any));
+        verifyNever(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')));
       });
 
       test('should use custom title when provided', () async {
@@ -151,7 +151,7 @@ void main() {
         const customTitle = 'Custom Manual Title';
         when(mockManualRepository.saveManual(any))
             .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any))
+        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
             .thenAnswer((_) async => Result.success(testSteps));
         when(mockManualRepository.updateManual(any))
             .thenAnswer((_) async => const Result.success(null));
@@ -165,6 +165,33 @@ void main() {
         // Assert
         expect(result.isSuccess, true);
         expect(result.data!.title, customTitle);
+      });
+
+      test('should forward manual info to Gemini service and store description', () async {
+        // Arrange
+        const manualInfo = ' 重要ポイントを詳しく説明してほしい ';
+        const sanitizedManualInfo = '重要ポイントを詳しく説明してほしい';
+
+        when(mockManualRepository.saveManual(any))
+            .thenAnswer((_) async => const Result.success(null));
+        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
+            .thenAnswer((_) async => Result.success(testSteps));
+        when(mockManualRepository.updateManual(any))
+            .thenAnswer((_) async => const Result.success(null));
+
+        // Act
+        final result = await videoAnalysisService.analyzeVideoAndCreateManual(
+          testVideoFile,
+          manualInfo: manualInfo,
+        );
+
+        // Assert
+        expect(result.isSuccess, true);
+        expect(result.data!.description, sanitizedManualInfo);
+        verify(mockGeminiService.analyzeVideo(
+          testVideoFile,
+          manualInfo: sanitizedManualInfo,
+        )).called(1);
       });
     });
 
@@ -192,7 +219,7 @@ void main() {
             .thenAnswer((_) async => const Result.success(null));
         when(mockManualRepository.saveManual(any))
             .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any))
+        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
             .thenAnswer((_) async => Result.success([
               const ManualStep(
                 id: 'step1',

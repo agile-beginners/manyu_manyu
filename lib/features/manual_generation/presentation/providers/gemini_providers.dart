@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/api_config.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../video_upload/domain/entities/video_file.dart';
 import '../../data/repositories/manual_repository_impl.dart';
@@ -74,6 +73,7 @@ class VideoAnalysisNotifier extends StateNotifier<AsyncValue<String?>> {
     String videoFormat, {
     int? durationMs,
     String? customTitle,
+    String? manualInfo,
   }) async {
     state = const AsyncValue.loading();
     
@@ -90,6 +90,7 @@ class VideoAnalysisNotifier extends StateNotifier<AsyncValue<String?>> {
       final result = await _videoAnalysisService.analyzeVideoAndCreateManual(
         videoFile,
         customTitle: customTitle,
+        manualInfo: manualInfo,
       );
 
       if (result.isSuccess) {

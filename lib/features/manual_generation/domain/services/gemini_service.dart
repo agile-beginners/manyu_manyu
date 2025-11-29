@@ -11,5 +11,8 @@ abstract class GeminiService {
   /// - 2.2: Maximum 20 steps are extracted
   /// - 2.3: JSON data with title, description, timestamp is received
   /// - 2.4: Error handling and retry options are provided
-  Future<Result<List<ManualStep>>> analyzeVideo(VideoFile videoFile);
+  Future<Result<List<ManualStep>>> analyzeVideo(
+    VideoFile videoFile, {
+    String? manualInfo,
+  });
 }

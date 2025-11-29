@@ -91,6 +91,7 @@ class VideoAnalysisNotifier extends StateNotifier<VideoAnalysisState> {
   Future<void> analyzeVideo(
     VideoFile videoFile, {
     String? customTitle,
+    String? manualInfo,
   }) async {
     state = const VideoAnalysisState(
       phase: VideoAnalysisPhase.analyzingVideo,
@@ -125,6 +126,7 @@ class VideoAnalysisNotifier extends StateNotifier<VideoAnalysisState> {
       final result = await _videoAnalysisService.analyzeVideoAndCreateManual(
         videoFile,
         customTitle: customTitle,
+        manualInfo: manualInfo,
         onProgress: (progressStage) {
           final progressState = VideoAnalysisState.fromProgress(progressStage);
           state = state.copyWith(

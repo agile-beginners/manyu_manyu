@@ -12,11 +12,14 @@ final videoRepositoryProvider = Provider<VideoRepository>((ref) {
 
 /// State class for video upload
 class VideoUploadState {
+  static const Object _manualInfoSentinel = Object();
+
   final File? selectedFile;
   final bool isUploading;
   final double uploadProgress;
   final VideoFile? uploadedVideo;
   final String? errorMessage;
+  final String? manualInfo;
 
   const VideoUploadState({
     this.selectedFile,
@@ -24,6 +27,7 @@ class VideoUploadState {
     this.uploadProgress = 0.0,
     this.uploadedVideo,
     this.errorMessage,
+    this.manualInfo,
   });
 
   VideoUploadState copyWith({
@@ -32,6 +36,7 @@ class VideoUploadState {
     double? uploadProgress,
     VideoFile? uploadedVideo,
     String? errorMessage,
+    Object? manualInfo = _manualInfoSentinel,
   }) {
     return VideoUploadState(
       selectedFile: selectedFile ?? this.selectedFile,
@@ -39,6 +44,9 @@ class VideoUploadState {
       uploadProgress: uploadProgress ?? this.uploadProgress,
       uploadedVideo: uploadedVideo ?? this.uploadedVideo,
       errorMessage: errorMessage,
+      manualInfo: identical(manualInfo, _manualInfoSentinel)
+          ? this.manualInfo
+          : manualInfo as String?,
     );
   }
 
@@ -51,6 +59,7 @@ class VideoUploadState {
       uploadedVideo: null,
       uploadProgress: 0.0,
       errorMessage: null,
+      manualInfo: null,
     );
   }
 }
@@ -77,6 +86,7 @@ class VideoUploadStateNotifier extends StateNotifier<VideoUploadState> {
       uploadProgress: 0.0,
       errorMessage: null,
       uploadedVideo: null,
+      manualInfo: null,
     );
 
     try {
@@ -124,6 +134,14 @@ class VideoUploadStateNotifier extends StateNotifier<VideoUploadState> {
   /// Clears the current error message
   void clearError() {
     state = state.clearError();
+  }
+
+  /// Updates the manual information provided by the user
+  void updateManualInfo(String? manualInfo) {
+    final trimmedInfo = manualInfo?.trim();
+    state = state.copyWith(
+      manualInfo: (trimmedInfo == null || trimmedInfo.isEmpty) ? null : trimmedInfo,
+    );
   }
 
   /// Resets the upload state
