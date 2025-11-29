@@ -73,6 +73,24 @@ class EnvConfig {
     );
   }
 
+  /// Nano Banana API Key (fallback to Gemini if not provided)
+  static String get nanoBananaApiKey {
+    try {
+      return _getValue('NANO_BANANA_API_KEY');
+    } catch (e) {
+      // Fallback to Gemini API key if Nano Banana key is not provided
+      return geminiApiKey;
+    }
+  }
+
+  /// Nano Banana API Base URL
+  static String get nanoBananaApiBaseUrl {
+    return _getValue(
+      'NANO_BANANA_API_BASE_URL',
+      defaultValue: 'https://api.nanobanana.com', // Placeholder URL
+    );
+  }
+
   /// Validates that all required configuration values are present
   static void validateConfiguration() {
     if (!_isInitialized) {
@@ -82,6 +100,7 @@ class EnvConfig {
     try {
       // Validate required API keys
       geminiApiKey;
+      nanoBananaApiKey; // This will fallback to Gemini if not provided
       
       if (kDebugMode) {
         print('✅ All required API keys are configured');
@@ -100,6 +119,8 @@ class EnvConfig {
     return {
       'gemini_api_configured': _hasValue('GEMINI_API_KEY') ? 'Yes' : 'No',
       'gemini_base_url': geminiApiBaseUrl,
+      'nano_banana_api_configured': _hasValue('NANO_BANANA_API_KEY') ? 'Yes' : 'No (using Gemini fallback)',
+      'nano_banana_base_url': nanoBananaApiBaseUrl,
     };
   }
 

@@ -4,33 +4,48 @@ import 'package:mockito/mockito.dart';
 
 import 'package:tokyo_flutter_hackathon_2025/core/errors/failures.dart';
 import 'package:tokyo_flutter_hackathon_2025/core/utils/result.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/image_extraction_service.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/video_analysis_service.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual_step.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/repositories/manual_repository.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/gemini_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/image_annotation_service.dart';
 import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entities/video_file.dart';
 
 import 'video_analysis_service_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<GeminiService>(), MockSpec<ManualRepository>()])
+@GenerateNiceMocks([
+  MockSpec<GeminiService>(), 
+  MockSpec<ManualRepository>(),
+  MockSpec<ImageExtractionService>(),
+  MockSpec<ImageAnnotationService>(),
+])
 void main() {
   // Provide dummy values for Result types
   provideDummy<Result<void>>(const Result.success(null));
   provideDummy<Result<Manual?>>(const Result.success(null));
+  provideDummy<Result<List<String>>>(const Result.success([]));
+  provideDummy<Result<String>>(const Result.success(''));
   provideDummy<Result<List<ManualStep>>>(const Result.success([]));
 
   group('VideoAnalysisService', () {
     late VideoAnalysisService videoAnalysisService;
     late MockGeminiService mockGeminiService;
     late MockManualRepository mockManualRepository;
+    late MockImageExtractionService mockImageExtractionService;
+    late MockImageAnnotationService mockImageAnnotationService;
 
     setUp(() {
       mockGeminiService = MockGeminiService();
       mockManualRepository = MockManualRepository();
+      mockImageExtractionService = MockImageExtractionService();
+      mockImageAnnotationService = MockImageAnnotationService();
       videoAnalysisService = VideoAnalysisService(
         geminiService: mockGeminiService,
         manualRepository: mockManualRepository,
+        imageExtractionService: mockImageExtractionService,
+        imageAnnotationService: mockImageAnnotationService,
       );
     });
 

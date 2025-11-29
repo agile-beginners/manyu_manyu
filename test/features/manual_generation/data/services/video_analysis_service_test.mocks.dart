@@ -8,6 +8,8 @@ import 'dart:async' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i7;
 import 'package:tokyo_flutter_hackathon_2025/core/utils/result.dart' as _i4;
+import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/image_extraction_service.dart'
+    as _i10;
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual.dart'
     as _i9;
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual_step.dart'
@@ -16,6 +18,8 @@ import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/r
     as _i8;
 import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/gemini_service.dart'
     as _i2;
+import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/image_annotation_service.dart'
+    as _i11;
 import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entities/video_file.dart'
     as _i6;
 
@@ -333,4 +337,105 @@ class MockManualRepository extends _i1.Mock implements _i8.ManualRepository {
             ),
           )
           as _i3.Future<_i4.Result<_i9.Manual>>);
+}
+
+/// A class which mocks [ImageExtractionService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockImageExtractionService extends _i1.Mock
+    implements _i10.ImageExtractionService {
+  @override
+  _i3.Future<_i4.Result<List<String>>> extractImagesFromVideo({
+    required String? videoPath,
+    required List<_i5.ManualStep>? steps,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#extractImagesFromVideo, [], {
+              #videoPath: videoPath,
+              #steps: steps,
+            }),
+            returnValue: _i3.Future<_i4.Result<List<String>>>.value(
+              _i7.dummyValue<_i4.Result<List<String>>>(
+                this,
+                Invocation.method(#extractImagesFromVideo, [], {
+                  #videoPath: videoPath,
+                  #steps: steps,
+                }),
+              ),
+            ),
+            returnValueForMissingStub:
+                _i3.Future<_i4.Result<List<String>>>.value(
+                  _i7.dummyValue<_i4.Result<List<String>>>(
+                    this,
+                    Invocation.method(#extractImagesFromVideo, [], {
+                      #videoPath: videoPath,
+                      #steps: steps,
+                    }),
+                  ),
+                ),
+          )
+          as _i3.Future<_i4.Result<List<String>>>);
+
+  @override
+  _i3.Future<void> cleanupTempFiles() =>
+      (super.noSuchMethod(
+            Invocation.method(#cleanupTempFiles, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<int> getEstimatedFrameCount(String? videoPath) =>
+      (super.noSuchMethod(
+            Invocation.method(#getEstimatedFrameCount, [videoPath]),
+            returnValue: _i3.Future<int>.value(0),
+            returnValueForMissingStub: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
+}
+
+/// A class which mocks [ImageAnnotationService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockImageAnnotationService extends _i1.Mock
+    implements _i11.ImageAnnotationService {
+  @override
+  _i3.Future<_i4.Result<String>> generateAnnotatedImage({
+    required String? originalImagePath,
+    required String? stepTitle,
+    required String? stepDescription,
+    required int? stepNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#generateAnnotatedImage, [], {
+              #originalImagePath: originalImagePath,
+              #stepTitle: stepTitle,
+              #stepDescription: stepDescription,
+              #stepNumber: stepNumber,
+            }),
+            returnValue: _i3.Future<_i4.Result<String>>.value(
+              _i7.dummyValue<_i4.Result<String>>(
+                this,
+                Invocation.method(#generateAnnotatedImage, [], {
+                  #originalImagePath: originalImagePath,
+                  #stepTitle: stepTitle,
+                  #stepDescription: stepDescription,
+                  #stepNumber: stepNumber,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i3.Future<_i4.Result<String>>.value(
+              _i7.dummyValue<_i4.Result<String>>(
+                this,
+                Invocation.method(#generateAnnotatedImage, [], {
+                  #originalImagePath: originalImagePath,
+                  #stepTitle: stepTitle,
+                  #stepDescription: stepDescription,
+                  #stepNumber: stepNumber,
+                }),
+              ),
+            ),
+          )
+          as _i3.Future<_i4.Result<String>>);
 }

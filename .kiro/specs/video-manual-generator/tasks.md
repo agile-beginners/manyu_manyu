@@ -68,7 +68,7 @@
   - **Property 7: 画像抽出とファイル保存の対応**
   - **検証対象: 要件 3.1, 3.2**
 
-- [ ] 6. Nano Banana API統合の実装
+- [x] 6. Nano Banana API統合の実装
   - NanoBananaServiceクラスの作成
   - 画像注釈API呼び出し機能
   - 注釈付き画像の保存処理

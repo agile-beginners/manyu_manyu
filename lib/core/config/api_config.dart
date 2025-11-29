@@ -9,6 +9,12 @@ class ApiConfig {
   /// Gets Gemini API base URL
   static String get geminiApiBaseUrl => EnvConfig.geminiApiBaseUrl;
   
+  /// Gets Nano Banana API key
+  static String get nanoBananaApiKey => EnvConfig.nanoBananaApiKey;
+  
+  /// Gets Nano Banana API base URL
+  static String get nanoBananaApiBaseUrl => EnvConfig.nanoBananaApiBaseUrl;
+  
   /// Validates that all required API keys are present
   static void validateApiKeys() => EnvConfig.validateConfiguration();
 }
