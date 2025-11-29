@@ -8,12 +8,14 @@ class ManualHeaderWidget extends StatefulWidget {
   final Manual manual;
   final Function(String) onTitleChanged;
   final Function(String?) onDescriptionChanged;
+  final VoidCallback onDownloadPdf;
   
   const ManualHeaderWidget({
     super.key,
     required this.manual,
     required this.onTitleChanged,
     required this.onDescriptionChanged,
+    required this.onDownloadPdf,
   });
   
   @override
@@ -198,6 +200,21 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // PDF Download Button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.file_download),
+              label: const Text('PDFダウンロード'),
+              onPressed: widget.onDownloadPdf,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
           ),
         ],
       ),
