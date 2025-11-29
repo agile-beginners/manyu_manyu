@@ -88,38 +88,37 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
             return const Center(child: Text('マニュアルが見つかりません'));
           }
 
-          return Column(
-            children: [
-              // Manual header with title and description editing
-              ManualHeaderWidget(
-                manual: manual,
-                onTitleChanged: (newTitle) {
-                  ref
-                      .read(manualEditNotifierProvider.notifier)
-                      .updateManualTitle(widget.manualId, newTitle);
-                },
-                onDescriptionChanged: (newDescription) {
-                  ref
-                      .read(manualEditNotifierProvider.notifier)
-                      .updateManualDescription(widget.manualId, newDescription);
-                },
-              ),
-
-              const Divider(),
-
-              // Steps list
-              Expanded(
-                child: StepListWidget(
+          return NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: ManualHeaderWidget(
                   manual: manual,
-                  onStepTap: _showStepEditDialog,
-                  onStepReorder: (stepIds) {
+                  onTitleChanged: (newTitle) {
                     ref
                         .read(manualEditNotifierProvider.notifier)
-                        .reorderSteps(widget.manualId, stepIds);
+                        .updateManualTitle(widget.manualId, newTitle);
+                  },
+                  onDescriptionChanged: (newDescription) {
+                    ref
+                        .read(manualEditNotifierProvider.notifier)
+                        .updateManualDescription(
+                          widget.manualId,
+                          newDescription,
+                        );
                   },
                 ),
               ),
+              const SliverToBoxAdapter(child: Divider(height: 1)),
             ],
+            body: StepListWidget(
+              manual: manual,
+              onStepTap: _showStepEditDialog,
+              onStepReorder: (stepIds) {
+                ref
+                    .read(manualEditNotifierProvider.notifier)
+                    .reorderSteps(widget.manualId, stepIds);
+              },
+            ),
           );
         },
 
