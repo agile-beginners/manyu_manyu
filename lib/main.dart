@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 
 void main() {
-  runApp(const VideoManualGeneratorApp());
+  runApp(
+    const ProviderScope(
+      child: VideoManualGeneratorApp(),
+    ),
+  );
 }
 
-class VideoManualGeneratorApp extends StatelessWidget {
+class VideoManualGeneratorApp extends ConsumerWidget {
   const VideoManualGeneratorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Video Manual Generator',
       theme: ThemeData(

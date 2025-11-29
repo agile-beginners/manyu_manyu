@@ -50,7 +50,8 @@ dependencies:
   video_player: ^2.8.1
   
   # State management
-  provider: ^6.1.1
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
   
   # JSON serialization
   json_annotation: ^4.8.1
@@ -76,6 +77,9 @@ dev_dependencies:
   # Testing utilities
   faker: ^2.1.0
   mockito: ^5.4.2
+  
+  # Riverpod code generation
+  riverpod_generator: ^2.3.9
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

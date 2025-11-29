@@ -19,6 +19,14 @@ Video Manual Generatorは、動画から自動的にマニュアルを生成す�
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
+### 状態管理アーキテクチャ
+
+**Riverpod**を使用した状態管理:
+- **Provider**: データの提供とビジネスロジックの管理
+- **ConsumerWidget**: UIコンポーネントでの状態の購読
+- **StateNotifier**: 複雑な状態変更の管理
+- **AsyncValue**: 非同期処理の状態管理（loading, data, error）
+
 ### Feature-First ディレクトリ構成
 
 ```
