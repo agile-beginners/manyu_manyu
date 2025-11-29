@@ -20,41 +20,16 @@ class VideoUploadScreen extends ConsumerWidget {
     WidgetRef ref,
     dynamic uploadedVideo,
   ) {
-    // Show confirmation dialog
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('動画解析を開始'),
-        content: const Text('動画の解析を開始しますか？\n解析には数分かかる場合があります。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Start video analysis
-              ref
-                  .read(videoAnalysisNotifierProvider.notifier)
-                  .analyzeVideo(uploadedVideo);
+    ref.read(videoAnalysisNotifierProvider.notifier).analyzeVideo(uploadedVideo);
 
-              // Show analysis started message
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('動画解析を開始しました'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-
-              // Navigate to analysis progress screen
-              _showAnalysisProgressDialog(context, ref);
-            },
-            child: const Text('開始'),
-          ),
-        ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('動画解析を開始しました'),
+        duration: Duration(seconds: 2),
       ),
     );
+
+    _showAnalysisProgressDialog(context, ref);
   }
 
   void _showAnalysisProgressDialog(BuildContext context, WidgetRef ref) {
@@ -238,7 +213,9 @@ class VideoUploadScreen extends ConsumerWidget {
                     uploadNotifier: uploadNotifier,
                   ),
                   const SizedBox(height: AppConstants.largePadding),
-                  if (uploadState.isUploading || uploadState.uploadProgress > 0)
+                  if (uploadState.isUploading ||
+                      (uploadState.uploadProgress > 0 &&
+                          uploadState.uploadProgress < 1.0))
                     _ProgressCard(uploadState: uploadState),
                   if (uploadState.errorMessage != null ||
                       uploadState.uploadedVideo != null) ...[
