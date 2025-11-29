@@ -98,7 +98,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
           const SizedBox(height: 8),
           TextField(
             controller: _titleController,
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: Theme.of(context).textTheme.titleMedium,
             decoration: InputDecoration(
               hintText: 'マニュアルのタイトルを入力',
               border: OutlineInputBorder(
@@ -106,10 +106,11 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
-                vertical: 16,
+                vertical: 10,
               ),
             ),
-            maxLines: 2,
+            maxLines: 1,
+            minLines: 1,
             onTap: () {
               setState(() {
                 _isTitleEditing = true;
