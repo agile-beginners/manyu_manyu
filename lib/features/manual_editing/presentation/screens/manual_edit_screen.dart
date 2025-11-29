@@ -51,24 +51,6 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
     );
   }
 
-  void _showAddStepDialog() {
-    // For now, we'll show a simple dialog to add a new step
-    // In a real implementation, this might involve more complex logic
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('新しいステップを追加'),
-        content: const Text('この機能は今後実装予定です。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final manualState = ref.watch(manualEditNotifierProvider);
@@ -174,10 +156,6 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddStepDialog,
-        child: const Icon(Icons.add),
       ),
     );
   }
