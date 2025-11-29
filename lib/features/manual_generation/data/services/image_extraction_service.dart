@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
@@ -104,60 +103,30 @@ class ImageExtractionService {
     required int stepNumber,
     required String outputDirectory,
   }) async {
-    VideoPlayerController? controller;
-    
     try {
-      // Initialize video player controller
-      controller = VideoPlayerController.file(File(videoPath));
-      await controller.initialize();
-      
-      // Convert timestamp from milliseconds to Duration
-      final targetPosition = Duration(milliseconds: timestamp);
-      
-      // Seek to the target timestamp
-      await controller.seekTo(targetPosition);
-      
-      // Wait a bit for the seek to complete
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      // Create output path
       final outputPath = '$outputDirectory/step_${stepNumber}_${timestamp}ms.jpg';
-      
-      // For now, create a placeholder since video frame capture is complex in Flutter
-      // In a production app, you would use a native plugin or ffmpeg
-      await _createImagePlaceholder(
-        outputPath: outputPath,
-        stepNumber: stepNumber,
-        timestamp: timestamp,
+
+      final thumbnailBytes = await VideoThumbnail.thumbnailData(
+        video: videoPath,
+        imageFormat: ImageFormat.JPEG,
+        timeMs: timestamp,
+        maxHeight: 720,
+        quality: 90,
       );
-      
+
+      if (thumbnailBytes == null || thumbnailBytes.isEmpty) {
+        print('Thumbnail generation returned empty for timestamp $timestamp ms.');
+        return null;
+      }
+
+      final file = File(outputPath);
+      await file.writeAsBytes(thumbnailBytes, flush: true);
+      print('Extracted frame for step $stepNumber at $timestamp ms -> $outputPath');
+
       return outputPath;
     } catch (e) {
       print('Error extracting frame at timestamp $timestamp: $e');
       return null;
-    } finally {
-      // Clean up video controller
-      await controller?.dispose();
-    }
-  }
-
-  /// Creates an image placeholder file with metadata
-  Future<void> _createImagePlaceholder({
-    required String outputPath,
-    required int stepNumber,
-    required int timestamp,
-  }) async {
-    try {
-      // Create a simple image placeholder
-      // In a real implementation, this would be actual frame data
-      final file = File(outputPath);
-      
-      // Create a minimal image file (1x1 pixel PNG)
-      final imageBytes = _createMinimalPngBytes();
-      await file.writeAsBytes(imageBytes);
-      
-    } catch (e) {
-      throw VideoProcessingFailure('Failed to create image placeholder: $e');
     }
   }
 
@@ -214,12 +183,6 @@ class ImageExtractionService {
     } catch (e) {
       throw VideoProcessingFailure('Failed to create placeholder image: $e');
     }
-  }
-
-  /// Gets the appropriate image format based on video format
-  String _getImageFormat(String videoPath) {
-    // Default to JPEG for extracted frames
-    return 'jpg';
   }
 
   /// Validates that the video file exists and is accessible
@@ -286,21 +249,4 @@ class ImageExtractionService {
     }
   }
 
-  /// Validates timestamp is within video duration
-  Future<bool> _isTimestampValid(String videoPath, int timestamp) async {
-    VideoPlayerController? controller;
-    
-    try {
-      controller = VideoPlayerController.file(File(videoPath));
-      await controller.initialize();
-      
-      final duration = controller.value.duration;
-      return timestamp >= 0 && timestamp <= duration.inMilliseconds;
-    } catch (e) {
-      print('Error validating timestamp: $e');
-      return false;
-    } finally {
-      await controller?.dispose();
-    }
-  }
 }

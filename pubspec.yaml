@@ -48,6 +48,7 @@ dependencies:
   
   # Video processing
   video_player: ^2.8.1
+  video_thumbnail: ^0.5.3
   
   # State management
   flutter_riverpod: ^2.4.9
