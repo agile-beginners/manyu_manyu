@@ -8,6 +8,7 @@ import '../../domain/entities/manual_step.dart';
 import '../../domain/repositories/manual_repository.dart';
 import '../../domain/services/gemini_service.dart';
 import '../../domain/services/image_annotation_service.dart';
+import '../../domain/value_objects/manual_generation_progress_stage.dart';
 import 'image_extraction_service.dart';
 
 /// Service that orchestrates the complete video analysis process
@@ -39,6 +40,7 @@ class VideoAnalysisService {
   Future<Result<Manual>> analyzeVideoAndCreateManual(
     VideoFile videoFile, {
     String? customTitle,
+    void Function(ManualGenerationProgressStage stage)? onProgress,
   }) async {
     try {
       // Create initial manual with generating status
@@ -61,6 +63,8 @@ class VideoAnalysisService {
 
       try {
         // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
+        onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
+
         final analysisResult = await _geminiService.analyzeVideo(videoFile);
         if (analysisResult.isFailure) {
           // Update manual status to failed
@@ -76,6 +80,8 @@ class VideoAnalysisService {
         final steps = analysisResult.data!;
 
         // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
+        onProgress?.call(ManualGenerationProgressStage.generatingImages);
+
         final imageExtractionResult = await _imageExtractionService.extractImagesFromVideo(
           videoPath: videoFile.path,
           steps: steps,
@@ -90,43 +96,64 @@ class VideoAnalysisService {
         }
 
         // Step 3: Update steps with extracted image paths and annotate images
-        final processedSteps = <ManualStep>[];
+        final imagePathsForSteps = List<String?>.generate(
+          steps.length,
+          (index) => index < extractedImagePaths.length
+              ? extractedImagePaths[index]
+              : null,
+        );
+
+        // Step 4: Annotate images in parallel (Requirements 4.1, 4.2, 4.3)
+        final annotationFutures = <Future<String?>>[];
         for (int i = 0; i < steps.length; i++) {
           final step = steps[i];
-          String? imagePath;
-          String? annotatedImagePath;
+          final imagePath = imagePathsForSteps[i];
 
-          // Assign extracted image path if available
-          if (i < extractedImagePaths.length) {
-            imagePath = extractedImagePaths[i];
+          if (imagePath == null) {
+            annotationFutures.add(Future.value(null));
+            continue;
+          }
 
-            // Step 4: Annotate image using Nano Banana API (Requirements 4.1, 4.2, 4.3)
+          annotationFutures.add(() async {
             try {
-              final annotationResult = await _imageAnnotationService.generateAnnotatedImage(
+              final annotationResult =
+                  await _imageAnnotationService.generateAnnotatedImage(
                 originalImagePath: imagePath,
                 stepTitle: step.title,
                 stepDescription: step.description,
                 stepNumber: step.stepNumber,
               );
 
-              if (annotationResult.isSuccess) {
-                annotatedImagePath = annotationResult.data!;
-              } else {
-                // Fallback: use original image if annotation fails (Requirement 4.4)
-                annotatedImagePath = imagePath;
-                print('Image annotation failed for step ${step.stepNumber}: ${annotationResult.failure!.message}');
+              if (annotationResult.isSuccess &&
+                  annotationResult.data != null) {
+                return annotationResult.data!;
               }
+
+              final failureMessage =
+                  annotationResult.failure?.message ?? 'Unknown error';
+              print(
+                'Image annotation failed for step ${step.stepNumber}: $failureMessage',
+              );
+              // Fallback: use original image if annotation fails (Requirement 4.4)
+              return imagePath;
             } catch (e) {
               // Fallback: use original image on any error (Requirement 4.4)
-              annotatedImagePath = imagePath;
               print('Image annotation error for step ${step.stepNumber}: $e');
+              return imagePath;
             }
-          }
+          }());
+        }
+
+        final annotatedImagePaths = await Future.wait(annotationFutures);
+
+        final processedSteps = <ManualStep>[];
+        for (int i = 0; i < steps.length; i++) {
+          final step = steps[i];
 
           // Create updated step with image paths
           final processedStep = step.copyWith(
-            imagePath: imagePath,
-            annotatedImagePath: annotatedImagePath,
+            imagePath: imagePathsForSteps[i],
+            annotatedImagePath: annotatedImagePaths[i],
             isProcessed: true,
           );
 
@@ -145,6 +172,8 @@ class VideoAnalysisService {
         if (updateResult.isFailure) {
           return Result.failure(updateResult.failure!);
         }
+
+        onProgress?.call(ManualGenerationProgressStage.completed);
 
         return Result.success(completedManual);
       } catch (e) {
@@ -169,7 +198,10 @@ class VideoAnalysisService {
   /// Retries analysis for a failed manual
   /// 
   /// Requirements: 2.4 - Retry option for failed API calls
-  Future<Result<Manual>> retryAnalysis(String manualId) async {
+  Future<Result<Manual>> retryAnalysis(
+    String manualId, {
+    void Function(ManualGenerationProgressStage stage)? onProgress,
+  }) async {
     try {
       // Get existing manual
       final manualResult = await _manualRepository.getManual(manualId);
@@ -208,7 +240,11 @@ class VideoAnalysisService {
       await _manualRepository.updateManual(generatingManual);
 
       // Retry analysis
-      return analyzeVideoAndCreateManual(videoFile, customTitle: manual.title);
+      return analyzeVideoAndCreateManual(
+        videoFile,
+        customTitle: manual.title,
+        onProgress: onProgress,
+      );
     } catch (e) {
       return Result.failure(
         ApiFailure('Failed to retry analysis: $e'),
