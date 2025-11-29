@@ -58,17 +58,6 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('マニュアル編集'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.preview),
-            onPressed: () {
-              // Navigate to preview screen
-              Navigator.of(
-                context,
-              ).pushNamed('/manual-preview', arguments: widget.manualId);
-            },
-          ),
-        ],
       ),
       body: manualState.when(
         data: (manual) {
@@ -114,14 +103,29 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
                           );
                         },
                         (path) {
-                          Share.shareXFiles([
-                            XFile(path),
-                          ], text: manual.title);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('PDFを保存しました: $path'),
-                              duration: const Duration(seconds: 5),
-                              action: SnackBarAction(label: 'OK', onPressed: () {}),
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('PDF生成完了'),
+                              content: const Text('マニュアルのPDF化が完了しました。'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('閉じる'),
+                                ),
+                                FilledButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Share.shareXFiles([
+                                      XFile(path),
+                                    ], text: manual.title);
+                                  },
+                                  icon: const Icon(Icons.save_alt),
+                                  label: const Text('保存する'),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -135,11 +139,6 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
             body: StepListWidget(
               manual: manual,
               onStepTap: _showStepEditDialog,
-              onStepReorder: (stepIds) {
-                ref
-                    .read(manualEditNotifierProvider.notifier)
-                    .reorderSteps(widget.manualId, stepIds);
-              },
             ),
           );
         },

@@ -8,13 +8,11 @@ import '../../../manual_generation/domain/entities/manual_step.dart';
 class StepListWidget extends StatefulWidget {
   final Manual manual;
   final Function(ManualStep) onStepTap;
-  final Function(List<String>) onStepReorder;
 
   const StepListWidget({
     super.key,
     required this.manual,
     required this.onStepTap,
-    required this.onStepReorder,
   });
 
   @override
@@ -22,14 +20,6 @@ class StepListWidget extends StatefulWidget {
 }
 
 class _StepListWidgetState extends State<StepListWidget> {
-  bool _isReorderMode = false;
-
-  void _toggleReorderMode() {
-    setState(() {
-      _isReorderMode = !_isReorderMode;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.manual.steps.isEmpty) {
@@ -63,7 +53,7 @@ class _StepListWidgetState extends State<StepListWidget> {
 
     return Column(
       children: [
-        // Header with step count and reorder toggle
+        // Header with step count
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
@@ -73,18 +63,13 @@ class _StepListWidgetState extends State<StepListWidget> {
                 'ステップ一覧 (${widget.manual.stepCount})',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              TextButton.icon(
-                onPressed: _toggleReorderMode,
-                icon: Icon(_isReorderMode ? Icons.check : Icons.reorder),
-                label: Text(_isReorderMode ? '完了' : '並び替え'),
-              ),
             ],
           ),
         ),
 
         // Steps list
         Expanded(
-          child: _isReorderMode ? _buildReorderableList() : _buildNormalList(),
+          child: _buildNormalList(),
         ),
       ],
     );
@@ -101,34 +86,6 @@ class _StepListWidgetState extends State<StepListWidget> {
     );
   }
 
-  Widget _buildReorderableList() {
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      itemCount: widget.manual.steps.length,
-      onReorder: (oldIndex, newIndex) {
-        if (newIndex > oldIndex) {
-          newIndex -= 1;
-        }
-
-        final steps = List<ManualStep>.from(widget.manual.steps);
-        final item = steps.removeAt(oldIndex);
-        steps.insert(newIndex, item);
-
-        // Update step numbers and get step IDs in new order
-        final reorderedStepIds = <String>[];
-        for (int i = 0; i < steps.length; i++) {
-          reorderedStepIds.add(steps[i].id);
-        }
-
-        widget.onStepReorder(reorderedStepIds);
-      },
-      itemBuilder: (context, index) {
-        final step = widget.manual.steps[index];
-        return _buildStepCard(step, index, key: ValueKey(step.id));
-      },
-    );
-  }
-
   Widget _buildStepCard(ManualStep step, int index, {Key? key}) {
     final hasImage = step.annotatedImagePath != null || step.imagePath != null;
 
@@ -136,7 +93,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       key: key,
       margin: const EdgeInsets.only(bottom: 12.0),
       child: InkWell(
-        onTap: _isReorderMode ? null : () => widget.onStepTap(step),
+        onTap: () => widget.onStepTap(step),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -174,11 +131,6 @@ class _StepListWidgetState extends State<StepListWidget> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (_isReorderMode)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Icon(Icons.drag_handle),
-                    ),
                 ],
               ),
               const SizedBox(height: 8),
