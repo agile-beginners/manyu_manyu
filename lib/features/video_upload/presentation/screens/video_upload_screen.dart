@@ -6,6 +6,7 @@ import '../../../manual_editing/presentation/screens/manual_edit_screen.dart';
 import '../../../manual_generation/domain/entities/manual.dart';
 import '../../../manual_generation/presentation/providers/video_analysis_providers.dart';
 import '../../../manual_generation/presentation/states/video_analysis_state.dart';
+import '../../../video_upload/domain/entities/video_file.dart';
 import '../providers/video_upload_providers.dart';
 import '../widgets/file_selection_widget.dart';
 import '../widgets/upload_progress_widget.dart';
@@ -18,9 +19,12 @@ class VideoUploadScreen extends ConsumerWidget {
   void _startVideoAnalysis(
     BuildContext context,
     WidgetRef ref,
-    dynamic uploadedVideo,
-  ) {
-    ref.read(videoAnalysisNotifierProvider.notifier).analyzeVideo(uploadedVideo);
+    VideoFile uploadedVideo, {
+    String? manualInfo,
+  }) {
+    ref
+        .read(videoAnalysisNotifierProvider.notifier)
+        .analyzeVideo(uploadedVideo, manualInfo: manualInfo);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -234,6 +238,7 @@ class VideoUploadScreen extends ConsumerWidget {
                                 context,
                                 ref,
                                 uploadState.uploadedVideo!,
+                                manualInfo: uploadState.manualInfo,
                               );
                             }
                           : null,
@@ -712,6 +717,12 @@ class _StatusCard extends ConsumerWidget {
               uploadState.uploadedVideo != null && !isAnalysisInProgress
                   ? onStartAnalysis
                   : null,
+          manualInfo: uploadState.manualInfo,
+          onManualInfoChanged: (value) {
+            ref
+                .read(videoUploadStateProvider.notifier)
+                .updateManualInfo(value);
+          },
         ),
       ),
     );

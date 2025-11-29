@@ -1,13 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/result.dart';
 import '../../../video_upload/domain/entities/video_file.dart';
 import '../../domain/entities/manual_step.dart';
@@ -17,27 +15,37 @@ import '../../domain/services/gemini_service.dart' as domain;
 class GeminiService implements domain.GeminiService {
   final ApiClient _apiClient;
   final String _apiKey;
-  
+
   GeminiService({
     required ApiClient apiClient,
     required String apiKey,
-  }) : _apiClient = apiClient, _apiKey = apiKey;
+  })  : _apiClient = apiClient,
+        _apiKey = apiKey;
 
   /// Analyzes a video file and extracts manual steps
-  /// 
+  ///
   /// Requirements: 2.1, 2.2, 2.3, 2.4
-  Future<Result<List<ManualStep>>> analyzeVideo(VideoFile videoFile) async {
+  Future<Result<List<ManualStep>>> analyzeVideo(
+    VideoFile videoFile, {
+    String? manualInfo,
+  }) async {
     try {
-      print('🎬 Analyzing video: ${videoFile.name} (${videoFile.sizeInBytes} bytes)');
-      
+      print(
+          '🎬 Analyzing video: ${videoFile.name} (${videoFile.sizeInBytes} bytes)');
+      final sanitizedManualInfo = manualInfo?.trim();
+      if (sanitizedManualInfo != null && sanitizedManualInfo.isNotEmpty) {
+        print(
+            '📝 Manual info provided (length: ${sanitizedManualInfo.length})');
+      }
+
       // Temporary: Use mock data for testing while API issues are resolved
       const bool useMockData = false; // Set to false when API is working
-      
+
       if (useMockData) {
         print('🧪 Using mock data');
         return _generateMockSteps(videoFile);
       }
-      
+
       // Validate video file
       final validationResult = _validateVideoFile(videoFile);
       if (validationResult.isFailure) {
@@ -55,7 +63,8 @@ class GeminiService implements domain.GeminiService {
       }
 
       // Call Gemini API with retry mechanism
-      final analysisResult = await _callGeminiApiWithRetry(videoBytes, videoFile);
+      final analysisResult = await _callGeminiApiWithRetry(
+          videoBytes, videoFile, sanitizedManualInfo);
       if (analysisResult.isFailure) {
         print('❌ API call failed: ${analysisResult.failure!.message}');
         return Result.failure(analysisResult.failure!);
@@ -63,12 +72,14 @@ class GeminiService implements domain.GeminiService {
 
       // Parse API response
       final steps = _parseGeminiResponse(analysisResult.data!);
-      
+
       // Validate step count (max 20 steps as per requirement 2.2)
       if (steps.length > AppConstants.maxManualSteps) {
-        print('❌ Too many steps: ${steps.length} > ${AppConstants.maxManualSteps}');
+        print(
+            '❌ Too many steps: ${steps.length} > ${AppConstants.maxManualSteps}');
         return Result.failure(
-          ApiFailure('Too many steps extracted: ${steps.length}. Maximum allowed: ${AppConstants.maxManualSteps}'),
+          ApiFailure(
+              'Too many steps extracted: ${steps.length}. Maximum allowed: ${AppConstants.maxManualSteps}'),
         );
       }
 
@@ -93,7 +104,8 @@ class GeminiService implements domain.GeminiService {
     }
 
     // Check file format
-    if (!AppConstants.supportedVideoFormats.contains(videoFile.format.toLowerCase())) {
+    if (!AppConstants.supportedVideoFormats
+        .contains(videoFile.format.toLowerCase())) {
       return Result.failure(
         ValidationFailure('Unsupported video format: ${videoFile.format}'),
       );
@@ -102,7 +114,8 @@ class GeminiService implements domain.GeminiService {
     // Check file size
     if (videoFile.sizeInBytes > AppConstants.maxVideoSizeBytes) {
       return Result.failure(
-        ValidationFailure('Video file too large: ${videoFile.sizeInBytes} bytes. Maximum: ${AppConstants.maxVideoSizeBytes} bytes'),
+        ValidationFailure(
+            'Video file too large: ${videoFile.sizeInBytes} bytes. Maximum: ${AppConstants.maxVideoSizeBytes} bytes'),
       );
     }
 
@@ -123,6 +136,7 @@ class GeminiService implements domain.GeminiService {
   Future<Result<Map<String, dynamic>>> _callGeminiApiWithRetry(
     List<int> videoBytes,
     VideoFile videoFile,
+    String? manualInfo,
   ) async {
     int attempts = 0;
     Exception? lastException;
@@ -130,17 +144,21 @@ class GeminiService implements domain.GeminiService {
     while (attempts < AppConstants.maxRetryAttempts) {
       attempts++;
       print('🔄 Attempt $attempts/${AppConstants.maxRetryAttempts}');
-      
+
       try {
-        final result = await _callGeminiApi(videoBytes, videoFile);
+        final result = await _callGeminiApi(
+          videoBytes,
+          videoFile,
+          manualInfo,
+        );
         if (result.isSuccess) {
           print('✅ API call successful');
           return result;
         }
-        
+
         print('❌ API call failed: ${result.failure!.message}');
         lastException = Exception(result.failure!.message);
-        
+
         // Wait before retry (exponential backoff)
         if (attempts < AppConstants.maxRetryAttempts) {
           final waitTime = attempts * 2;
@@ -150,7 +168,7 @@ class GeminiService implements domain.GeminiService {
       } catch (e) {
         print('❌ Exception on attempt $attempts: $e');
         lastException = e is Exception ? e : Exception(e.toString());
-        
+
         // Wait before retry
         if (attempts < AppConstants.maxRetryAttempts) {
           final waitTime = attempts * 2;
@@ -160,7 +178,8 @@ class GeminiService implements domain.GeminiService {
       }
     }
 
-    final errorMessage = 'Failed after $attempts attempts: ${lastException?.toString() ?? "Unknown error"}';
+    final errorMessage =
+        'Failed after $attempts attempts: ${lastException?.toString() ?? "Unknown error"}';
     print('❌ Final failure: $errorMessage');
     return Result.failure(ApiFailure(errorMessage));
   }
@@ -169,12 +188,19 @@ class GeminiService implements domain.GeminiService {
   Future<Result<Map<String, dynamic>>> _callGeminiApi(
     List<int> videoBytes,
     VideoFile videoFile,
+    String? manualInfo,
   ) async {
     try {
-      final url = '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/${AppConstants.geminiModel}:generateContent';
+      final url =
+          '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/${AppConstants.geminiModel}:generateContent';
       print('🌐 API Endpoint: $url');
-      
-      return await _makeApiRequest(url, videoBytes, videoFile);
+
+      return await _makeApiRequest(
+        url,
+        videoBytes,
+        videoFile,
+        manualInfo,
+      );
     } catch (e) {
       if (e is ApiException) {
         return Result.failure(ApiFailure(e.message, code: e.code));
@@ -188,19 +214,20 @@ class GeminiService implements domain.GeminiService {
     String url,
     List<int> videoBytes,
     VideoFile videoFile,
+    String? manualInfo,
   ) async {
     print('📤 Making API request...');
-    
+
     // Encode video as base64
     final base64Video = base64Encode(videoBytes);
-    
+
     // Prepare request body
     final requestBody = {
       'contents': [
         {
           'parts': [
             {
-              'text': _buildAnalysisPrompt(),
+              'text': _buildAnalysisPrompt(manualInfo: manualInfo),
             },
             {
               'inline_data': {
@@ -226,7 +253,11 @@ class GeminiService implements domain.GeminiService {
     print('  Video Size: ${videoBytes.length} bytes');
     print('  Base64 Size: ${base64Video.length} characters');
     print('  Request Body Size: ${jsonEncode(requestBody).length} characters');
-    
+    if (manualInfo != null && manualInfo.isNotEmpty) {
+      print(
+          '  Manual Info Preview: ${manualInfo.substring(0, manualInfo.length > 120 ? 120 : manualInfo.length)}${manualInfo.length > 120 ? '...' : ''}');
+    }
+
     // Make API call
     final response = await _apiClient.post(
       url,
@@ -246,13 +277,13 @@ class GeminiService implements domain.GeminiService {
     if (response.containsKey('error')) {
       print('  Error: ${response['error']}');
     }
-    
+
     return Result.success(response);
   }
 
   /// Builds the analysis prompt for Gemini
-  String _buildAnalysisPrompt() {
-    return '''
+  String _buildAnalysisPrompt({String? manualInfo}) {
+    final buffer = StringBuffer('''
 この動画を分析して、マニュアル作成のためのステップバイステップの手順を抽出してください。
 
 以下の構造でJSONレスポンスを提供してください：
@@ -271,13 +302,22 @@ class GeminiService implements domain.GeminiService {
 - 最大${AppConstants.maxManualSteps}ステップまで抽出
 - 各ステップには明確なタイトルと詳細な説明を含める
 - タイムスタンプは動画内でそのアクションが発生する時間をミリ秒で表示
+  - ここで、タイムスタンプはできる限り詳細に指定するようにしてください。(出来れば1/10秒レベルまで指定)
 - ユーザーが実行可能なアクションに焦点を当てる
 - 説明は明確で簡潔にする
 - 動画のタイムラインに基づいて時系列順に並べる
 - すべてのテキストは日本語で記述する
 
 純粋なJSONのみを返してください。コードブロック（```json）や追加のテキストは含めないでください。
-''';
+''');
+
+    if (manualInfo != null && manualInfo.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln('追加コンテキスト:');
+      buffer.writeln(manualInfo);
+    }
+
+    return buffer.toString();
   }
 
   /// Gets MIME type for video format
@@ -323,7 +363,7 @@ class GeminiService implements domain.GeminiService {
 
       // Clean the response text (remove code blocks if present)
       String cleanedText = textPart.trim();
-      
+
       // Remove markdown code blocks if present
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replaceFirst('```json', '').trim();
@@ -334,13 +374,13 @@ class GeminiService implements domain.GeminiService {
       if (cleanedText.endsWith('```')) {
         cleanedText = cleanedText.substring(0, cleanedText.length - 3).trim();
       }
-      
+
       print('📄 Cleaned Response Text:');
       print(cleanedText);
 
       // Parse JSON from cleaned text response
       final jsonResponse = jsonDecode(cleanedText) as Map<String, dynamic>;
-      
+
       // Validate required fields
       if (!jsonResponse.containsKey('steps')) {
         throw const ApiException('Missing steps in Gemini response');
@@ -352,10 +392,10 @@ class GeminiService implements domain.GeminiService {
 
       for (int i = 0; i < stepsJson.length; i++) {
         final stepJson = stepsJson[i] as Map<String, dynamic>;
-        
+
         // Validate required fields for each step
-        if (!stepJson.containsKey('title') || 
-            !stepJson.containsKey('description') || 
+        if (!stepJson.containsKey('title') ||
+            !stepJson.containsKey('description') ||
             !stepJson.containsKey('timestamp')) {
           throw ApiException('Missing required fields in step $i');
         }
@@ -384,7 +424,7 @@ class GeminiService implements domain.GeminiService {
   /// Generates mock steps for testing purposes
   Result<List<ManualStep>> _generateMockSteps(VideoFile videoFile) {
     print('🎭 モックデータを生成中...');
-    
+
     const uuid = Uuid();
     final steps = <ManualStep>[
       ManualStep(
@@ -420,7 +460,7 @@ class GeminiService implements domain.GeminiService {
         isProcessed: false,
       ),
     ];
-    
+
     print('✅ ${steps.length}個のモックステップを生成しました');
     return Result.success(steps);
   }
