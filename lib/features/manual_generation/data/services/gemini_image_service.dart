@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
@@ -13,15 +11,14 @@ import '../../../../core/utils/result.dart';
 class GeminiImageService {
   final ApiClient _apiClient;
   final String _apiKey;
-  
-  GeminiImageService({
-    required ApiClient apiClient,
-    required String apiKey,
-  }) : _apiClient = apiClient, _apiKey = apiKey;
+
+  GeminiImageService({required ApiClient apiClient, required String apiKey})
+    : _apiClient = apiClient,
+      _apiKey = apiKey;
 
   /// Generates an annotated image with arrows, text, and highlights
   /// using Gemini's image generation capabilities
-  /// 
+  ///
   /// Requirements: 4.1, 4.2, 4.3, 4.4
   Future<Result<String>> generateAnnotatedImage({
     required String originalImagePath,
@@ -33,7 +30,7 @@ class GeminiImageService {
       print('🖼️ 画像アノテーション開始: ステップ$stepNumber');
       print('📁 元画像パス: $originalImagePath');
       print('📝 ステップタイトル: $stepTitle');
-      
+
       // Read the original image
       final imageBytes = await _readImageFile(originalImagePath);
       if (imageBytes == null) {
@@ -99,13 +96,14 @@ class GeminiImageService {
     required int stepNumber,
   }) async {
     try {
-      final url = '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/gemini-2.5-flash-image:generateContent';
+      final url =
+          '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/gemini-2.5-flash-image:generateContent';
       print('🌐 画像生成API エンドポイント: $url');
-      
+
       // Encode image as base64
       final base64Image = base64Encode(imageBytes);
       print('🔄 Base64エンコード完了: ${base64Image.length} 文字');
-      
+
       // Create prompt for image annotation
       final prompt = _buildImageAnnotationPrompt(
         stepTitle: stepTitle,
@@ -117,25 +115,15 @@ class GeminiImageService {
       final requestBody = {
         'contents': [
           {
+            'role': 'user',
             'parts': [
+              {'text': prompt},
               {
-                'text': prompt,
+                'inlineData': {'mimeType': 'image/jpeg', 'data': base64Image},
               },
-              {
-                'inline_data': {
-                  'mime_type': 'image/jpeg',
-                  'data': base64Image,
-                }
-              }
-            ]
-          }
+            ],
+          },
         ],
-        // 'generationConfig': {
-        //   'temperature': 0.1,
-        //   'topK': 32,
-        //   'topP': 1.0,
-        //   'maxOutputTokens': 4096,
-        // },
       };
 
       // Log request details
@@ -153,7 +141,7 @@ class GeminiImageService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': _apiKey
+          'X-Goog-Api-Key': _apiKey,
         },
         body: requestBody,
       );
@@ -185,7 +173,8 @@ class GeminiImageService {
     required String stepDescription,
     required int stepNumber,
   }) {
-    final prompt = '''
+    final prompt =
+        '''
 このスクリーンショットを分析して、ステップバイステップの手順を理解しやすくするアノテーション付きバージョンを作成してください。
 
 ステップ$stepNumber: $stepTitle
@@ -204,19 +193,21 @@ class GeminiImageService {
 
 純粋な画像のみを返してください。テキストやコードブロックは含めないでください。
 ''';
-    
+
     print('📝 画像アノテーションプロンプト:');
     print(prompt);
-    
+
     return prompt;
   }
 
   /// Parses Gemini image generation response
-  Future<Result<List<int>>> _parseImageGenerationResponse(Map<String, dynamic> response) async {
+  Future<Result<List<int>>> _parseImageGenerationResponse(
+    Map<String, dynamic> response,
+  ) async {
     try {
       print('🔍 画像生成レスポンス解析中...');
       print('📄 生レスポンス: ${jsonEncode(response)}');
-      
+
       final candidates = response['candidates'] as List<dynamic>?;
       if (candidates == null || candidates.isEmpty) {
         print('❌ レスポンスに候補がありません');
@@ -235,24 +226,27 @@ class GeminiImageService {
       final parts = content['parts'] as List<dynamic>?;
       if (parts != null && parts.isNotEmpty) {
         for (final part in parts) {
-          if (part is Map<String, dynamic> && part.containsKey('inline_data')) {
-            final inlineData = part['inline_data'] as Map<String, dynamic>;
-            if (inlineData.containsKey('data') && inlineData.containsKey('mime_type')) {
-              final mimeType = inlineData['mime_type'] as String;
-              final data = inlineData['data'] as String;
-              
-              print('✅ 画像データ発見:');
-              print('  MIME Type: $mimeType');
-              print('  データサイズ: ${data.length} 文字');
-              
-              if (mimeType.startsWith('image/')) {
-                try {
-                  final imageBytes = base64Decode(data);
-                  print('✅ Base64デコード完了: ${imageBytes.length} bytes');
-                  return Result.success(imageBytes);
-                } catch (e) {
-                  print('❌ Base64デコードエラー: $e');
-                  throw ApiException('Failed to decode base64 image: $e');
+          if (part is Map<String, dynamic>) {
+            final inlineData = part['inlineData'] ?? part['inline_data'];
+            if (inlineData is Map<String, dynamic>) {
+              final mimeType =
+                  inlineData['mimeType'] ?? inlineData['mime_type'];
+              final data = inlineData['data'];
+
+              if (mimeType is String && data is String) {
+                print('✅ 画像データ発見:');
+                print('  MIME Type: $mimeType');
+                print('  データサイズ: ${data.length} 文字');
+
+                if (mimeType.startsWith('image/')) {
+                  try {
+                    final imageBytes = base64Decode(data);
+                    print('✅ Base64デコード完了: ${imageBytes.length} bytes');
+                    return Result.success(imageBytes);
+                  } catch (e) {
+                    print('❌ Base64デコードエラー: $e');
+                    throw ApiException('Failed to decode base64 image: $e');
+                  }
                 }
               }
             }
@@ -263,8 +257,9 @@ class GeminiImageService {
       // For now, we'll return a placeholder since the actual image generation
       // API structure needs to be verified with real Gemini API documentation
       print('⚠️ 画像データが見つからない、フォールバックを使用');
-      throw const ApiException('Image data not found in response - using fallback');
-      
+      throw const ApiException(
+        'Image data not found in response - using fallback',
+      );
     } catch (e) {
       print('❌ 画像生成レスポンス解析エラー: $e');
       if (e is ApiException) {
@@ -282,12 +277,12 @@ class GeminiImageService {
   ) async {
     try {
       print('💾 生成画像を保存中...');
-      
+
       // Create annotated images directory
       final originalFile = File(originalImagePath);
       final directory = originalFile.parent;
       final annotatedDir = Directory('${directory.path}/annotated');
-      
+
       if (!await annotatedDir.exists()) {
         await annotatedDir.create(recursive: true);
         print('📁 アノテーション用ディレクトリ作成: ${annotatedDir.path}');
@@ -297,60 +292,21 @@ class GeminiImageService {
       final originalName = originalFile.uri.pathSegments.last;
       final nameWithoutExtension = originalName.split('.').first;
       final extension = originalName.split('.').last;
-      final annotatedFileName = '${nameWithoutExtension}_step${stepNumber}_annotated.$extension';
-      
+      final annotatedFileName =
+          '${nameWithoutExtension}_step${stepNumber}_annotated.$extension';
+
       // Save annotated image
       final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
       await annotatedFile.writeAsBytes(imageBytes);
-      
+
       print('✅ アノテーション画像保存完了:');
       print('  パス: ${annotatedFile.path}');
       print('  サイズ: ${imageBytes.length} bytes');
-      
+
       return annotatedFile.path;
     } catch (e) {
       print('❌ アノテーション画像保存エラー: $e');
       throw ApiException('Failed to save annotated image: $e');
-    }
-  }
-
-  /// Creates a simple overlay annotation as fallback
-  /// This is a placeholder implementation that could be enhanced
-  Future<String> _createSimpleAnnotation(
-    String originalImagePath,
-    String stepTitle,
-    int stepNumber,
-  ) async {
-    try {
-      print('🔄 シンプルアノテーション作成（フォールバック）');
-      
-      // For now, just copy the original image with a new name
-      // In a real implementation, you might use a package like image
-      // to add simple overlays
-      
-      final originalFile = File(originalImagePath);
-      final directory = originalFile.parent;
-      final annotatedDir = Directory('${directory.path}/annotated');
-      
-      if (!await annotatedDir.exists()) {
-        await annotatedDir.create(recursive: true);
-        print('📁 フォールバック用ディレクトリ作成: ${annotatedDir.path}');
-      }
-
-      final originalName = originalFile.uri.pathSegments.last;
-      final nameWithoutExtension = originalName.split('.').first;
-      final extension = originalName.split('.').last;
-      final annotatedFileName = '${nameWithoutExtension}_step${stepNumber}_annotated.$extension';
-      
-      final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
-      await originalFile.copy(annotatedFile.path);
-      
-      print('✅ フォールバック画像作成完了: ${annotatedFile.path}');
-      return annotatedFile.path;
-    } catch (e) {
-      print('❌ フォールバック画像作成エラー: $e');
-      // Ultimate fallback: return original path
-      return originalImagePath;
     }
   }
 }

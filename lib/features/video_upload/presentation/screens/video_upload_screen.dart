@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../manual_editing/presentation/screens/manual_edit_screen.dart';
+import '../../../manual_generation/domain/entities/manual.dart';
 import '../../../manual_generation/presentation/providers/video_analysis_providers.dart';
 import '../providers/video_upload_providers.dart';
 import '../widgets/upload_progress_widget.dart';
@@ -11,7 +13,11 @@ import '../widgets/upload_status_widget.dart';
 class VideoUploadScreen extends ConsumerWidget {
   const VideoUploadScreen({super.key});
 
-  void _startVideoAnalysis(BuildContext context, WidgetRef ref, dynamic uploadedVideo) {
+  void _startVideoAnalysis(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic uploadedVideo,
+  ) {
     // Show confirmation dialog
     showDialog(
       context: context,
@@ -27,8 +33,10 @@ class VideoUploadScreen extends ConsumerWidget {
             onPressed: () {
               Navigator.of(context).pop();
               // Start video analysis
-              ref.read(videoAnalysisNotifierProvider.notifier).analyzeVideo(uploadedVideo);
-              
+              ref
+                  .read(videoAnalysisNotifierProvider.notifier)
+                  .analyzeVideo(uploadedVideo);
+
               // Show analysis started message
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -36,7 +44,7 @@ class VideoUploadScreen extends ConsumerWidget {
                   duration: Duration(seconds: 2),
                 ),
               );
-              
+
               // Navigate to analysis progress screen
               _showAnalysisProgressDialog(context, ref);
             },
@@ -46,7 +54,7 @@ class VideoUploadScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showAnalysisProgressDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
@@ -54,7 +62,7 @@ class VideoUploadScreen extends ConsumerWidget {
       builder: (context) => Consumer(
         builder: (context, ref, child) {
           final analysisState = ref.watch(videoAnalysisNotifierProvider);
-          
+
           return AlertDialog(
             title: const Text('動画解析中'),
             content: analysisState.when(
@@ -71,7 +79,7 @@ class VideoUploadScreen extends ConsumerWidget {
                   // Analysis completed successfully
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.of(context).pop();
-                    _showAnalysisCompleteDialog(context, manual);
+                    _navigateToManualEdit(context, ref, manual);
                   });
                 }
                 return const SizedBox.shrink();
@@ -103,34 +111,32 @@ class VideoUploadScreen extends ConsumerWidget {
       ),
     );
   }
-  
-  void _showAnalysisCompleteDialog(BuildContext context, dynamic manual) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('解析完了'),
-        content: Text('マニュアル「${manual.title}」が作成されました。\n${manual.stepCount}個のステップが抽出されました。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Navigate to manual edit screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('マニュアル編集画面への遷移は今後実装予定です'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: const Text('編集'),
-          ),
-        ],
+
+  void _navigateToManualEdit(
+    BuildContext context,
+    WidgetRef ref,
+    Manual manual,
+  ) {
+    // Reset analysis state before leaving the progress flow
+    ref.read(videoAnalysisNotifierProvider.notifier).reset();
+
+    // Show a brief confirmation toast/snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('解析が完了しました。「${manual.title}」を編集します。'),
+        duration: const Duration(seconds: 2),
       ),
     );
+
+    // Navigate on the next microtask to avoid Navigator conflicts
+    Future.microtask(() {
+      if (!context.mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ManualEditScreen(manualId: manual.id),
+        ),
+      );
+    });
   }
 
   @override
@@ -171,9 +177,9 @@ class VideoUploadScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Upload progress section
             if (uploadState.isUploading || uploadState.uploadProgress > 0)
               Card(
@@ -185,29 +191,40 @@ class VideoUploadScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Upload status section
-            if (uploadState.errorMessage != null || uploadState.uploadedVideo != null)
+            if (uploadState.errorMessage != null ||
+                uploadState.uploadedVideo != null)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final isAnalysisInProgress = ref.watch(isAnalysisInProgressProvider);
-                      
+                      final isAnalysisInProgress = ref.watch(
+                        isAnalysisInProgressProvider,
+                      );
+
                       return UploadStatusWidget(
                         uploadedVideo: uploadState.uploadedVideo,
                         errorMessage: uploadState.errorMessage,
                         onRetry: () {
                           if (uploadState.selectedFile != null) {
-                            uploadNotifier.uploadVideo(uploadState.selectedFile!);
+                            uploadNotifier.uploadVideo(
+                              uploadState.selectedFile!,
+                            );
                           }
                         },
-                        onStartAnalysis: uploadState.uploadedVideo != null && !isAnalysisInProgress
+                        onStartAnalysis:
+                            uploadState.uploadedVideo != null &&
+                                !isAnalysisInProgress
                             ? () {
-                                _startVideoAnalysis(context, ref, uploadState.uploadedVideo!);
+                                _startVideoAnalysis(
+                                  context,
+                                  ref,
+                                  uploadState.uploadedVideo!,
+                                );
                               }
                             : null,
                       );
@@ -215,12 +232,13 @@ class VideoUploadScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            
+
             const Spacer(),
-            
+
             // Upload button
             ElevatedButton(
-              onPressed: uploadState.selectedFile != null && !uploadState.isUploading
+              onPressed:
+                  uploadState.selectedFile != null && !uploadState.isUploading
                   ? () {
                       uploadNotifier.uploadVideo(uploadState.selectedFile!);
                     }
@@ -241,10 +259,7 @@ class VideoUploadScreen extends ConsumerWidget {
                         Text('アップロード中...'),
                       ],
                     )
-                  : const Text(
-                      'アップロード開始',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                  : const Text('アップロード開始', style: TextStyle(fontSize: 16)),
             ),
           ],
         ),
