@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../lib/features/manual_generation/data/services/image_extraction_service.dart';
 import '../../../../../lib/features/manual_generation/domain/entities/manual_step.dart';
 
 void main() {
+  // Initialize Flutter binding for integration tests
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('ImageExtractionService Integration', () {
     late ImageExtractionService service;
 
@@ -50,12 +53,13 @@ void main() {
           steps: steps,
         );
 
-        // Assert
+        // Assert - Since video processing requires platform-specific implementation,
+        // we expect the service to handle this gracefully by creating placeholders
         expect(result.isSuccess, isTrue);
         final imagePaths = result.data!;
         expect(imagePaths.length, equals(3));
 
-        // Verify all image files were created
+        // Verify all image files were created (either extracted or placeholder)
         for (int i = 0; i < imagePaths.length; i++) {
           final imagePath = imagePaths[i];
           expect(File(imagePath).existsSync(), isTrue);
@@ -108,7 +112,7 @@ void main() {
           steps: steps,
         );
 
-        // Assert
+        // Assert - Service should handle video processing gracefully
         expect(result.isSuccess, isTrue);
         final imagePaths = result.data!;
         expect(imagePaths.length, equals(2));
