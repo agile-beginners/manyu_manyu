@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
@@ -133,7 +134,7 @@ class GeminiImageService {
       print('  Base64サイズ: ${base64Image.length} 文字');
       print('  リクエストボディサイズ: ${jsonEncode(requestBody).length} 文字');
       print('  プロンプト長: ${prompt.length} 文字');
-      print('  リクエストボディ: ${requestBody}');
+      print('  リクエストボディ: $requestBody');
 
       // Make API call
       print('📤 Gemini画像生成API呼び出し中...');
@@ -182,10 +183,12 @@ class GeminiImageService {
 
 この画像に以下の視覚的アノテーションを追加してください：
 1. 説明で言及されている重要なUI要素を指す赤い矢印を追加
-2. クリック可能な領域を強調する赤い円または四角形を追加
+2. 操作対象領域、操作が影響を与える領域を強調する赤い円または四角形を追加
 3. 左上角に赤い円でステップ番号「$stepNumber」を追加
 4. クリックまたは操作する内容を説明する明確で読みやすいフォントのテキストラベルを追加
 5. アノテーションには明確に見える明るい対比色（赤、オレンジ）を使用
+
+すべてのテキストラベルと説明文は日本語で記載してください。
 
 目標は、この画像を誰かがこのステップを完了するために従うことができる明確な指導ガイドにすることです。
 
