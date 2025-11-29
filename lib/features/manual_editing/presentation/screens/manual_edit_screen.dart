@@ -60,44 +60,6 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
         title: const Text('マニュアル編集'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () {
-              final notifier = ref.read(manualEditNotifierProvider.notifier);
-              final manual = ref.read(manualEditNotifierProvider).value;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('PDFを生成しています...'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-
-              notifier.exportManual(widget.manualId).then((result) {
-                result.fold(
-                  (failure) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('PDF出力に失敗しました: ${failure.message}'),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  },
-                  (path) {
-                    Share.shareXFiles([
-                      XFile(path),
-                    ], text: manual?.title ?? 'マニュアル');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('PDFを保存しました: $path'),
-                        duration: const Duration(seconds: 5),
-                        action: SnackBarAction(label: 'OK', onPressed: () {}),
-                      ),
-                    );
-                  },
-                );
-              });
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.preview),
             onPressed: () {
               // Navigate to preview screen
@@ -131,6 +93,40 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
                           widget.manualId,
                           newDescription,
                         );
+                  },
+                  onDownloadPdf: () {
+                    final notifier = ref.read(manualEditNotifierProvider.notifier);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('PDFを生成しています...'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+
+                    notifier.exportManual(widget.manualId).then((result) {
+                      result.fold(
+                        (failure) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('PDF出力に失敗しました: ${failure.message}'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                        (path) {
+                          Share.shareXFiles([
+                            XFile(path),
+                          ], text: manual.title);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('PDFを保存しました: $path'),
+                              duration: const Duration(seconds: 5),
+                              action: SnackBarAction(label: 'OK', onPressed: () {}),
+                            ),
+                          );
+                        },
+                      );
+                    });
                   },
                 ),
               ),
