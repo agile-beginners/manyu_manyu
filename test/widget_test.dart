@@ -11,20 +11,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tokyo_flutter_hackathon_2025/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Video Manual Generator app loads', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const VideoManualGeneratorApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the app title is displayed.
+    expect(find.text('Video Manual Generator'), findsWidgets);
+    
+    // Verify that the video icon is displayed.
+    expect(find.byIcon(Icons.video_library), findsOneWidget);
+    
+    // Verify that the description text is displayed.
+    expect(find.text('Upload a video to automatically generate step-by-step manuals using AI'), findsOneWidget);
   });
 }
