@@ -3,6 +3,7 @@ class AppConstants {
   // Gemini API configuration
   static const String geminiApiBaseUrl = 'https://generativelanguage.googleapis.com';
   static const String geminiModel = 'gemini-3-pro-preview';
+  static const String geminiImageModel = 'gemini-3-pro-image-preview';
   static const String geminiApiVersion = 'v1beta';
   
   // File constraints

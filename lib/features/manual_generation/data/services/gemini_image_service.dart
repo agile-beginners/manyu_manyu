@@ -7,7 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
 
 /// Service for Gemini API image generation and editing
-/// Uses Gemini's built-in image generation capabilities
+/// Uses the Nano Banana Pro (gemini-3-pro-image-preview) model
 class GeminiImageService {
   final ApiClient _apiClient;
   final String _apiKey;
@@ -97,8 +97,8 @@ class GeminiImageService {
   }) async {
     try {
       final url =
-          '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/gemini-2.5-flash-image:generateContent';
-      print('🌐 画像生成API エンドポイント: $url');
+          '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/${AppConstants.geminiImageModel}:generateContent';
+      print('🌐 画像生成API エンドポイント (Nano Banana Pro): $url');
 
       // Encode image as base64
       final base64Image = base64Encode(imageBytes);
