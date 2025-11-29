@@ -1,7 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../network/api_client.dart';
+
 /// アプリケーションの基本的なプロバイダー定義
 /// 今後のタスクで具体的な機能プロバイダーが追加される
+
+/// API client provider
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient();
+});
 
 /// アプリケーションの状態を管理するプロバイダー
 final appStateProvider = StateProvider<AppState>((ref) {

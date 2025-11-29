@@ -1,9 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/config/env_config.dart';
 import 'core/constants/app_constants.dart';
+import 'core/debug/config_debug_screen.dart';
 import 'features/video_upload/presentation/screens/video_upload_screen.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter binding is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize environment configuration
+  await EnvConfig.initialize();
+  
   runApp(
     const ProviderScope(
       child: VideoManualGeneratorApp(),
@@ -103,6 +112,20 @@ class HomePage extends StatelessWidget {
                 icon: const Icon(Icons.upload_file),
                 label: const Text('動画をアップロード'),
               ),
+              if (kDebugMode) ...[
+                const SizedBox(height: AppConstants.defaultPadding),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ConfigDebugScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.settings),
+                  label: const Text('Configuration Debug'),
+                ),
+              ],
             ],
           ),
         ),

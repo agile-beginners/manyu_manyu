@@ -2,7 +2,6 @@
 class AppConstants {
   // API Configuration
   static const String geminiApiBaseUrl = 'https://generativelanguage.googleapis.com';
-  static const String nanoBananaApiBaseUrl = 'https://api.nanobanana.com';
   
   // File constraints
   static const int maxVideoSizeBytes = 100 * 1024 * 1024; // 100MB

@@ -39,7 +39,7 @@
   - **Property 2: アップロード完了時のUI状態遷移**
   - **検証対象: 要件 1.4**
 
-- [ ] 4. Gemini API統合の実装
+- [x] 4. Gemini API統合の実装
   - GeminiServiceクラスの作成
   - 動画解析API呼び出し機能
   - API応答のパース処理
