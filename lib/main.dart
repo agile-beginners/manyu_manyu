@@ -178,20 +178,6 @@ class _HomeContent extends StatelessWidget {
           _HighlightsRow(colorScheme: colorScheme),
           const SizedBox(height: AppConstants.largePadding * 1.3),
           _PrimaryActions(colorScheme: colorScheme),
-          if (kDebugMode) ...[
-            const SizedBox(height: AppConstants.defaultPadding),
-            TextButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ConfigDebugScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.settings_outlined),
-              label: const Text('設定デバッグ'),
-            ),
-          ],
         ],
       ),
     );
@@ -437,9 +423,9 @@ class _PrimaryActions extends StatelessWidget {
                 ),
               );
             },
-            icon: const Icon(Icons.upload_file_outlined, size: 22),
+            icon: const Icon(Icons.arrow_forward, size: 22),
             label: const Text(
-              '動画をアップロード',
+              'はじめる',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
