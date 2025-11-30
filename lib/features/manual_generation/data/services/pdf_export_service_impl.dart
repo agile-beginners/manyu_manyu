@@ -21,7 +21,8 @@ class PdfExportServiceImpl implements PdfExportService {
   @override
   Future<Result<String>> exportManual(Manual manual) async {
     try {
-      _log('exportManual start: title=${manual.title}, updatedAt=${manual.updatedAt}');
+      _log(
+          'exportManual start: title=${manual.title}, updatedAt=${manual.updatedAt}');
       await _ensureFontsLoaded();
 
       final theme = (_fontRegular != null && _fontBold != null)
@@ -81,9 +82,11 @@ class PdfExportServiceImpl implements PdfExportService {
     _fontsLoading = true;
     try {
       _log('Loading local fonts (TTF)...');
-      final regularData = await rootBundle.load('assets/fonts/MPLUS1p-Regular.ttf');
+      final regularData =
+          await rootBundle.load('assets/fonts/MPLUS1p-Regular.ttf');
       final boldData = await rootBundle.load('assets/fonts/MPLUS1p-Bold.ttf');
-      _log('Font sizes: regular=${regularData.lengthInBytes}, bold=${boldData.lengthInBytes}');
+      _log(
+          'Font sizes: regular=${regularData.lengthInBytes}, bold=${boldData.lengthInBytes}');
       _fontRegular = pw.Font.ttf(regularData);
       _fontBold = pw.Font.ttf(boldData);
       _log('Local fonts loaded successfully');
@@ -181,17 +184,49 @@ class PdfExportServiceImpl implements PdfExportService {
     final bytes = file.readAsBytesSync();
     final image = pw.MemoryImage(bytes);
     const radius = 6.0;
-    return pw.Container(
-      height: 200,
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey300, width: 1),
-        borderRadius: pw.BorderRadius.circular(radius),
-      ),
-      child: pw.ClipRRect(
-        horizontalRadius: radius,
-        verticalRadius: radius,
-        child: pw.Image(image, fit: pw.BoxFit.cover),
-      ),
+    return pw.LayoutBuilder(
+      builder: (context, constraints) {
+        final resolvedConstraints = constraints ?? const pw.BoxConstraints();
+        final pageFormat = context.page.pageFormat;
+        final availableWidth = resolvedConstraints.maxWidth.isFinite
+            ? resolvedConstraints.maxWidth
+            : pageFormat.availableWidth;
+        final availableHeight = resolvedConstraints.maxHeight.isFinite
+            ? resolvedConstraints.maxHeight
+            : pageFormat.availableHeight;
+
+        final imageWidth = image.width?.toDouble() ?? availableWidth;
+        final imageHeight = image.height?.toDouble() ?? availableHeight;
+        final aspectRatio = imageHeight == 0 ? 1.0 : imageWidth / imageHeight;
+
+        double targetWidth = availableWidth;
+        double targetHeight = targetWidth / aspectRatio;
+
+        if (targetHeight > availableHeight) {
+          targetHeight = availableHeight;
+          targetWidth = targetHeight * aspectRatio;
+        }
+
+        return pw.Container(
+          width: targetWidth,
+          height: targetHeight,
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.grey300, width: 1),
+            borderRadius: pw.BorderRadius.circular(radius),
+          ),
+          child: pw.ClipRRect(
+            horizontalRadius: radius,
+            verticalRadius: radius,
+            child: pw.Image(
+              image,
+              width: targetWidth,
+              height: targetHeight,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.center,
+            ),
+          ),
+        );
+      },
     );
   }
 

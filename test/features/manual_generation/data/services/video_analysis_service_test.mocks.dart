@@ -43,21 +43,34 @@ import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entiti
 class MockGeminiService extends _i1.Mock implements _i2.GeminiService {
   @override
   _i3.Future<_i4.Result<List<_i5.ManualStep>>> analyzeVideo(
-    _i6.VideoFile? videoFile,
-  ) =>
+    _i6.VideoFile? videoFile, {
+    String? manualInfo,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#analyzeVideo, [videoFile]),
+            Invocation.method(
+              #analyzeVideo,
+              [videoFile],
+              {#manualInfo: manualInfo},
+            ),
             returnValue: _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
               _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
                 this,
-                Invocation.method(#analyzeVideo, [videoFile]),
+                Invocation.method(
+                  #analyzeVideo,
+                  [videoFile],
+                  {#manualInfo: manualInfo},
+                ),
               ),
             ),
             returnValueForMissingStub:
                 _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
                   _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
                     this,
-                    Invocation.method(#analyzeVideo, [videoFile]),
+                    Invocation.method(
+                      #analyzeVideo,
+                      [videoFile],
+                      {#manualInfo: manualInfo},
+                    ),
                   ),
                 ),
           )

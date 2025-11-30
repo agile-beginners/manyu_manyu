@@ -8,6 +8,8 @@ class UploadStatusWidget extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onRetry;
   final VoidCallback? onStartAnalysis;
+  final String? manualInfo;
+  final ValueChanged<String>? onManualInfoChanged;
 
   const UploadStatusWidget({
     super.key,
@@ -15,6 +17,8 @@ class UploadStatusWidget extends StatelessWidget {
     this.errorMessage,
     this.onRetry,
     this.onStartAnalysis,
+    this.manualInfo,
+    this.onManualInfoChanged,
   });
 
   @override
@@ -93,6 +97,27 @@ class UploadStatusWidget extends StatelessWidget {
           ),
           
           const SizedBox(height: 20),
+
+          if (onManualInfoChanged != null) ...[
+            TextFormField(
+              key: ValueKey(uploadedVideo?.path ?? 'no-video'),
+              initialValue: manualInfo,
+              onChanged: onManualInfoChanged,
+              maxLines: 3,
+              minLines: 2,
+              decoration: InputDecoration(
+                labelText: '生成したいマニュアルの情報 (任意)',
+                hintText: '例: 操作対象や目的、重点的に説明したいポイントなど',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           
           // Analysis start button
           SizedBox(

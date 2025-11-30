@@ -40,9 +40,12 @@ class VideoAnalysisService {
   Future<Result<Manual>> analyzeVideoAndCreateManual(
     VideoFile videoFile, {
     String? customTitle,
+    String? manualInfo,
     void Function(ManualGenerationProgressStage stage)? onProgress,
   }) async {
     try {
+      final sanitizedManualInfo = manualInfo?.trim();
+
       // Create initial manual with generating status
       final manual = Manual(
         id: _uuid.v4(),
@@ -53,6 +56,10 @@ class VideoAnalysisService {
         videoPath: videoFile.path,
         videoDurationMs: videoFile.durationMs,
         status: ManualStatus.generating,
+        description:
+            (sanitizedManualInfo == null || sanitizedManualInfo.isEmpty)
+                ? null
+                : sanitizedManualInfo,
       );
 
       // Save initial manual
@@ -65,7 +72,10 @@ class VideoAnalysisService {
         // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
         onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
 
-        final analysisResult = await _geminiService.analyzeVideo(videoFile);
+        final analysisResult = await _geminiService.analyzeVideo(
+          videoFile,
+          manualInfo: sanitizedManualInfo,
+        );
         if (analysisResult.isFailure) {
           // Update manual status to failed
           final failedManual = manual.copyWith(
@@ -243,6 +253,7 @@ class VideoAnalysisService {
       return analyzeVideoAndCreateManual(
         videoFile,
         customTitle: manual.title,
+        manualInfo: manual.description,
         onProgress: onProgress,
       );
     } catch (e) {
