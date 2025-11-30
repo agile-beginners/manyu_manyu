@@ -29,58 +29,100 @@ class UploadStatusWidget extends StatelessWidget {
   }
 
   Widget _buildSuccessWidget(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade200),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'アップロード完了',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check_rounded,
                   color: Colors.green.shade700,
-                  fontWeight: FontWeight.w600,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'アップロード完了',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '動画の解析を開始できます',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           
           // Video file details
-          _buildVideoDetails(context),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _buildVideoDetails(context),
+          ),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
           // Analysis start button
           SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
+            height: 50,
+            child: FilledButton.icon(
               onPressed: onStartAnalysis,
               icon: onStartAnalysis == null 
                   ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.auto_awesome),
-              label: Text(onStartAnalysis == null ? '解析中...' : '動画解析を開始'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              label: Text(
+                onStartAnalysis == null ? '解析中...' : '動画解析を開始',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
               ),
             ),
           ),
@@ -91,46 +133,79 @@ class UploadStatusWidget extends StatelessWidget {
 
   Widget _buildErrorWidget(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.error,
-                color: Colors.red,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'アップロードエラー',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline_rounded,
                   color: Colors.red.shade700,
-                  fontWeight: FontWeight.w600,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'アップロードエラー',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.red.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'もう一度お試しください',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           
-          Text(
-            errorMessage!,
-            style: Theme.of(context).textTheme.bodyMedium,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              errorMessage!,
+              style: TextStyle(
+                color: Colors.red.shade900,
+                fontSize: 14,
+              ),
+            ),
           ),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
           // Retry button
           if (onRetry != null)
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
@@ -138,6 +213,9 @@ class UploadStatusWidget extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.red.shade700,
                   side: BorderSide(color: Colors.red.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -150,54 +228,50 @@ class UploadStatusWidget extends StatelessWidget {
     if (uploadedVideo == null) return const SizedBox.shrink();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow(context, 'ファイル名', uploadedVideo!.name),
-        const SizedBox(height: 4),
+        _buildDetailRow(context, Icons.description_outlined, 'ファイル名', uploadedVideo!.name),
+        const SizedBox(height: 8),
         _buildDetailRow(
           context, 
+          Icons.data_usage_outlined,
           'サイズ', 
           '${(uploadedVideo!.sizeInBytes / (1024 * 1024)).toStringAsFixed(1)} MB'
         ),
-        const SizedBox(height: 4),
-        _buildDetailRow(context, '形式', uploadedVideo!.format.toUpperCase()),
-        const SizedBox(height: 4),
-        _buildDetailRow(
-          context, 
-          'アップロード日時', 
-          _formatDateTime(uploadedVideo!.createdAt)
-        ),
+        const SizedBox(height: 8),
+        _buildDetailRow(context, Icons.video_file_outlined, '形式', uploadedVideo!.format.toUpperCase()),
       ],
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            '$label:',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey.shade600,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label:',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey.shade600,
           ),
         ),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
     );
-  }
-
-  String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.year}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.day.toString().padLeft(2, '0')} '
-           '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -22,45 +23,127 @@ class FileSelectionWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final supportedFormats = ref.watch(supportedFormatsProvider);
     final maxFileSize = ref.watch(maxFileSizeProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // File selection button
-        OutlinedButton.icon(
-          onPressed: isEnabled ? _selectFile : null,
-          icon: const Icon(Icons.video_file),
-          label: const Text('ファイルを選択'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Selected file info
-        if (selectedFile != null) ...[
+        // File selection area
+        if (selectedFile == null)
+          InkWell(
+            onTap: isEnabled ? _selectFile : null,
+            borderRadius: BorderRadius.circular(16),
+            child: DottedBorder(
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(16),
+              dashPattern: const [8, 4],
+              color: isEnabled
+                  ? colorScheme.primary.withOpacity(0.5)
+                  : colorScheme.onSurface.withOpacity(0.2),
+              strokeWidth: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isEnabled
+                      ? colorScheme.primary.withOpacity(0.04)
+                      : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.cloud_upload_outlined,
+                        size: 40,
+                        color: isEnabled
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withOpacity(0.4),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '動画ファイルをここにドロップ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isEnabled
+                            ? colorScheme.onSurface
+                            : colorScheme.onSurface.withOpacity(0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'または',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'ファイルを選択',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isEnabled
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withOpacity(0.5),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
+              color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.outlineVariant,
+              ),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.video_file,
-                  color: Theme.of(context).colorScheme.primary,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.video_file_rounded,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 32,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _getFileName(selectedFile!.path),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -69,13 +152,21 @@ class FileSelectionWidget extends ConsumerWidget {
                         future: selectedFile!.stat(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
-                            final sizeInMB = snapshot.data!.size / (1024 * 1024);
+                            final sizeInMB =
+                                snapshot.data!.size / (1024 * 1024);
                             return Text(
                               '${sizeInMB.toStringAsFixed(1)} MB',
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             );
                           }
-                          return const Text('サイズ計算中...');
+                          return const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
                         },
                       ),
                     ],
@@ -83,30 +174,40 @@ class FileSelectionWidget extends ConsumerWidget {
                 ),
                 if (isEnabled)
                   IconButton(
-                    onPressed: () => onFileSelected(selectedFile!),
-                    icon: const Icon(Icons.refresh),
-                    tooltip: '別のファイルを選択',
+                    onPressed: _selectFile,
+                    icon: const Icon(Icons.change_circle_outlined),
+                    tooltip: 'ファイルを変更',
+                    style: IconButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                    ),
                   ),
               ],
             ),
           ),
-        ],
-        
-        const SizedBox(height: 12),
-        
+
+        const SizedBox(height: 16),
+
         // Format and size info
-        Text(
-          '対応形式: ${supportedFormats.join(', ').toUpperCase()}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '最大ファイルサイズ: ${(maxFileSize / (1024 * 1024)).round()}MB',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 14,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                '対応形式: ${supportedFormats.join(', ').toUpperCase()}  •  最大: ${(maxFileSize / (1024 * 1024)).round()}MB',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
       ],
     );

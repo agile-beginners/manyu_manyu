@@ -268,29 +268,6 @@ class _AnalysisProgressSteps extends StatelessWidget {
     }
   }
 
-  bool _isStepCompleted({
-    required int stepIndex,
-    required bool isFullyCompleted,
-    required int activeIndex,
-  }) {
-    if (activeIndex < 0) return false;
-    if (isFullyCompleted) {
-      return activeIndex >= stepIndex;
-    }
-    return activeIndex > stepIndex;
-  }
-
-  bool _isStepActive({
-    required int stepIndex,
-    required bool isFullyCompleted,
-    required int activeIndex,
-  }) {
-    if (isFullyCompleted || activeIndex < 0) {
-      return false;
-    }
-    return activeIndex == stepIndex;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -303,150 +280,89 @@ class _AnalysisProgressSteps extends StatelessWidget {
     ];
 
     final labels = <VideoAnalysisPhase, String>{
-      VideoAnalysisPhase.analyzingVideo: '動画の解析中',
-      VideoAnalysisPhase.generatingImages: '説明画像の生成中',
-      VideoAnalysisPhase.completed: 'マニュアル生成完了',
+      VideoAnalysisPhase.analyzingVideo: '動画解析',
+      VideoAnalysisPhase.generatingImages: '画像生成',
+      VideoAnalysisPhase.completed: '完了',
     };
 
     final activeIndex = _phaseToIndex(state.displayPhase);
     final bool isFullyCompleted = state.phase == VideoAnalysisPhase.completed;
-    final disabledColor = theme.disabledColor;
 
-    final timelineSegments = <Widget>[];
-    final labelSegments = <Widget>[];
-
-    for (var i = 0; i < steps.length; i++) {
-      final stepPhase = steps[i];
-      final stepCompleted = _isStepCompleted(
-        stepIndex: i,
-        isFullyCompleted: isFullyCompleted,
-        activeIndex: activeIndex,
-      );
-      final stepActive = _isStepActive(
-        stepIndex: i,
-        isFullyCompleted: isFullyCompleted,
-        activeIndex: activeIndex,
-      );
-
-      final Widget circle = AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: stepCompleted
-              ? colorScheme.primary
-              : stepActive
-                  ? colorScheme.primaryContainer
-                  : colorScheme.surface,
-          border: Border.all(
-            color: stepCompleted || stepActive
-                ? colorScheme.primary
-                : disabledColor.withOpacity(0.5),
-            width: 2,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < steps.length; i++) ...[
+          _buildStep(
+            context,
+            index: i + 1,
+            label: labels[steps[i]]!,
+            isActive: i == activeIndex,
+            isCompleted: i < activeIndex || isFullyCompleted,
+            colorScheme: colorScheme,
           ),
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: stepCompleted
-              ? Icon(
-                  Icons.check,
-                  size: 18,
-                  color: colorScheme.onPrimary,
-                )
-              : Text(
-                  '${i + 1}',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                        color: stepActive
-                            ? colorScheme.onPrimaryContainer
-                            : disabledColor,
-                        fontWeight:
-                            stepActive ? FontWeight.w700 : FontWeight.w600,
-                      ) ??
-                      TextStyle(
-                        color: stepActive
-                            ? colorScheme.onPrimaryContainer
-                            : disabledColor,
-                        fontSize: 16,
-                        fontWeight:
-                            stepActive ? FontWeight.w700 : FontWeight.w600,
-                      ),
-                ),
-        ),
-      );
-
-      timelineSegments.add(circle);
-
-      if (i < steps.length - 1) {
-        final connectorCompleted = _isStepCompleted(
-          stepIndex: i,
-          isFullyCompleted: isFullyCompleted,
-          activeIndex: activeIndex,
-        );
-
-        timelineSegments.add(
-          Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              height: 3,
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: connectorCompleted
-                    ? colorScheme.primary
-                    : disabledColor.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(999),
-              ),
+          if (i < steps.length - 1)
+            Container(
+              width: 40,
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              color: i < activeIndex || isFullyCompleted
+                  ? colorScheme.primary
+                  : colorScheme.surfaceContainerHighest,
             ),
-          ),
-        );
-      }
+        ],
+      ],
+    );
+  }
 
-      final labelStyle = theme.textTheme.labelMedium?.copyWith(
-            color: stepCompleted || stepActive
-                ? colorScheme.primary
-                : disabledColor.withOpacity(0.9),
-            fontWeight: stepActive ? FontWeight.w700 : FontWeight.w500,
-          ) ??
-          TextStyle(
-            color: stepCompleted || stepActive
-                ? colorScheme.primary
-                : disabledColor.withOpacity(0.9),
-            fontSize: 12,
-            fontWeight: stepActive ? FontWeight.w700 : FontWeight.w500,
-          );
-
-      labelSegments.add(
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              labels[stepPhase]!,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: labelStyle,
-            ),
-          ),
-        ),
-      );
-    }
+  Widget _buildStep(
+    BuildContext context, {
+    required int index,
+    required String label,
+    required bool isActive,
+    required bool isCompleted,
+    required ColorScheme colorScheme,
+  }) {
+    final color = isCompleted || isActive
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant.withOpacity(0.5);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: timelineSegments,
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCompleted ? colorScheme.primary : Colors.transparent,
+            border: Border.all(
+              color: color,
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: isCompleted
+                ? Icon(
+                    Icons.check,
+                    size: 20,
+                    color: colorScheme.onPrimary,
+                  )
+                : Text(
+                    '$index',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: labelSegments,
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            color: color,
           ),
         ),
       ],
@@ -461,85 +377,34 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.largePadding * 1.5,
-        vertical: AppConstants.largePadding * 1.1,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-          ),
-        ],
-        border: Border.all(
-          color: colorScheme.primary.withOpacity(0.12),
+    return Column(
+      children: [
+        Icon(
+          Icons.cloud_upload_outlined,
+          size: 64,
+          color: colorScheme.primary,
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 72,
-            width: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary.withOpacity(0.16),
-                  colorScheme.primary.withOpacity(0.3),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: const Icon(
-              Icons.upload_file_outlined,
-              size: 36,
-              color: Colors.white,
-            ),
+        const SizedBox(height: 16),
+        const Text(
+          '動画をアップロードしてAI解析を開始',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(width: AppConstants.largePadding),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '動画をアップロードしてAI解析を開始',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F2937),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'マニュマニュがステップ抽出・注釈付け・PDF出力まで自動でサポート。動画を選択してアップロードを開始してください。',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Color(0xFF4B5563),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: const [
-                    _InfoChip(label: 'Geminiでステップ抽出'),
-                    _InfoChip(label: 'Nano Bananaで注釈付け'),
-                    _InfoChip(label: '最大20ステップ'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 24),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: const [
+            _InfoChip(label: 'Geminiでステップ抽出'),
+            _InfoChip(label: 'Nano Bananaで注釈付け'),
+            _InfoChip(label: '最大20ステップ'),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -561,36 +426,14 @@ class _UploadCard extends StatelessWidget {
       elevation: 0,
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: colorScheme.primary.withOpacity(0.08)),
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppConstants.largePadding),
+        padding: const EdgeInsets.all(32),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: const [
-                Icon(Icons.video_library_outlined, color: Color(0xFF2563EB)),
-                SizedBox(width: 8),
-                Text(
-                  '動画ファイルを選択',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            const Text(
-              'MP4/MOV/AVI/MKV 形式に対応。最大 500MB までアップロードできます。',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF4B5563),
-              ),
-            ),
-            const SizedBox(height: AppConstants.largePadding),
             FileSelectionWidget(
               selectedFile: uploadState.selectedFile,
               onFileSelected: (file) {
@@ -598,31 +441,20 @@ class _UploadCard extends StatelessWidget {
               },
               isEnabled: !uploadState.isUploading,
             ),
-            const SizedBox(height: AppConstants.defaultPadding),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: const [
-                _InfoChip(label: '対応形式: MP4 / MOV / AVI / MKV'),
-                _InfoChip(label: '上限: 500MB'),
-                _InfoChip(label: 'アップロード後にAI解析を開始'),
-              ],
-            ),
-            const SizedBox(height: AppConstants.largePadding * 0.8),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              height: 56,
+              child: FilledButton(
                 onPressed: uploadState.selectedFile != null &&
                         !uploadState.isUploading
                     ? () {
                         uploadNotifier.uploadVideo(uploadState.selectedFile!);
                       }
                     : null,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: AppConstants.defaultPadding),
+                style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: uploadState.isUploading
@@ -630,19 +462,28 @@ class _UploadCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
                           ),
-                          SizedBox(width: 8),
-                          Text('アップロード中...'),
+                          SizedBox(width: 12),
+                          Text(
+                            'アップロード中...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       )
                     : const Text(
                         'アップロードを開始',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
               ),
