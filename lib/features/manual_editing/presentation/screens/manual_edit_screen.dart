@@ -115,15 +115,28 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
                                   },
                                   child: const Text('閉じる'),
                                 ),
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Share.shareXFiles([
-                                      XFile(path),
-                                    ], text: manual.title);
-                                  },
-                                  icon: const Icon(Icons.save_alt),
-                                  label: const Text('保存する'),
+                                Builder(
+                                  builder: (context) {
+                                    return FilledButton.icon(
+                                      onPressed: () {
+                                        // Calculate the button's position before closing the dialog
+                                        final box = context.findRenderObject() as RenderBox?;
+                                        Rect? sharePositionOrigin;
+                                        if (box != null) {
+                                          sharePositionOrigin = box.localToGlobal(Offset.zero) & box.size;
+                                        }
+
+                                        Navigator.of(context).pop();
+                                        Share.shareXFiles(
+                                          [XFile(path)],
+                                          text: manual.title,
+                                          sharePositionOrigin: sharePositionOrigin,
+                                        );
+                                      },
+                                      icon: const Icon(Icons.save_alt),
+                                      label: const Text('保存する'),
+                                    );
+                                  }
                                 ),
                               ],
                             ),
