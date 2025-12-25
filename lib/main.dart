@@ -1,10 +1,8 @@
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/env_config.dart';
 import 'core/constants/app_constants.dart';
-import 'core/debug/config_debug_screen.dart';
 import 'features/video_upload/presentation/screens/video_upload_screen.dart';
 
 void main() async {
