@@ -4,13 +4,47 @@
 
 ## セットアップ
 
-### 1. 依存関係のインストール
+### 1. Flutter Version Manager（FVM）のセットアップ（推奨）
+
+このプロジェクトはFlutterのバージョンを統一するため、FVMを使用しています。
+
+#### FVMのインストール
 
 ```bash
-flutter pub get
+curl -fsSL https://fvm.app/install.sh | bash
 ```
 
-### 2. 環境変数の設定
+#### PATHの設定
+
+`~/.zshrc`または`~/.bashrc`に以下を追加：
+
+```bash
+export PATH="$HOME/fvm/bin:$PATH"
+```
+
+設定を反映：
+
+```bash
+source ~/.zshrc  # または source ~/.bashrc
+```
+
+#### Flutterバージョンのインストール
+
+```bash
+fvm install
+```
+
+このコマンドで、`.fvmrc`に記載されているFlutterバージョン（3.38.5）が自動的にインストールされます。
+
+**注意**: 今後のFlutterコマンドは`fvm`を前につけて実行してください。
+
+### 2. 依存関係のインストール
+
+```bash
+fvm flutter pub get
+```
+
+### 3. 環境変数の設定
 
 1. `.env.example`を`.env`にコピー:
 ```bash
@@ -37,7 +71,7 @@ GEMINI_API_KEY=your_actual_gemini_api_key_here
 ### 4. アプリの実行
 
 ```bash
-flutter run
+fvm flutter run
 ```
 
 ## 機能
@@ -63,7 +97,13 @@ flutter run
 ### テスト実行
 
 ```bash
-flutter test
+fvm flutter test
+```
+
+### コード生成（build_runner）
+
+```bash
+fvm flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 ## 注意事項
@@ -71,3 +111,5 @@ flutter test
 - `.env`ファイルはGitに含まれません（セキュリティのため）
 - API Keyは絶対にソースコードに直接書かないでください
 - 本番環境では適切なシークレット管理サービスを使用してください
+- FVMを使用することで、チーム全体で同じFlutterバージョンを使用できます
+- `.fvm`フォルダはgitignoreされており、各開発者のローカルに作成されます
