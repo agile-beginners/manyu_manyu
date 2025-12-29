@@ -38,12 +38,14 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
     Map<String, String>? headers,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#get, [url], {#headers: headers}),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+        Invocation.method(
+          #get,
+          [url],
+          {#headers: headers},
+        ),
+        returnValue:
+            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i3.Future<Map<String, dynamic>>);
 
   @override
   _i3.Future<Map<String, dynamic>> post(
@@ -52,12 +54,17 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
     dynamic body,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#post, [url], {#headers: headers, #body: body}),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+        Invocation.method(
+          #post,
+          [url],
+          {
+            #headers: headers,
+            #body: body,
+          },
+        ),
+        returnValue:
+            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i3.Future<Map<String, dynamic>>);
 
   @override
   _i3.Future<Map<String, dynamic>> put(
@@ -66,12 +73,17 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
     dynamic body,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#put, [url], {#headers: headers, #body: body}),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+        Invocation.method(
+          #put,
+          [url],
+          {
+            #headers: headers,
+            #body: body,
+          },
+        ),
+        returnValue:
+            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i3.Future<Map<String, dynamic>>);
 
   @override
   _i3.Future<Map<String, dynamic>> delete(
@@ -79,12 +91,14 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
     Map<String, String>? headers,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#delete, [url], {#headers: headers}),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+        Invocation.method(
+          #delete,
+          [url],
+          {#headers: headers},
+        ),
+        returnValue:
+            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i3.Future<Map<String, dynamic>>);
 
   @override
   _i3.Future<Map<String, dynamic>> multipartRequest(
@@ -95,20 +109,28 @@ class MockApiClient extends _i1.Mock implements _i2.ApiClient {
     List<_i4.MultipartFile>? files,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(
-              #multipartRequest,
-              [method, url],
-              {#headers: headers, #fields: fields, #files: files},
-            ),
-            returnValue: _i3.Future<Map<String, dynamic>>.value(
-              <String, dynamic>{},
-            ),
-          )
-          as _i3.Future<Map<String, dynamic>>);
+        Invocation.method(
+          #multipartRequest,
+          [
+            method,
+            url,
+          ],
+          {
+            #headers: headers,
+            #fields: fields,
+            #files: files,
+          },
+        ),
+        returnValue:
+            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i3.Future<Map<String, dynamic>>);
 
   @override
   void dispose() => super.noSuchMethod(
-    Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

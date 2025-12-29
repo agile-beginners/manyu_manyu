@@ -47,34 +47,31 @@ class MockGeminiService extends _i1.Mock implements _i2.GeminiService {
     String? manualInfo,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(
-              #analyzeVideo,
-              [videoFile],
-              {#manualInfo: manualInfo},
-            ),
-            returnValue: _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
-              _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
-                this,
-                Invocation.method(
-                  #analyzeVideo,
-                  [videoFile],
-                  {#manualInfo: manualInfo},
-                ),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
-                  _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
-                    this,
-                    Invocation.method(
-                      #analyzeVideo,
-                      [videoFile],
-                      {#manualInfo: manualInfo},
-                    ),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<_i5.ManualStep>>>);
+        Invocation.method(
+          #analyzeVideo,
+          [videoFile],
+          {#manualInfo: manualInfo},
+        ),
+        returnValue: _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
+            _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
+          this,
+          Invocation.method(
+            #analyzeVideo,
+            [videoFile],
+            {#manualInfo: manualInfo},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
+                _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
+          this,
+          Invocation.method(
+            #analyzeVideo,
+            [videoFile],
+            {#manualInfo: manualInfo},
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<_i5.ManualStep>>>);
 }
 
 /// A class which mocks [ManualRepository].
@@ -84,99 +81,127 @@ class MockManualRepository extends _i1.Mock implements _i8.ManualRepository {
   @override
   _i3.Future<_i4.Result<void>> saveManual(_i9.Manual? manual) =>
       (super.noSuchMethod(
-            Invocation.method(#saveManual, [manual]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#saveManual, [manual]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#saveManual, [manual]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+        Invocation.method(
+          #saveManual,
+          [manual],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #saveManual,
+            [manual],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #saveManual,
+            [manual],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
   _i3.Future<_i4.Result<_i9.Manual?>> getManual(String? id) =>
       (super.noSuchMethod(
-            Invocation.method(#getManual, [id]),
-            returnValue: _i3.Future<_i4.Result<_i9.Manual?>>.value(
-              _i7.dummyValue<_i4.Result<_i9.Manual?>>(
-                this,
-                Invocation.method(#getManual, [id]),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<_i9.Manual?>>.value(
-                  _i7.dummyValue<_i4.Result<_i9.Manual?>>(
-                    this,
-                    Invocation.method(#getManual, [id]),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<_i9.Manual?>>);
+        Invocation.method(
+          #getManual,
+          [id],
+        ),
+        returnValue: _i3.Future<_i4.Result<_i9.Manual?>>.value(
+            _i7.dummyValue<_i4.Result<_i9.Manual?>>(
+          this,
+          Invocation.method(
+            #getManual,
+            [id],
+          ),
+        )),
+        returnValueForMissingStub: _i3.Future<_i4.Result<_i9.Manual?>>.value(
+            _i7.dummyValue<_i4.Result<_i9.Manual?>>(
+          this,
+          Invocation.method(
+            #getManual,
+            [id],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<_i9.Manual?>>);
 
   @override
   _i3.Future<_i4.Result<void>> updateManual(_i9.Manual? manual) =>
       (super.noSuchMethod(
-            Invocation.method(#updateManual, [manual]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#updateManual, [manual]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#updateManual, [manual]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+        Invocation.method(
+          #updateManual,
+          [manual],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #updateManual,
+            [manual],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #updateManual,
+            [manual],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
-  _i3.Future<_i4.Result<void>> deleteManual(String? id) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteManual, [id]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#deleteManual, [id]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#deleteManual, [id]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+  _i3.Future<_i4.Result<void>> deleteManual(String? id) => (super.noSuchMethod(
+        Invocation.method(
+          #deleteManual,
+          [id],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #deleteManual,
+            [id],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #deleteManual,
+            [id],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
   _i3.Future<_i4.Result<List<_i9.Manual>>> getAllManuals() =>
       (super.noSuchMethod(
-            Invocation.method(#getAllManuals, []),
-            returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-              _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                this,
-                Invocation.method(#getAllManuals, []),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-                  _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                    this,
-                    Invocation.method(#getAllManuals, []),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<_i9.Manual>>>);
+        Invocation.method(
+          #getAllManuals,
+          [],
+        ),
+        returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+            _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #getAllManuals,
+            [],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+                _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #getAllManuals,
+            [],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<_i9.Manual>>>);
 
   @override
   _i3.Future<_i4.Result<void>> saveManualStep(
@@ -184,21 +209,36 @@ class MockManualRepository extends _i1.Mock implements _i8.ManualRepository {
     _i5.ManualStep? step,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#saveManualStep, [manualId, step]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#saveManualStep, [manualId, step]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#saveManualStep, [manualId, step]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+        Invocation.method(
+          #saveManualStep,
+          [
+            manualId,
+            step,
+          ],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #saveManualStep,
+            [
+              manualId,
+              step,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #saveManualStep,
+            [
+              manualId,
+              step,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
   _i3.Future<_i4.Result<void>> updateManualStep(
@@ -206,21 +246,36 @@ class MockManualRepository extends _i1.Mock implements _i8.ManualRepository {
     _i5.ManualStep? step,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#updateManualStep, [manualId, step]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#updateManualStep, [manualId, step]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#updateManualStep, [manualId, step]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+        Invocation.method(
+          #updateManualStep,
+          [
+            manualId,
+            step,
+          ],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #updateManualStep,
+            [
+              manualId,
+              step,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #updateManualStep,
+            [
+              manualId,
+              step,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
   _i3.Future<_i4.Result<void>> deleteManualStep(
@@ -228,128 +283,169 @@ class MockManualRepository extends _i1.Mock implements _i8.ManualRepository {
     String? stepId,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#deleteManualStep, [manualId, stepId]),
-            returnValue: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#deleteManualStep, [manualId, stepId]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<void>>.value(
-              _i7.dummyValue<_i4.Result<void>>(
-                this,
-                Invocation.method(#deleteManualStep, [manualId, stepId]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<void>>);
+        Invocation.method(
+          #deleteManualStep,
+          [
+            manualId,
+            stepId,
+          ],
+        ),
+        returnValue:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #deleteManualStep,
+            [
+              manualId,
+              stepId,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<void>>.value(_i7.dummyValue<_i4.Result<void>>(
+          this,
+          Invocation.method(
+            #deleteManualStep,
+            [
+              manualId,
+              stepId,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<void>>);
 
   @override
   _i3.Future<_i4.Result<List<_i5.ManualStep>>> getManualSteps(
-    String? manualId,
-  ) =>
+          String? manualId) =>
       (super.noSuchMethod(
-            Invocation.method(#getManualSteps, [manualId]),
-            returnValue: _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
-              _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
-                this,
-                Invocation.method(#getManualSteps, [manualId]),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
-                  _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
-                    this,
-                    Invocation.method(#getManualSteps, [manualId]),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<_i5.ManualStep>>>);
+        Invocation.method(
+          #getManualSteps,
+          [manualId],
+        ),
+        returnValue: _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
+            _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
+          this,
+          Invocation.method(
+            #getManualSteps,
+            [manualId],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<List<_i5.ManualStep>>>.value(
+                _i7.dummyValue<_i4.Result<List<_i5.ManualStep>>>(
+          this,
+          Invocation.method(
+            #getManualSteps,
+            [manualId],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<_i5.ManualStep>>>);
 
   @override
   _i3.Future<_i4.Result<List<_i9.Manual>>> searchManuals(String? query) =>
       (super.noSuchMethod(
-            Invocation.method(#searchManuals, [query]),
-            returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-              _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                this,
-                Invocation.method(#searchManuals, [query]),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-                  _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                    this,
-                    Invocation.method(#searchManuals, [query]),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<_i9.Manual>>>);
+        Invocation.method(
+          #searchManuals,
+          [query],
+        ),
+        returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+            _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #searchManuals,
+            [query],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+                _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #searchManuals,
+            [query],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<_i9.Manual>>>);
 
   @override
   _i3.Future<_i4.Result<List<_i9.Manual>>> getManualsByStatus(
-    _i9.ManualStatus? status,
-  ) =>
+          _i9.ManualStatus? status) =>
       (super.noSuchMethod(
-            Invocation.method(#getManualsByStatus, [status]),
-            returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-              _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                this,
-                Invocation.method(#getManualsByStatus, [status]),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
-                  _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
-                    this,
-                    Invocation.method(#getManualsByStatus, [status]),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<_i9.Manual>>>);
+        Invocation.method(
+          #getManualsByStatus,
+          [status],
+        ),
+        returnValue: _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+            _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #getManualsByStatus,
+            [status],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<List<_i9.Manual>>>.value(
+                _i7.dummyValue<_i4.Result<List<_i9.Manual>>>(
+          this,
+          Invocation.method(
+            #getManualsByStatus,
+            [status],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<_i9.Manual>>>);
 
   @override
   _i3.Future<_i4.Result<Map<String, dynamic>>> exportManualAsJson(
-    String? manualId,
-  ) =>
+          String? manualId) =>
       (super.noSuchMethod(
-            Invocation.method(#exportManualAsJson, [manualId]),
-            returnValue: _i3.Future<_i4.Result<Map<String, dynamic>>>.value(
-              _i7.dummyValue<_i4.Result<Map<String, dynamic>>>(
-                this,
-                Invocation.method(#exportManualAsJson, [manualId]),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<Map<String, dynamic>>>.value(
-                  _i7.dummyValue<_i4.Result<Map<String, dynamic>>>(
-                    this,
-                    Invocation.method(#exportManualAsJson, [manualId]),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<Map<String, dynamic>>>);
+        Invocation.method(
+          #exportManualAsJson,
+          [manualId],
+        ),
+        returnValue: _i3.Future<_i4.Result<Map<String, dynamic>>>.value(
+            _i7.dummyValue<_i4.Result<Map<String, dynamic>>>(
+          this,
+          Invocation.method(
+            #exportManualAsJson,
+            [manualId],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i3.Future<_i4.Result<Map<String, dynamic>>>.value(
+                _i7.dummyValue<_i4.Result<Map<String, dynamic>>>(
+          this,
+          Invocation.method(
+            #exportManualAsJson,
+            [manualId],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<Map<String, dynamic>>>);
 
   @override
   _i3.Future<_i4.Result<_i9.Manual>> importManualFromJson(
-    Map<String, dynamic>? json,
-  ) =>
+          Map<String, dynamic>? json) =>
       (super.noSuchMethod(
-            Invocation.method(#importManualFromJson, [json]),
-            returnValue: _i3.Future<_i4.Result<_i9.Manual>>.value(
-              _i7.dummyValue<_i4.Result<_i9.Manual>>(
-                this,
-                Invocation.method(#importManualFromJson, [json]),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<_i9.Manual>>.value(
-              _i7.dummyValue<_i4.Result<_i9.Manual>>(
-                this,
-                Invocation.method(#importManualFromJson, [json]),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<_i9.Manual>>);
+        Invocation.method(
+          #importManualFromJson,
+          [json],
+        ),
+        returnValue: _i3.Future<_i4.Result<_i9.Manual>>.value(
+            _i7.dummyValue<_i4.Result<_i9.Manual>>(
+          this,
+          Invocation.method(
+            #importManualFromJson,
+            [json],
+          ),
+        )),
+        returnValueForMissingStub: _i3.Future<_i4.Result<_i9.Manual>>.value(
+            _i7.dummyValue<_i4.Result<_i9.Manual>>(
+          this,
+          Invocation.method(
+            #importManualFromJson,
+            [json],
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<_i9.Manual>>);
 }
 
 /// A class which mocks [ImageExtractionService].
@@ -363,49 +459,60 @@ class MockImageExtractionService extends _i1.Mock
     required List<_i5.ManualStep>? steps,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#extractImagesFromVideo, [], {
+        Invocation.method(
+          #extractImagesFromVideo,
+          [],
+          {
+            #videoPath: videoPath,
+            #steps: steps,
+          },
+        ),
+        returnValue: _i3.Future<_i4.Result<List<String>>>.value(
+            _i7.dummyValue<_i4.Result<List<String>>>(
+          this,
+          Invocation.method(
+            #extractImagesFromVideo,
+            [],
+            {
               #videoPath: videoPath,
               #steps: steps,
-            }),
-            returnValue: _i3.Future<_i4.Result<List<String>>>.value(
-              _i7.dummyValue<_i4.Result<List<String>>>(
-                this,
-                Invocation.method(#extractImagesFromVideo, [], {
-                  #videoPath: videoPath,
-                  #steps: steps,
-                }),
-              ),
-            ),
-            returnValueForMissingStub:
-                _i3.Future<_i4.Result<List<String>>>.value(
-                  _i7.dummyValue<_i4.Result<List<String>>>(
-                    this,
-                    Invocation.method(#extractImagesFromVideo, [], {
-                      #videoPath: videoPath,
-                      #steps: steps,
-                    }),
-                  ),
-                ),
-          )
-          as _i3.Future<_i4.Result<List<String>>>);
+            },
+          ),
+        )),
+        returnValueForMissingStub: _i3.Future<_i4.Result<List<String>>>.value(
+            _i7.dummyValue<_i4.Result<List<String>>>(
+          this,
+          Invocation.method(
+            #extractImagesFromVideo,
+            [],
+            {
+              #videoPath: videoPath,
+              #steps: steps,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<List<String>>>);
 
   @override
-  _i3.Future<void> cleanupTempFiles() =>
-      (super.noSuchMethod(
-            Invocation.method(#cleanupTempFiles, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> cleanupTempFiles() => (super.noSuchMethod(
+        Invocation.method(
+          #cleanupTempFiles,
+          [],
+        ),
+        returnValue: _i3.Future<void>.value(),
+        returnValueForMissingStub: _i3.Future<void>.value(),
+      ) as _i3.Future<void>);
 
   @override
   _i3.Future<int> getEstimatedFrameCount(String? videoPath) =>
       (super.noSuchMethod(
-            Invocation.method(#getEstimatedFrameCount, [videoPath]),
-            returnValue: _i3.Future<int>.value(0),
-            returnValueForMissingStub: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
+        Invocation.method(
+          #getEstimatedFrameCount,
+          [videoPath],
+        ),
+        returnValue: _i3.Future<int>.value(0),
+        returnValueForMissingStub: _i3.Future<int>.value(0),
+      ) as _i3.Future<int>);
 }
 
 /// A class which mocks [ImageAnnotationService].
@@ -421,34 +528,43 @@ class MockImageAnnotationService extends _i1.Mock
     required int? stepNumber,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#generateAnnotatedImage, [], {
+        Invocation.method(
+          #generateAnnotatedImage,
+          [],
+          {
+            #originalImagePath: originalImagePath,
+            #stepTitle: stepTitle,
+            #stepDescription: stepDescription,
+            #stepNumber: stepNumber,
+          },
+        ),
+        returnValue: _i3.Future<_i4.Result<String>>.value(
+            _i7.dummyValue<_i4.Result<String>>(
+          this,
+          Invocation.method(
+            #generateAnnotatedImage,
+            [],
+            {
               #originalImagePath: originalImagePath,
               #stepTitle: stepTitle,
               #stepDescription: stepDescription,
               #stepNumber: stepNumber,
-            }),
-            returnValue: _i3.Future<_i4.Result<String>>.value(
-              _i7.dummyValue<_i4.Result<String>>(
-                this,
-                Invocation.method(#generateAnnotatedImage, [], {
-                  #originalImagePath: originalImagePath,
-                  #stepTitle: stepTitle,
-                  #stepDescription: stepDescription,
-                  #stepNumber: stepNumber,
-                }),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i4.Result<String>>.value(
-              _i7.dummyValue<_i4.Result<String>>(
-                this,
-                Invocation.method(#generateAnnotatedImage, [], {
-                  #originalImagePath: originalImagePath,
-                  #stepTitle: stepTitle,
-                  #stepDescription: stepDescription,
-                  #stepNumber: stepNumber,
-                }),
-              ),
-            ),
-          )
-          as _i3.Future<_i4.Result<String>>);
+            },
+          ),
+        )),
+        returnValueForMissingStub: _i3.Future<_i4.Result<String>>.value(
+            _i7.dummyValue<_i4.Result<String>>(
+          this,
+          Invocation.method(
+            #generateAnnotatedImage,
+            [],
+            {
+              #originalImagePath: originalImagePath,
+              #stepTitle: stepTitle,
+              #stepDescription: stepDescription,
+              #stepNumber: stepNumber,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i4.Result<String>>);
 }
