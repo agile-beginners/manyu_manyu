@@ -90,7 +90,7 @@ class UploadStatusWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: _buildVideoDetails(context),
@@ -113,7 +113,7 @@ class UploadStatusWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.6),
+                fillColor: Colors.white.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 20),
@@ -212,7 +212,7 @@ class UploadStatusWidget extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

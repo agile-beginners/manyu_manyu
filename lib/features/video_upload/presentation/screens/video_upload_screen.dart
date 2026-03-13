@@ -329,7 +329,7 @@ class _AnalysisProgressSteps extends StatelessWidget {
   }) {
     final color = isCompleted || isActive
         ? colorScheme.primary
-        : colorScheme.onSurfaceVariant.withOpacity(0.5);
+        : colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -432,7 +432,7 @@ class _UploadCard extends StatelessWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -546,7 +546,7 @@ class _StatusCard extends ConsumerWidget {
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.primary.withOpacity(0.08)),
+        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.08)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppConstants.largePadding),

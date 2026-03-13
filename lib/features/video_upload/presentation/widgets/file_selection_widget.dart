@@ -38,16 +38,16 @@ class FileSelectionWidget extends ConsumerWidget {
               radius: const Radius.circular(16),
               dashPattern: const [8, 4],
               color: isEnabled
-                  ? colorScheme.primary.withOpacity(0.5)
-                  : colorScheme.onSurface.withOpacity(0.2),
+                  ? colorScheme.primary.withValues(alpha: 0.5)
+                  : colorScheme.onSurface.withValues(alpha: 0.2),
               strokeWidth: 2,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: isEnabled
-                      ? colorScheme.primary.withOpacity(0.04)
-                      : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      ? colorScheme.primary.withValues(alpha: 0.04)
+                      : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -60,7 +60,7 @@ class FileSelectionWidget extends ConsumerWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.1),
+                            color: colorScheme.primary.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -71,7 +71,7 @@ class FileSelectionWidget extends ConsumerWidget {
                         size: 40,
                         color: isEnabled
                             ? colorScheme.primary
-                            : colorScheme.onSurface.withOpacity(0.4),
+                            : colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -82,7 +82,7 @@ class FileSelectionWidget extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                         color: isEnabled
                             ? colorScheme.onSurface
-                            : colorScheme.onSurface.withOpacity(0.5),
+                            : colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -101,7 +101,7 @@ class FileSelectionWidget extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                         color: isEnabled
                             ? colorScheme.primary
-                            : colorScheme.onSurface.withOpacity(0.5),
+                            : colorScheme.onSurface.withValues(alpha: 0.5),
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -114,7 +114,7 @@ class FileSelectionWidget extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: colorScheme.outlineVariant,

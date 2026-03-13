@@ -34,7 +34,6 @@ class VideoManualGeneratorApp extends ConsumerWidget {
           seedColor: seedColor,
           brightness: Brightness.light,
           surface: surfaceTint,
-          background: surfaceTint,
         ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
@@ -94,8 +93,8 @@ class HomePage extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colorScheme.primary.withOpacity(0.12),
-                colorScheme.primary.withOpacity(0.04),
+                colorScheme.primary.withValues(alpha: 0.12),
+                colorScheme.primary.withValues(alpha: 0.04),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -143,7 +142,7 @@ class _HomeContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 22,
             offset: const Offset(0, 16),
           ),
@@ -195,9 +194,11 @@ class _Badge extends StatelessWidget {
         vertical: AppConstants.defaultPadding / 2,
       ),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.08),
+        color: colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.18)),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.18),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -235,15 +236,15 @@ class _HeroIcon extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary.withOpacity(0.14),
-            colorScheme.primary.withOpacity(0.32),
+            colorScheme.primary.withValues(alpha: 0.14),
+            colorScheme.primary.withValues(alpha: 0.32),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.25),
+            color: colorScheme.primary.withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 12),
           ),
@@ -258,7 +259,7 @@ class _HeroIcon extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 10),
               ),
@@ -345,9 +346,11 @@ class _Highlight extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.04),
+        color: colorScheme.primary.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.12)),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.12),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,7 +362,7 @@ class _Highlight extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, 8),
                 ),
