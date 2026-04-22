@@ -1,16 +1,26 @@
 # フィーチャーファースト再構成 実装計画
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Note:** この計画はユーザーが手動で実装する想定です。各ステップに具体的なコマンドと期待される結果を記載しています。
+> **Note:** この計画はユーザーが手動で実装する想定で、設計書の最新方針に合わせて更新している。
 
 **Goal:** `lib/features/` 配下を feature-first の原則に沿って再構成し、`manual_editing` / `manual_generation` / `manual_preview` / `pdf_export` を `manual/` に統合、`video_upload` を `video/` に改名する。
 
-**Architecture:** 段階的フェーズで進める。各フェーズで `fvm flutter analyze` が通る状態を保ち、フェーズ単位でコミットする。フェーズ 1 → 7 の順で依存関係があるため、順番に実行する。
+**Implementation Principles:**
+- `video` の責務は `VideoFile` を返すところまでとする
+- `video` から `manual/generation` への受け渡しは、画面遷移時に `VideoFile` を引数として渡す
+- `domain/` には `entities` と `value_objects` のみ残す
+- Repository interface は `data/repositories/`、外部 service interface は `data/services/` に置く
+- `application` の service は concrete class を直接置き、`Ref` を受け取ってよい
+- query provider は `presentation` ではなく `application` 側に置く
+- service ファイルには service 本体・service provider・関連 query provider を近接配置してよい
+- controller は画面固有状態に専念し、query provider 更新は service に委譲する
 
-**Tech Stack:** Flutter 3.38.5 (fvm)、Dart、Riverpod (手書き `StateNotifier`)、build_runner (freezed / json_serializable)、git
+**Tech Stack:** Flutter (fvm), Dart, Riverpod / Riverpod Generator, build_runner, json_serializable, git
 
-**関連ドキュメント:** [設計ドキュメント](../specs/2026-04-21-feature-first-restructure-design.md)
+**関連ドキュメント:**
+- [設計ドキュメント](../specs/2026-04-21-feature-first-restructure-design.md)
+- [移動マッピング](../specs/2026-04-21-feature-first-restructure-mapping.md)
 
 ---
 
@@ -19,322 +29,163 @@
 - プロジェクトルートは `/Users/8mitsuboy/workspaces/manyu_manyu`
 - 以降のコマンドは全てプロジェクトルートで実行する想定
 - Flutter は `fvm flutter ...` で実行する
-- 現在のブランチは `feature/update-riverpod`。ワーキングツリーに未コミットの変更（`macos/Podfile.lock`, `pubspec.lock`）がある
+- 実装前に `git status` でワーキングツリーを確認する
+- 未コミット変更がある場合は、このリファクタリングと無関係な差分を混ぜない
 
 ---
 
 ## Phase 0: 準備
 
-### Task 0.1: ワーキングツリーを整える
+### Task 0.1: 現状確認
 
-- [x] **Step 0.1.1: 現在のブランチとステータスを確認**
+- [ ] **Step 0.1.1: ブランチと差分を確認**
 
 ```bash
 git status
 git branch --show-current
 ```
 
-期待: 現在のブランチと、未コミットの変更が見える。
-
-- [x] **Step 0.1.2: リファクタリング用のブランチを作成**
-
-現在のブランチ `feature/update-riverpod` と混ぜないために、新しいブランチを切る:
+- [ ] **Step 0.1.2: リファクタリング用ブランチを切る**
 
 ```bash
 git checkout -b refactor/feature-first-restructure
 ```
 
-期待: `Switched to a new branch 'refactor/feature-first-restructure'`
-
-- [x] **Step 0.1.3: 未コミットの変更を一旦コミット or stash**
-
-`macos/Podfile.lock`, `pubspec.lock` は環境依存の自動生成物。リファクタリングとは無関係なのでまずコミット（or stash）して、以降の作業を綺麗に進める:
+- [ ] **Step 0.1.3: `fvm flutter analyze` を実行し、現状エラーの有無を記録**
 
 ```bash
-# コミットする場合:
-git add macos/Podfile.lock pubspec.lock
-git commit -m "chore: update generated lock files"
-
-# or stash する場合:
-git stash push -m "wip: lock files"
+fvm flutter analyze
 ```
 
-期待: `git status` で clean な状態になる。
+期待: 現状の基準点を把握できる。
 
 ---
 
-## Phase 1: 空フォルダの削除
+## Phase 1: 空 feature と `video` の整備
 
-`manual_preview/` と `pdf_export/` は中身が `.gitkeep` のみの空フォルダ。先に削除しておく。
+このフェーズでは依存の少ない箇所から片付ける。
 
-### Task 1.1: 空フォルダを削除してコミット
+### Task 1.1: 空 feature を削除
 
-- [ ] **Step 1.1.1: 削除対象フォルダの中身を確認**
+- [ ] **Step 1.1.1: `manual_preview/`, `pdf_export/` が空であることを確認**
 
 ```bash
-ls -la lib/features/manual_preview/*/
-ls -la lib/features/pdf_export/*/
+find lib/features/manual_preview -type f
+find lib/features/pdf_export -type f
 ```
 
-期待: 各フォルダに `.gitkeep` しかないことを確認する。
-
-- [ ] **Step 1.1.2: `manual_preview/`, `pdf_export/` を削除**
+- [ ] **Step 1.1.2: 空 feature を削除**
 
 ```bash
 git rm -r lib/features/manual_preview
 git rm -r lib/features/pdf_export
 ```
 
-期待: 対象ファイル（.gitkeep）が削除済みとしてステージされる。
+### Task 1.2: `video_upload` を `video` に改名
 
-- [ ] **Step 1.1.3: analyze で問題ないことを確認**
-
-```bash
-fvm flutter analyze
-```
-
-期待: エラーなし。空フォルダ削除では import 破損は起きない。
-
-- [ ] **Step 1.1.4: コミット**
-
-```bash
-git commit -m "refactor: remove empty manual_preview and pdf_export feature folders"
-```
-
----
-
-## Phase 2: `manual/` ディレクトリ構造を作成
-
-リファクタ先のフォルダを先に作っておく（`.gitkeep` 付き）。これで以降のフェーズで段階的にファイルを移動できる。
-
-### Task 2.1: `manual/` 配下のディレクトリを作成
-
-- [ ] **Step 2.1.1: ディレクトリを mkdir で作成**
-
-```bash
-mkdir -p lib/features/manual/application
-mkdir -p lib/features/manual/data/repositories
-mkdir -p lib/features/manual/data/services
-mkdir -p lib/features/manual/domain/entities
-mkdir -p lib/features/manual/domain/repositories
-mkdir -p lib/features/manual/domain/services
-mkdir -p lib/features/manual/domain/value_objects
-mkdir -p lib/features/manual/presentation/generation/providers
-mkdir -p lib/features/manual/presentation/generation/screens
-mkdir -p lib/features/manual/presentation/generation/states
-mkdir -p lib/features/manual/presentation/generation/widgets
-mkdir -p lib/features/manual/presentation/editing/providers
-mkdir -p lib/features/manual/presentation/editing/screens
-mkdir -p lib/features/manual/presentation/editing/widgets
-mkdir -p lib/features/manual/presentation/preview/screens
-mkdir -p lib/features/manual/presentation/preview/widgets
-mkdir -p lib/features/manual/presentation/export/widgets
-```
-
-期待: 全ディレクトリが作成される。`ls lib/features/manual/` で確認。
-
-- [ ] **Step 2.1.2: 各ディレクトリに `.gitkeep` を配置**
-
-```bash
-find lib/features/manual -type d -empty -exec touch {}/.gitkeep \;
-```
-
-期待: 全ての空ディレクトリに `.gitkeep` ができる。`find lib/features/manual -name '.gitkeep'` で確認。
-
-- [ ] **Step 2.1.3: analyze で問題ないことを確認**
-
-```bash
-fvm flutter analyze
-```
-
-期待: エラーなし。
-
-- [ ] **Step 2.1.4: コミット**
-
-```bash
-git add lib/features/manual
-git commit -m "refactor: scaffold manual/ feature directory structure"
-```
-
----
-
-## Phase 3: `video_upload` → `video` へのリネーム
-
-Manual 側より先に video 側をリネームする（依存関係が少ないため）。
-
-### Task 3.1: フォルダ全体を `video/` にリネーム
-
-- [ ] **Step 3.1.1: フォルダ rename**
+- [ ] **Step 1.2.1: フォルダをリネーム**
 
 ```bash
 git mv lib/features/video_upload lib/features/video
 ```
 
-期待: `lib/features/video/` が出現し、`lib/features/video_upload/` は消える。
-
-- [ ] **Step 3.1.2: analyze で破損確認**
+- [ ] **Step 1.2.2: `VideoRepository` interface を `data/repositories/` に寄せる**
 
 ```bash
-fvm flutter analyze
+git mv lib/features/video/domain/repositories/video_repository.dart lib/features/video/data/repositories/video_repository.dart
 ```
 
-期待: **多数のエラー** が出る（`video_upload` を import している箇所が壊れる）。どのファイルが壊れているかを把握する。
+- [ ] **Step 1.2.3: 空になった `domain/repositories/` を削除**
 
-### Task 3.2: barrel ファイルを削除
+```bash
+rm -rf lib/features/video/domain/repositories
+```
 
-- [ ] **Step 3.2.1: barrel ファイルを削除**
+- [ ] **Step 1.2.4: barrel ファイルを削除**
 
 ```bash
 git rm lib/features/video/data/data.dart
 git rm lib/features/video/domain/domain.dart
 ```
 
-期待: 2 ファイル削除。
+### Task 1.3: `video` 側の controller 名を整理
 
-### Task 3.3: Provider ファイルを Controller にリネーム
-
-ファイル `lib/features/video/presentation/providers/video_upload_providers.dart` をリネーム。
-
-- [ ] **Step 3.3.1: ファイル rename**
+- [ ] **Step 1.3.1: provider ファイルを controller 名に変更**
 
 ```bash
 git mv lib/features/video/presentation/providers/video_upload_providers.dart lib/features/video/presentation/providers/video_upload_controller.dart
 ```
 
-- [ ] **Step 3.3.2: ファイル内部のクラス名を変更**
+- [ ] **Step 1.3.2: `VideoUploadStateNotifier` を `VideoUploadController` にリネーム**
 
-`lib/features/video/presentation/providers/video_upload_controller.dart` を開いて、以下を置換:
+対象:
+- クラス名
+- コンストラクタ名
+- `StateNotifierProvider<...>` の型引数
 
-- `class VideoUploadStateNotifier` → `class VideoUploadController`
-- `VideoUploadStateNotifier(...)` コンストラクタの自己参照 → `VideoUploadController(...)`
-- `StateNotifierProvider<VideoUploadStateNotifier, ...>` → `StateNotifierProvider<VideoUploadController, ...>`
+### Task 1.4: `video_upload` 参照の import を更新
 
-具体的には下記の行を置換:
-
-```dart
-// Before (68行目)
-class VideoUploadStateNotifier extends StateNotifier<VideoUploadState> {
-  final VideoRepository _repository;
-
-  VideoUploadStateNotifier(this._repository) : super(const VideoUploadState());
-
-// After
-class VideoUploadController extends StateNotifier<VideoUploadState> {
-  final VideoRepository _repository;
-
-  VideoUploadController(this._repository) : super(const VideoUploadState());
-```
-
-```dart
-// Before (154行目あたり)
-final videoUploadStateProvider = StateNotifierProvider<VideoUploadStateNotifier, VideoUploadState>((ref) {
-  final repository = ref.watch(videoRepositoryProvider);
-  return VideoUploadStateNotifier(repository);
-});
-
-// After
-final videoUploadStateProvider = StateNotifierProvider<VideoUploadController, VideoUploadState>((ref) {
-  final repository = ref.watch(videoRepositoryProvider);
-  return VideoUploadController(repository);
-});
-```
-
-### Task 3.4: import 文の全置換
-
-他のファイルから `video_upload` を参照しているコードを `video` に置き換える。
-
-- [ ] **Step 3.4.1: 参照元ファイルを洗い出す**
+- [ ] **Step 1.4.1: 参照元を洗い出す**
 
 ```bash
-rg -l "features/video_upload" lib/
+rg -n "features/video_upload|video_upload_providers\\.dart|VideoUploadStateNotifier" lib
 ```
 
-期待される出力例:
-```
-lib/features/home/presentation/widgets/primary_actions.dart
-lib/features/manual_generation/presentation/providers/gemini_providers.dart
-lib/features/manual_generation/presentation/providers/video_analysis_providers.dart
-lib/features/video/presentation/screens/video_upload_screen.dart
-lib/features/video/presentation/widgets/file_selection_widget.dart
-lib/features/video/presentation/widgets/upload_progress_widget.dart
-lib/features/video/presentation/widgets/upload_status_widget.dart
-```
+- [ ] **Step 1.4.2: パスとクラス名を更新**
 
-- [ ] **Step 3.4.2: 各ファイルで `video_upload/` を `video/` に置換**
+方針:
+- `features/video_upload` → `features/video`
+- `video_upload_providers.dart` → `video_upload_controller.dart`
+- `VideoUploadStateNotifier` → `VideoUploadController`
 
-`sed` で一括置換する（macOS の sed は `-i ''` が必要）:
+### Task 1.5: `video` の責務境界を実装で合わせる準備
 
-```bash
-rg -l "features/video_upload" lib/ | xargs sed -i '' 's|features/video_upload|features/video|g'
-```
+- [ ] **Step 1.5.1: `video/presentation/screens/video_upload_screen.dart` の現状を確認**
 
-期待: `rg "features/video_upload" lib/` で何もマッチしない状態になる。
+確認ポイント:
+- `manual_generation` や `manual_editing` を直接 import していないか
+- upload 完了後に解析開始まで握っていないか
 
-- [ ] **Step 3.4.3: barrel 経由の import を直接 import に置換**
+- [ ] **Step 1.5.2: この時点では、`video` が最終的に `VideoFile` を渡すだけの画面になる前提をメモする**
 
-`data/data.dart` や `domain/domain.dart` を import しているコードがあれば個別に修正する:
+このフェーズではまだ完全移行しなくてよいが、以降のフェーズで `manual/generation` に責務を寄せる前提を崩さない。
 
-```bash
-rg "features/video/data/data\\.dart|features/video/domain/domain\\.dart" lib/
-```
-
-ヒットしたファイルを開き、例えば以下のように直接 import に変更:
-
-```dart
-// Before
-import 'package:manyu_manyu/features/video/domain/domain.dart';
-
-// After（必要なファイルを個別に指定）
-import 'package:manyu_manyu/features/video/domain/entities/video_file.dart';
-import 'package:manyu_manyu/features/video/domain/repositories/video_repository.dart';
-```
-
-- [ ] **Step 3.4.4: Provider 名の参照も追随（必要なら）**
-
-`VideoUploadStateNotifier` を直接参照しているコードがあれば `VideoUploadController` に変更:
-
-```bash
-rg "VideoUploadStateNotifier" lib/
-```
-
-ヒットした場合、各ファイルで `VideoUploadStateNotifier` → `VideoUploadController` に置換。ヒットしなければスキップ。
-
-### Task 3.5: analyze と動作確認
-
-- [ ] **Step 3.5.1: analyze で全エラー解消を確認**
+- [ ] **Step 1.5.3: analyze**
 
 ```bash
 fvm flutter analyze
 ```
 
-期待: `No issues found!`（または元々あった warning のみ）。
-
-- [ ] **Step 3.5.2: build_runner 実行（必要な場合のみ）**
-
-`.g.dart` が影響を受ける変更はないはずだが、念のため:
-
-```bash
-fvm dart run build_runner build --delete-conflicting-outputs
-```
-
-期待: 成功メッセージ。
-
-- [ ] **Step 3.5.3: コミット**
-
-```bash
-git add -A
-git commit -m "refactor: rename video_upload feature to video and rename providers to controller"
-```
-
 ---
 
-## Phase 4: `manual/` への domain / data 統合
+## Phase 2: `manual` の domain / data 統合
 
-Manual 集約の中核（`manual.dart`, `manual_step.dart`）を含むため、このフェーズで Manual の所有権が確立される。
+このフェーズで `Manual` 集約の所有権を `manual/` に寄せる。
 
-### Task 4.1: `manual_generation/domain/` を `manual/domain/` へ統合
+### Task 2.1: `manual/` の基本構造を整える
 
-- [ ] **Step 4.1.1: entities を移動**
+- [ ] **Step 2.1.1: 既存の `manual/` 配下を確認**
+
+```bash
+find lib/features/manual -maxdepth 4 -type d | sort
+```
+
+- [ ] **Step 2.1.2: 不足ディレクトリがあれば補完**
+
+必要に応じて:
+- `application/`
+- `data/repositories/`
+- `data/services/`
+- `domain/entities/`
+- `domain/value_objects/`
+- `presentation/generation/`
+- `presentation/editing/`
+- `presentation/preview/`
+- `presentation/export/`
+
+### Task 2.2: `manual_generation/domain` を `manual/domain` / `manual/data` に寄せる
+
+- [ ] **Step 2.2.1: entities を移動**
 
 ```bash
 git mv lib/features/manual_generation/domain/entities/manual.dart lib/features/manual/domain/entities/manual.dart
@@ -343,228 +194,209 @@ git mv lib/features/manual_generation/domain/entities/manual_step.dart lib/featu
 git mv lib/features/manual_generation/domain/entities/manual_step.g.dart lib/features/manual/domain/entities/manual_step.g.dart
 ```
 
-- [ ] **Step 4.1.2: repositories を移動**
+- [ ] **Step 2.2.2: `ManualStatus` を `manual_status.dart` に分離**
 
-```bash
-git mv lib/features/manual_generation/domain/repositories/manual_repository.dart lib/features/manual/domain/repositories/manual_repository.dart
-```
+作業内容:
+- `manual.dart` から enum を切り出す
+- `lib/features/manual/domain/entities/manual_status.dart` を作成
+- `manual.dart` 側は import に切り替える
 
-- [ ] **Step 4.1.3: services を移動**
-
-```bash
-git mv lib/features/manual_generation/domain/services/gemini_service.dart lib/features/manual/domain/services/gemini_service.dart
-git mv lib/features/manual_generation/domain/services/image_annotation_service.dart lib/features/manual/domain/services/image_annotation_service.dart
-git mv lib/features/manual_generation/domain/services/pdf_export_service.dart lib/features/manual/domain/services/pdf_export_service.dart
-```
-
-- [ ] **Step 4.1.4: value_objects を移動**
+- [ ] **Step 2.2.3: value object を移動**
 
 ```bash
 git mv lib/features/manual_generation/domain/value_objects/manual_generation_progress_stage.dart lib/features/manual/domain/value_objects/manual_generation_progress_stage.dart
 ```
 
-- [ ] **Step 4.1.5: barrel ファイルを削除**
+- [ ] **Step 2.2.4: Repository interface を `data/repositories/` へ移動**
 
 ```bash
-git rm lib/features/manual_generation/domain/domain.dart
+git mv lib/features/manual_generation/domain/repositories/manual_repository.dart lib/features/manual/data/repositories/manual_repository.dart
 ```
 
-### Task 4.2: `manual_editing/domain/` を `manual/domain/` へ統合
-
-- [ ] **Step 4.2.1: service を移動**
+- [ ] **Step 2.2.5: 外部 service interface を `data/services/` へ移動**
 
 ```bash
-git mv lib/features/manual_editing/domain/services/manual_edit_service.dart lib/features/manual/domain/services/manual_edit_service.dart
+git mv lib/features/manual_generation/domain/services/gemini_service.dart lib/features/manual/data/services/video_analysis_service.dart
+git mv lib/features/manual_generation/domain/services/image_annotation_service.dart lib/features/manual/data/services/image_annotation_service.dart
+git mv lib/features/manual_generation/domain/services/pdf_export_service.dart lib/features/manual/data/services/pdf_export_service.dart
 ```
 
-- [ ] **Step 4.2.2: barrel ファイルを削除**
+- [ ] **Step 2.2.6: interface 名を設計に合わせて整理**
 
-```bash
-git rm lib/features/manual_editing/domain/domain.dart
-```
+方針:
+- abstract `GeminiService` → `VideoAnalysisService`
+- concrete Gemini 実装は `GeminiVideoAnalysisService`
 
-### Task 4.3: `manual_generation/data/` を `manual/data/` へ統合
+### Task 2.3: `manual_generation/data` を `manual/data` に寄せる
 
-- [ ] **Step 4.3.1: repositories を移動**
+- [ ] **Step 2.3.1: repository 実装を移動**
 
 ```bash
 git mv lib/features/manual_generation/data/repositories/manual_repository_impl.dart lib/features/manual/data/repositories/manual_repository_impl.dart
 ```
 
-- [ ] **Step 4.3.2: services を移動**
+- [ ] **Step 2.3.2: 外部 service 実装を移動**
 
 ```bash
 git mv lib/features/manual_generation/data/services/gemini_image_service.dart lib/features/manual/data/services/gemini_image_service.dart
-git mv lib/features/manual_generation/data/services/gemini_service.dart lib/features/manual/data/services/gemini_service.dart
 git mv lib/features/manual_generation/data/services/image_extraction_service.dart lib/features/manual/data/services/image_extraction_service.dart
 git mv lib/features/manual_generation/data/services/nano_banana_service.dart lib/features/manual/data/services/nano_banana_service.dart
 git mv lib/features/manual_generation/data/services/pdf_export_service_impl.dart lib/features/manual/data/services/pdf_export_service_impl.dart
-git mv lib/features/manual_generation/data/services/video_analysis_service.dart lib/features/manual/data/services/video_analysis_service.dart
 ```
 
-- [ ] **Step 4.3.3: barrel ファイルを削除**
+- [ ] **Step 2.3.3: concrete Gemini 実装を移動・改名**
 
 ```bash
+git mv lib/features/manual_generation/data/services/gemini_service.dart lib/features/manual/data/services/gemini_video_analysis_service.dart
+```
+
+### Task 2.4: `manual_editing` の domain / data を整理
+
+- [ ] **Step 2.4.1: `manual_editing/domain/services/manual_edit_service.dart` を削除**
+
+理由: application service は abstract class を作らず concrete class を直接 `application/` に置くため。
+
+```bash
+git rm lib/features/manual_editing/domain/services/manual_edit_service.dart
+```
+
+- [ ] **Step 2.4.2: `manual_editing/data/services/manual_edit_service_impl.dart` は後続フェーズで `manual/application/manual_edit_service.dart` に移す前提で保持**
+
+この段階では位置だけ確認し、次フェーズで application 化する。
+
+- [ ] **Step 2.4.3: 不要 barrel を削除**
+
+```bash
+git rm lib/features/manual_generation/domain/domain.dart
+git rm lib/features/manual_editing/domain/domain.dart
 git rm lib/features/manual_generation/data/data.dart
-```
-
-### Task 4.4: `manual_editing/data/` を `manual/data/` へ統合
-
-- [ ] **Step 4.4.1: service を移動**
-
-```bash
-git mv lib/features/manual_editing/data/services/manual_edit_service_impl.dart lib/features/manual/data/services/manual_edit_service_impl.dart
-```
-
-- [ ] **Step 4.4.2: barrel ファイルを削除**
-
-```bash
 git rm lib/features/manual_editing/data/data.dart
 ```
 
-### Task 4.5: import パスの一括更新
-
-この時点で `manual/presentation/generation/` と `manual/presentation/editing/` 配下は**まだ空**（Phase 5 で移動）。しかし Phase 5 で参照する `manual/domain/` と `manual/data/` は既に所定の位置にあるので、以下を**実行しておく**:
-
-1. `manual_generation/domain/*` → `manual/domain/*` の参照更新
-2. `manual_generation/data/*` → `manual/data/*` の参照更新
-3. `manual_editing/domain/*` → `manual/domain/*` の参照更新
-4. `manual_editing/data/*` → `manual/data/*` の参照更新
-
-この参照更新をすることで、Phase 5 でファイルを移動した後の analyze 失敗を最小化できる。
-
-- [ ] **Step 4.5.1: 参照元ファイルを洗い出す**
-
-```bash
-rg -l "features/manual_generation/(domain|data)" lib/
-rg -l "features/manual_editing/(domain|data)" lib/
-```
-
-- [ ] **Step 4.5.2: `manual_generation/domain` への参照を更新**
-
-```bash
-rg -l "features/manual_generation/domain" lib/ | xargs sed -i '' 's|features/manual_generation/domain|features/manual/domain|g'
-```
-
-- [ ] **Step 4.5.3: `manual_generation/data` への参照を更新**
-
-```bash
-rg -l "features/manual_generation/data" lib/ | xargs sed -i '' 's|features/manual_generation/data|features/manual/data|g'
-```
-
-- [ ] **Step 4.5.4: `manual_editing/domain` への参照を更新**
-
-```bash
-rg -l "features/manual_editing/domain" lib/ | xargs sed -i '' 's|features/manual_editing/domain|features/manual/domain|g'
-```
-
-- [ ] **Step 4.5.5: `manual_editing/data` への参照を更新**
-
-```bash
-rg -l "features/manual_editing/data" lib/ | xargs sed -i '' 's|features/manual_editing/data|features/manual/data|g'
-```
-
-- [ ] **Step 4.5.6: barrel 経由の import を直接 import に置換**
-
-barrel ファイル（`data.dart`, `domain.dart`）を参照しているコードがあれば個別修正:
-
-```bash
-rg "features/manual/(data/data|domain/domain)\\.dart" lib/
-```
-
-ヒットしたファイルを開き、具体的なファイルへの import に書き換える。例:
-
-```dart
-// Before
-import 'package:manyu_manyu/features/manual/data/data.dart';
-
-// After
-import 'package:manyu_manyu/features/manual/data/services/manual_edit_service_impl.dart';
-```
-
-### Task 4.6: `.gitkeep` の削除
-
-実ファイルが入ったディレクトリの `.gitkeep` は不要:
-
-- [ ] **Step 4.6.1: 実ファイルが入った階層の .gitkeep を削除**
-
-```bash
-find lib/features/manual/data -name '.gitkeep' -delete
-find lib/features/manual/domain -name '.gitkeep' -delete
-```
-
-期待: `manual/data/` と `manual/domain/` 配下の `.gitkeep` が消える。
-
-### Task 4.7: analyze 確認とコミット
-
-- [ ] **Step 4.7.1: analyze 実行**
+- [ ] **Step 2.4.4: analyze**
 
 ```bash
 fvm flutter analyze
 ```
 
-期待: **エラーが残っている可能性あり**（Phase 5 で解決）。この時点ではエラーが残っていても、「内容が `manual_editing/presentation/` または `manual_generation/presentation/` 配下のファイルから発生している」ことのみ確認する。他の場所からのエラーは修正する。
+期待: presentation 由来のエラーは残り得るが、domain / data の移動方針自体は揃っている。
 
-- [ ] **Step 4.7.2: manual_editing/presentation/ と manual_generation/presentation/ 由来以外のエラーを修正**
+---
 
-`fvm flutter analyze` の出力から、これら 2 フォルダ以外のエラーがあれば個別対応。典型例:
-- home から manual を参照している箇所
-- video から manual を参照している箇所
-- core から manual を参照している箇所（あれば）
+## Phase 3: `manual/application` への service 再配置
 
-- [ ] **Step 4.7.3: build_runner 実行**
+このフェーズで設計の中心だった application service の責務を実装に落とす。
+
+### Task 3.1: `ManualCreationService` を作る
+
+- [ ] **Step 3.1.1: 旧 orchestration 実装を `manual/application/manual_creation_service.dart` へ移動**
+
+移行元:
+- `lib/features/manual_generation/data/services/video_analysis_service.dart`
+
+移行先:
+- `lib/features/manual/application/manual_creation_service.dart`
+
+- [ ] **Step 3.1.2: クラス名を `ManualCreationService` に変更**
+
+- [ ] **Step 3.1.3: service ファイル内に関連 provider を定義**
+
+対象例:
+- `manualCreationServiceProvider`
+- 生成系 query provider
+- 生成完了後に invalidate 対象となる provider
+
+### Task 3.2: `ManualEditService` を作る
+
+- [ ] **Step 3.2.1: 旧 `manual_edit_service_impl.dart` を `manual/application/manual_edit_service.dart` へ移動**
 
 ```bash
-fvm dart run build_runner build --delete-conflicting-outputs
+git mv lib/features/manual_editing/data/services/manual_edit_service_impl.dart lib/features/manual/application/manual_edit_service.dart
 ```
 
-期待: 成功。`manual.g.dart`, `manual_step.g.dart` が新しい位置で再生成される。
+- [ ] **Step 3.2.2: クラス名を `ManualEditService` に変更**
 
-- [ ] **Step 4.7.4: コミット**
+- [ ] **Step 3.2.3: service ファイルに以下を近接配置**
+
+対象例:
+- `manualEditServiceProvider`
+- `manualProvider`
+- `allManualsProvider`
+- `manualStepCountProvider`
+- `canExportManualProvider`
+
+### Task 3.3: `ManualExportService` を作る
+
+- [ ] **Step 3.3.1: PDF 出力の orchestration を `manual/application/manual_export_service.dart` に切り出す**
+
+方針:
+- presentation から `PdfExportService` 実装を直接呼ばない
+- `ManualExportService` が repository / export service / query 更新を調停する
+
+### Task 3.4: `Ref` と `invalidate` の責務を service 側に寄せる
+
+- [ ] **Step 3.4.1: 各 application service が `Ref` を受け取るようにする**
+
+- [ ] **Step 3.4.2: 書き込み成功後に関連 query provider を `invalidate` する**
+
+例:
+- Manual 生成後
+  - `manualProvider(newManualId)`
+  - `allManualsProvider`
+- Manual 編集後
+  - `manualProvider(manualId)`
+  - `allManualsProvider`
+  - 必要に応じて派生 provider
+
+### Task 3.5: `main.dart` 依存の配線を増やさない
+
+- [ ] **Step 3.5.1: `main.dart` に feature ごとの override を追加しない**
+
+方針:
+- `main.dart` は `ProviderScope` の起動と全体初期化に留める
+- feature 実装の詳細は service / provider 側に閉じる
+
+- [ ] **Step 3.5.2: analyze**
 
 ```bash
-git add -A
-git commit -m "refactor: consolidate manual_generation and manual_editing domain/data into manual/"
+fvm flutter analyze
 ```
 
 ---
 
-## Phase 5: `manual/presentation/` への統合 + Controller リネーム
+## Phase 4: `manual/presentation` の統合
 
-最も作業量が多いフェーズ。manual_generation と manual_editing の presentation を移動し、Provider ファイルを Controller にリネームする。
+### Task 4.1: `manual_generation/presentation` を `manual/presentation/generation` に統合
 
-### Task 5.1: `manual_generation/presentation/` を `manual/presentation/generation/` へ移動
-
-- [ ] **Step 5.1.1: providers を移動（Controller リネームも同時に）**
-
-```bash
-git mv lib/features/manual_generation/presentation/providers/gemini_providers.dart lib/features/manual/presentation/generation/providers/gemini_providers.dart
-git mv lib/features/manual_generation/presentation/providers/video_analysis_providers.dart lib/features/manual/presentation/generation/providers/video_analysis_controller.dart
-```
-
-**注意:** `gemini_providers.dart` はリネームせず、ファイル名そのまま。`video_analysis_providers.dart` は `video_analysis_controller.dart` にリネーム。
-
-- [ ] **Step 5.1.2: states を移動**
+- [ ] **Step 4.1.1: state を移動**
 
 ```bash
 git mv lib/features/manual_generation/presentation/states/video_analysis_state.dart lib/features/manual/presentation/generation/states/video_analysis_state.dart
 ```
 
-### Task 5.2: `manual_editing/presentation/` を `manual/presentation/editing/` へ移動
+- [ ] **Step 4.1.2: generation controller を移動・改名**
 
-- [ ] **Step 5.2.1: providers を移動（Controller リネームも同時に）**
+```bash
+git mv lib/features/manual_generation/presentation/providers/video_analysis_providers.dart lib/features/manual/presentation/generation/providers/video_analysis_controller.dart
+```
+
+- [ ] **Step 4.1.3: `VideoAnalysisNotifier` を `VideoAnalysisController` に変更**
+
+### Task 4.2: `manual_editing/presentation` を `manual/presentation/editing` に統合
+
+- [ ] **Step 4.2.1: controller を移動・改名**
 
 ```bash
 git mv lib/features/manual_editing/presentation/providers/manual_edit_providers.dart lib/features/manual/presentation/editing/providers/manual_edit_controller.dart
 ```
 
-- [ ] **Step 5.2.2: screens を移動**
+- [ ] **Step 4.2.2: screen を移動**
 
 ```bash
 git mv lib/features/manual_editing/presentation/screens/manual_edit_screen.dart lib/features/manual/presentation/editing/screens/manual_edit_screen.dart
 ```
 
-- [ ] **Step 5.2.3: widgets を移動**
+- [ ] **Step 4.2.3: widget を移動**
 
 ```bash
 git mv lib/features/manual_editing/presentation/widgets/manual_header_widget.dart lib/features/manual/presentation/editing/widgets/manual_header_widget.dart
@@ -572,200 +404,89 @@ git mv lib/features/manual_editing/presentation/widgets/step_edit_dialog.dart li
 git mv lib/features/manual_editing/presentation/widgets/step_list_widget.dart lib/features/manual/presentation/editing/widgets/step_list_widget.dart
 ```
 
-- [ ] **Step 5.2.4: barrel ファイル削除**
+- [ ] **Step 4.2.4: `ManualEditNotifier` を `ManualEditController` に変更**
+
+### Task 4.3: `video -> manual/generation` の受け渡しを実装で反映
+
+- [ ] **Step 4.3.1: `video_upload_screen.dart` は upload 完了後に `VideoFile` を引数として generation 画面へ遷移する形に変更**
+
+- [ ] **Step 4.3.2: generation 画面 / controller / service が `VideoFile` を入力として `ManualCreationService` を呼ぶように変更**
+
+- [ ] **Step 4.3.3: `video` 側から manual の query provider や service ロジックを直接読まないことを確認**
+
+### Task 4.4: import を更新
+
+- [ ] **Step 4.4.1: 旧 feature パス参照を洗い出す**
 
 ```bash
-git rm lib/features/manual_editing/presentation/presentation.dart
+rg -n "features/manual_generation|features/manual_editing|features/video_upload" lib
 ```
 
-（`manual_generation/presentation/presentation.dart` は存在しないが、もし存在する場合は同様に削除）
+- [ ] **Step 4.4.2: import を新パスへ更新**
 
-### Task 5.3: `video_analysis_controller.dart` 内のクラス名変更
+方針:
+- `manual_generation` / `manual_editing` / `video_upload` を残さない
+- barrel file import を直接 import に置き換える
+- 相対 import が複雑な箇所は `package:manyu_manyu/...` を優先してよい
 
-ファイル `lib/features/manual/presentation/generation/providers/video_analysis_controller.dart` を開く。
-
-- [ ] **Step 5.3.1: `VideoAnalysisNotifier` を `VideoAnalysisController` に置換**
-
-エディタで以下を一括置換（ファイル全体で約 3 箇所）:
-
-- `class VideoAnalysisNotifier` → `class VideoAnalysisController`
-- `VideoAnalysisNotifier(` → `VideoAnalysisController(`
-- `StateNotifierProvider<VideoAnalysisNotifier,` → `StateNotifierProvider<VideoAnalysisController,`
-
-または sed:
-
-```bash
-sed -i '' 's/VideoAnalysisNotifier/VideoAnalysisController/g' lib/features/manual/presentation/generation/providers/video_analysis_controller.dart
-```
-
-### Task 5.4: `manual_edit_controller.dart` 内のクラス名変更
-
-ファイル `lib/features/manual/presentation/editing/providers/manual_edit_controller.dart` を開く。
-
-- [ ] **Step 5.4.1: `ManualEditNotifier` を `ManualEditController` に置換**
-
-```bash
-sed -i '' 's/ManualEditNotifier/ManualEditController/g' lib/features/manual/presentation/editing/providers/manual_edit_controller.dart
-```
-
-期待: `class ManualEditNotifier`, `ManualEditNotifier(`, `StateNotifierProvider<ManualEditNotifier, ...>` が全て `ManualEditController` に置換される。
-
-### Task 5.5: 新しいパスに合わせて import を更新
-
-前フェーズで `manual_generation/` や `manual_editing/` の domain/data は既に `manual/domain`, `manual/data` に書き換え済み。ここでは **presentation 配下**の参照を更新する。
-
-- [ ] **Step 5.5.1: 他ファイルからの参照を更新**
-
-```bash
-rg -l "features/manual_generation/presentation" lib/
-rg -l "features/manual_editing/presentation" lib/
-```
-
-ヒットしたファイルで:
-- `features/manual_generation/presentation` → `features/manual/presentation/generation`
-- `features/manual_editing/presentation` → `features/manual/presentation/editing`
-
-sed で一括:
-
-```bash
-rg -l "features/manual_generation/presentation" lib/ | xargs sed -i '' 's|features/manual_generation/presentation|features/manual/presentation/generation|g'
-rg -l "features/manual_editing/presentation" lib/ | xargs sed -i '' 's|features/manual_editing/presentation|features/manual/presentation/editing|g'
-```
-
-- [ ] **Step 5.5.2: ファイル名リネームに伴う参照を更新**
-
-`video_upload_providers.dart` → `video_upload_controller.dart`
-`manual_edit_providers.dart` → `manual_edit_controller.dart`
-`video_analysis_providers.dart` → `video_analysis_controller.dart`
-
-他ファイルから旧ファイル名を import している箇所を確認:
-
-```bash
-rg "video_upload_providers\\.dart|manual_edit_providers\\.dart|video_analysis_providers\\.dart" lib/
-```
-
-ヒットしたら sed で一括更新:
-
-```bash
-rg -l "video_upload_providers\\.dart" lib/ | xargs sed -i '' 's|video_upload_providers\.dart|video_upload_controller.dart|g'
-rg -l "manual_edit_providers\\.dart" lib/ | xargs sed -i '' 's|manual_edit_providers\.dart|manual_edit_controller.dart|g'
-rg -l "video_analysis_providers\\.dart" lib/ | xargs sed -i '' 's|video_analysis_providers\.dart|video_analysis_controller.dart|g'
-```
-
-- [ ] **Step 5.5.3: Controller クラス名参照を更新**
-
-```bash
-rg -l "ManualEditNotifier" lib/ | xargs sed -i '' 's/ManualEditNotifier/ManualEditController/g' 2>/dev/null || true
-rg -l "VideoAnalysisNotifier" lib/ | xargs sed -i '' 's/VideoAnalysisNotifier/VideoAnalysisController/g' 2>/dev/null || true
-```
-
-（既に対象ファイル自体は置換済みなので、他参照があれば追加置換）
-
-- [ ] **Step 5.5.4: manual/ 内の相対 import を検証**
-
-移動したファイル内の相対 import が壊れている可能性。各ファイルの `import '../../...';` パスを確認する。
-
-例えば `manual/presentation/editing/screens/manual_edit_screen.dart` が元々 `manual_editing/presentation/screens/` にあったなら、相対パスは `../../../../core/...` だったはず。新しい位置は `manual/presentation/editing/screens/` なので、`../../../../core/...` は 4 段上がって `lib/` 直下を想定するが、新しい位置では 5 段上がることになる、ような破綻が起きうる。
-
-**手順:**
-
-```bash
-rg "import '\\.\\./" lib/features/manual/
-rg "import '\\.\\./" lib/features/video/
-```
-
-ヒットした各ファイルを開き、相対 import のパスの階層数が正しいか確認。必要なら `package:manyu_manyu/...` 形式の絶対 import に書き換える（メンテ性も上がる）。
-
-### Task 5.6: `.gitkeep` の削除
-
-- [ ] **Step 5.6.1: 実ファイルが入った階層の .gitkeep を削除**
-
-```bash
-find lib/features/manual/presentation/generation -name '.gitkeep' -delete
-find lib/features/manual/presentation/editing -name '.gitkeep' -delete
-```
-
-ただし `manual/presentation/preview/` と `manual/presentation/export/` はまだ空なので `.gitkeep` を残す。
-
-### Task 5.7: build_runner & analyze
-
-- [ ] **Step 5.7.1: build_runner で再生成**
+- [ ] **Step 4.4.3: build_runner**
 
 ```bash
 fvm dart run build_runner build --delete-conflicting-outputs
 ```
 
-期待: 成功。`.g.dart` ファイルが新しい位置で正しく生成される。
-
-- [ ] **Step 5.7.2: analyze で全エラー解消を確認**
+- [ ] **Step 4.4.4: analyze**
 
 ```bash
 fvm flutter analyze
 ```
 
-期待: `No issues found!`（または元々あった warning のみ）。
-
-エラーが残る場合は、出力を見て:
-- import パスの間違い → 該当箇所を修正
-- クラス名の参照漏れ → 該当箇所を修正
-
-までを繰り返す。
-
-- [ ] **Step 5.7.3: コミット**
-
-```bash
-git add -A
-git commit -m "refactor: move manual_editing and manual_generation presentation into manual/presentation with epic sub-folders"
-```
-
 ---
 
-## Phase 6: 古い空フォルダのクリーンアップ
+## Phase 5: 旧 feature の撤去と最終整合
 
-### Task 6.1: 空になったフォルダを削除
+### Task 5.1: 不要ディレクトリと `.gitkeep` を整理
 
-- [ ] **Step 6.1.1: 空フォルダの確認**
+- [ ] **Step 5.1.1: 実ファイルが入った新ディレクトリの `.gitkeep` を削除**
+
+```bash
+find lib/features/manual -name '.gitkeep' -delete
+find lib/features/video -name '.gitkeep' -delete
+```
+
+必要なら空ディレクトリ分だけ戻す。
+
+- [ ] **Step 5.1.2: 旧 feature の残存ファイルを確認**
 
 ```bash
 find lib/features/manual_editing -type f
 find lib/features/manual_generation -type f
 ```
 
-期待: **出力なし**（全ファイルが manual/ に移動済みのため）。
-
-もし残っているファイルがあれば、Phase 4 / 5 の移動漏れ。該当ファイルを適切な場所に移動する。
-
-- [ ] **Step 6.1.2: 空フォルダを削除**
+- [ ] **Step 5.1.3: 空になった旧 feature を削除**
 
 ```bash
 rm -rf lib/features/manual_editing
 rm -rf lib/features/manual_generation
 ```
 
-期待: これらのフォルダが消える。git は空フォルダを追跡しないので `git rm` は不要（ファイルが既に移動済みで git 側では削除として追跡済み）。
+### Task 5.2: 参照漏れを確認
 
-- [ ] **Step 6.1.3: analyze で最終確認**
-
-```bash
-fvm flutter analyze
-```
-
-期待: `No issues found!`
-
-- [ ] **Step 6.1.4: コミット**
+- [ ] **Step 5.2.1: 旧 feature 名が残っていないか確認**
 
 ```bash
-git add -A
-git commit -m "refactor: remove emptied manual_editing and manual_generation directories"
+rg -n "manual_editing|manual_generation|manual_preview|pdf_export|video_upload" lib
 ```
 
----
+- [ ] **Step 5.2.2: 旧クラス名が残っていないか確認**
 
-## Phase 7: 最終検証
+```bash
+rg -n "VideoUploadStateNotifier|VideoAnalysisNotifier|ManualEditNotifier|ManualEditServiceDataImpl" lib
+```
 
-### Task 7.1: クリーンビルドと動作確認
+### Task 5.3: 最終検証
 
-- [ ] **Step 7.1.1: クリーンビルド**
+- [ ] **Step 5.3.1: clean build**
 
 ```bash
 fvm flutter clean
@@ -773,25 +494,19 @@ fvm flutter pub get
 fvm dart run build_runner build --delete-conflicting-outputs
 ```
 
-期待: 全て成功。
-
-- [ ] **Step 7.1.2: analyze**
+- [ ] **Step 5.3.2: analyze**
 
 ```bash
 fvm flutter analyze
 ```
 
-期待: `No issues found!`
-
-- [ ] **Step 7.1.3: test 実行（テストがあれば）**
+- [ ] **Step 5.3.3: test**
 
 ```bash
 fvm flutter test
 ```
 
-期待: 既存テストがあれば通る。なければ `No tests found` で OK。
-
-- [ ] **Step 7.1.4: アプリを起動して手動動作確認**
+- [ ] **Step 5.3.4: 動作確認**
 
 ```bash
 fvm flutter run
@@ -799,121 +514,35 @@ fvm flutter run
 
 確認項目:
 - アプリが起動する
-- ホーム画面が表示される
-- 「はじめる」ボタンで動画アップロード画面に遷移する
-- （もし既存データがあれば）マニュアル編集画面が正常に開く
-- （もし Gemini API キーが設定されていれば）マニュアル生成フローが動く
+- ホームから動画アップロード画面へ遷移できる
+- upload 完了後、`VideoFile` を引数に generation 画面へ遷移できる
+- generation -> editing の流れが動く
+- 既存 Manual の編集が動く
+- PDF 出力が動く
 
-エラーが出る場合は該当箇所を修正してコミットを追加する。
-
-- [ ] **Step 7.1.5: フォルダ構造の最終確認**
-
-```bash
-tree lib/features -L 3
-```
-
-期待される構造（抜粋）:
-```
-lib/features
-├── home
-│   └── presentation
-│       ├── screens
-│       └── widgets
-├── manual
-│   ├── application
-│   ├── data
-│   │   ├── repositories
-│   │   └── services
-│   ├── domain
-│   │   ├── entities
-│   │   ├── repositories
-│   │   ├── services
-│   │   └── value_objects
-│   └── presentation
-│       ├── editing
-│       ├── export
-│       ├── generation
-│       └── preview
-└── video
-    ├── data
-    │   ├── repositories
-    │   └── services
-    ├── domain
-    │   ├── entities
-    │   └── repositories
-    └── presentation
-        ├── providers
-        ├── screens
-        └── widgets
-```
-
-`manual_editing`, `manual_generation`, `manual_preview`, `pdf_export`, `video_upload` が全て消えていること、`manual/`, `video/` の構造が設計通りであることを確認。
-
-### Task 7.2: PR の準備（任意）
-
-- [ ] **Step 7.2.1: ログとコミット履歴の確認**
+- [ ] **Step 5.3.5: 最終コミット**
 
 ```bash
-git log --oneline refactor/feature-first-restructure ^feature/update-riverpod
-```
-
-期待: Phase ごとのコミットが綺麗に並んでいる。
-
-- [ ] **Step 7.2.2: develop への PR を作成（任意）**
-
-必要に応じて PR を作成。タイトル例:
-
-```
-refactor: consolidate manual_* features into manual/ (feature-first restructure)
+git add -A
+git commit -m "refactor: restructure features around manual and video domains"
 ```
 
 ---
 
-## 参考: 変更ファイル一覧（事後確認用）
+## 補足方針
 
-Phase 7 完了時点で以下の状態になる:
-
-### 新規作成
-- `lib/features/manual/application/.gitkeep`
-- `lib/features/manual/presentation/preview/.gitkeep`（または screens/, widgets/ に .gitkeep）
-- `lib/features/manual/presentation/export/.gitkeep`
-
-### リネーム
-- `lib/features/video_upload/` → `lib/features/video/`
-- `lib/features/video/presentation/providers/video_upload_providers.dart` → `.../video_upload_controller.dart`
-- `lib/features/manual_generation/presentation/providers/video_analysis_providers.dart` → `.../manual/presentation/generation/providers/video_analysis_controller.dart`
-- `lib/features/manual_editing/presentation/providers/manual_edit_providers.dart` → `.../manual/presentation/editing/providers/manual_edit_controller.dart`
-
-### 移動
-- `manual_editing/*` → `manual/**`（詳細は設計ドキュメント参照）
-- `manual_generation/*` → `manual/**`
-- `video_upload/*` → `video/*`
-
-### 削除
-- `manual_preview/`, `pdf_export/`（空フォルダ）
-- `manual_editing/`, `manual_generation/`, `video_upload/`（移動後、空になったもの）
-- 全 barrel ファイル（`data.dart`, `domain.dart`, `presentation.dart`）
-
-### クラスリネーム
-- `VideoUploadStateNotifier` → `VideoUploadController`
-- `VideoAnalysisNotifier` → `VideoAnalysisController`
-- `ManualEditNotifier` → `ManualEditController`
-
----
-
-## スコープ外の既知の問題（将来対応）
-
-以下の既存の問題は今回のリファクタリングでは **そのまま保持**する。別 PR で対応:
-
-1. **Provider の重複定義**: `manualRepositoryProvider`, `geminiServiceProvider` など複数の Provider が `manual_edit_controller.dart`, `video_analysis_controller.dart`, `gemini_providers.dart` に重複している
-2. **`gemini_providers.dart` の `application/` への移動検討**: DI 専用ファイルなので `application/` 層に移すのが本来の形
-3. **1 ファイルに複数の Provider+Notifier+Service クラスが混在**: ファイル分割が有益
-4. **`ManualEditServiceDataImpl` という命名**: `ManualEditServiceImpl` に揃える余地あり
+- 実装中に provider の所有者で迷ったら、まず「その provider はどの application service と最も強く結びつくか」で置き場所を決める
+- 複数 service から同程度に使う provider は、feature 内の共通 provider として切り出してよい
+- 設計に迷ったら以下を優先参照とする
+  - https://codewithandrea.com/articles/flutter-app-architecture-riverpod-introduction/
+  - https://github.com/bizz84/complete-flutter-course
 
 ---
 
 ## 自己レビューチェックリスト
 
-- [x] **Spec coverage**: 設計ドキュメントの各セクションが Phase として対応している（feature 統合、video 改名、barrel 削除、Controller リネーム、検証手順）
-- [x] **Placeholder scan**: TBD / TODO / 「適切にハンドリング」系の曖昧表現なし。各ステップに具体的コマンドを記載
-- [x] **Type consistency**: Controller リネームは全 Phase で一貫（`VideoUploadStateNotifier` / `VideoAnalysisNotifier` / `ManualEditNotifier` → `VideoUploadController` / `VideoAnalysisController` / `ManualEditController`）
+- [x] 設計ドキュメントの最新方針と矛盾しない
+- [x] `main.dart override` 前提を削除した
+- [x] `video -> manual/generation` の受け渡し方法を反映した
+- [x] `application service + provider + query provider` 近接配置を反映した
+- [x] repository / service interface の置き場所を `data/` に統一した
