@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 
-import '../providers/video_upload_providers.dart';
+import '../providers/video_upload_controller.dart';
 
 /// Widget for selecting video files
 class FileSelectionWidget extends ConsumerWidget {

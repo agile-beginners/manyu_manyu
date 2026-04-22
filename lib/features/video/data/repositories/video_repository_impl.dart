@@ -6,8 +6,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
+import 'video_repository.dart';
 import '../../domain/entities/video_file.dart';
-import '../../domain/repositories/video_repository.dart';
 
 /// Concrete implementation of VideoRepository using local storage
 class VideoRepositoryImpl implements VideoRepository {

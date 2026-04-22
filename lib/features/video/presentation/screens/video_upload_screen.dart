@@ -6,8 +6,8 @@ import '../../../manual_editing/presentation/screens/manual_edit_screen.dart';
 import '../../../manual_generation/domain/entities/manual.dart';
 import '../../../manual_generation/presentation/providers/video_analysis_providers.dart';
 import '../../../manual_generation/presentation/states/video_analysis_state.dart';
-import '../../../video_upload/domain/entities/video_file.dart';
-import '../providers/video_upload_providers.dart';
+import '../../domain/entities/video_file.dart';
+import '../providers/video_upload_controller.dart';
 import '../widgets/file_selection_widget.dart';
 import '../widgets/upload_progress_widget.dart';
 import '../widgets/upload_status_widget.dart';
@@ -423,7 +423,7 @@ class _UploadCard extends StatelessWidget {
 
   final ColorScheme colorScheme;
   final VideoUploadState uploadState;
-  final VideoUploadStateNotifier uploadNotifier;
+  final VideoUploadController uploadNotifier;
 
   @override
   Widget build(BuildContext context) {

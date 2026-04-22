@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../video_upload/presentation/screens/video_upload_screen.dart';
+import '../../../video/presentation/screens/video_upload_screen.dart';
 
 class PrimaryActions extends StatelessWidget {
   const PrimaryActions({super.key, required this.colorScheme});

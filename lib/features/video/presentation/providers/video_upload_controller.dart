@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/video_repository_impl.dart';
+import '../../data/repositories/video_repository.dart';
 import '../../domain/entities/video_file.dart';
-import '../../domain/repositories/video_repository.dart';
 
 /// Provider for VideoRepository
 final videoRepositoryProvider = Provider<VideoRepository>((ref) {
@@ -65,10 +65,10 @@ class VideoUploadState {
 }
 
 /// StateNotifier for managing video upload state
-class VideoUploadStateNotifier extends StateNotifier<VideoUploadState> {
+class VideoUploadController extends StateNotifier<VideoUploadState> {
   final VideoRepository _repository;
 
-  VideoUploadStateNotifier(this._repository) : super(const VideoUploadState());
+  VideoUploadController(this._repository) : super(const VideoUploadState());
 
   /// Selects a file for upload
   void selectFile(File file) {
@@ -151,9 +151,9 @@ class VideoUploadStateNotifier extends StateNotifier<VideoUploadState> {
 }
 
 /// Provider for video upload state
-final videoUploadStateProvider = StateNotifierProvider<VideoUploadStateNotifier, VideoUploadState>((ref) {
+final videoUploadStateProvider = StateNotifierProvider<VideoUploadController, VideoUploadState>((ref) {
   final repository = ref.watch(videoRepositoryProvider);
-  return VideoUploadStateNotifier(repository);
+  return VideoUploadController(repository);
 });
 
 /// Provider for supported video formats

@@ -1,7 +1,7 @@
 import 'dart:io';
 import '../../../../core/utils/result.dart';
+import '../repositories/video_repository.dart';
 import '../../domain/entities/video_file.dart';
-import '../../domain/repositories/video_repository.dart';
 
 /// Service class for handling video upload operations
 class VideoUploadService {

@@ -1,6 +1,6 @@
 import 'dart:io';
 import '../../../../core/utils/result.dart';
-import '../entities/video_file.dart';
+import '../../domain/entities/video_file.dart';
 
 /// Repository interface for video file operations
 abstract class VideoRepository {

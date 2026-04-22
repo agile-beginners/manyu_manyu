@@ -38,20 +38,20 @@
 
 ### Task 0.1: 現状確認
 
-- [ ] **Step 0.1.1: ブランチと差分を確認**
+- [x] **Step 0.1.1: ブランチと差分を確認**
 
 ```bash
 git status
 git branch --show-current
 ```
 
-- [ ] **Step 0.1.2: リファクタリング用ブランチを切る**
+- [x] **Step 0.1.2: リファクタリング用ブランチを切る**
 
 ```bash
 git checkout -b refactor/feature-first-restructure
 ```
 
-- [ ] **Step 0.1.3: `fvm flutter analyze` を実行し、現状エラーの有無を記録**
+- [x] **Step 0.1.3: `fvm flutter analyze` を実行し、現状エラーの有無を記録**
 
 ```bash
 fvm flutter analyze
@@ -67,14 +67,14 @@ fvm flutter analyze
 
 ### Task 1.1: 空 feature を削除
 
-- [ ] **Step 1.1.1: `manual_preview/`, `pdf_export/` が空であることを確認**
+- [x] **Step 1.1.1: `manual_preview/`, `pdf_export/` が空であることを確認**
 
 ```bash
 find lib/features/manual_preview -type f
 find lib/features/pdf_export -type f
 ```
 
-- [ ] **Step 1.1.2: 空 feature を削除**
+- [x] **Step 1.1.2: 空 feature を削除**
 
 ```bash
 git rm -r lib/features/manual_preview
@@ -83,25 +83,25 @@ git rm -r lib/features/pdf_export
 
 ### Task 1.2: `video_upload` を `video` に改名
 
-- [ ] **Step 1.2.1: フォルダをリネーム**
+- [x] **Step 1.2.1: フォルダをリネーム**
 
 ```bash
 git mv lib/features/video_upload lib/features/video
 ```
 
-- [ ] **Step 1.2.2: `VideoRepository` interface を `data/repositories/` に寄せる**
+- [x] **Step 1.2.2: `VideoRepository` interface を `data/repositories/` に寄せる**
 
 ```bash
 git mv lib/features/video/domain/repositories/video_repository.dart lib/features/video/data/repositories/video_repository.dart
 ```
 
-- [ ] **Step 1.2.3: 空になった `domain/repositories/` を削除**
+- [x] **Step 1.2.3: 空になった `domain/repositories/` を削除**
 
 ```bash
 rm -rf lib/features/video/domain/repositories
 ```
 
-- [ ] **Step 1.2.4: barrel ファイルを削除**
+- [x] **Step 1.2.4: barrel ファイルを削除**
 
 ```bash
 git rm lib/features/video/data/data.dart
@@ -110,13 +110,13 @@ git rm lib/features/video/domain/domain.dart
 
 ### Task 1.3: `video` 側の controller 名を整理
 
-- [ ] **Step 1.3.1: provider ファイルを controller 名に変更**
+- [x] **Step 1.3.1: provider ファイルを controller 名に変更**
 
 ```bash
 git mv lib/features/video/presentation/providers/video_upload_providers.dart lib/features/video/presentation/providers/video_upload_controller.dart
 ```
 
-- [ ] **Step 1.3.2: `VideoUploadStateNotifier` を `VideoUploadController` にリネーム**
+- [x] **Step 1.3.2: `VideoUploadStateNotifier` を `VideoUploadController` にリネーム**
 
 対象:
 - クラス名
@@ -125,13 +125,13 @@ git mv lib/features/video/presentation/providers/video_upload_providers.dart lib
 
 ### Task 1.4: `video_upload` 参照の import を更新
 
-- [ ] **Step 1.4.1: 参照元を洗い出す**
+- [x] **Step 1.4.1: 参照元を洗い出す**
 
 ```bash
 rg -n "features/video_upload|video_upload_providers\\.dart|VideoUploadStateNotifier" lib
 ```
 
-- [ ] **Step 1.4.2: パスとクラス名を更新**
+- [x] **Step 1.4.2: パスとクラス名を更新**
 
 方針:
 - `features/video_upload` → `features/video`
@@ -140,7 +140,7 @@ rg -n "features/video_upload|video_upload_providers\\.dart|VideoUploadStateNotif
 
 ### Task 1.5: `video` の責務境界を実装で合わせる準備
 
-- [ ] **Step 1.5.1: `video/presentation/screens/video_upload_screen.dart` の現状を確認**
+- [x] **Step 1.5.1: `video/presentation/screens/video_upload_screen.dart` の現状を確認**
 
 確認ポイント:
 - `manual_generation` や `manual_editing` を直接 import していないか
@@ -150,7 +150,7 @@ rg -n "features/video_upload|video_upload_providers\\.dart|VideoUploadStateNotif
 
 このフェーズではまだ完全移行しなくてよいが、以降のフェーズで `manual/generation` に責務を寄せる前提を崩さない。
 
-- [ ] **Step 1.5.3: analyze**
+- [x] **Step 1.5.3: analyze**
 
 ```bash
 fvm flutter analyze
