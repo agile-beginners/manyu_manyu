@@ -1,41 +1,53 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/config/env_config.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/providers/app_providers.dart';
 import '../../../../core/utils/result.dart';
-import '../../../video_upload/domain/entities/video_file.dart';
-import '../../domain/entities/manual.dart';
-import '../../domain/entities/manual_step.dart';
-import '../../domain/repositories/manual_repository.dart';
-import '../../domain/services/gemini_service.dart';
-import '../../domain/services/image_annotation_service.dart';
-import '../../domain/value_objects/manual_generation_progress_stage.dart';
-import 'image_extraction_service.dart';
+import '../../video/domain/entities/video_file.dart';
+import '../data/repositories/manual_repository.dart';
+import '../data/repositories/manual_repository_impl.dart';
+import '../data/services/gemini_image_service.dart';
+import '../data/services/gemini_video_analysis_service.dart';
+import '../data/services/image_annotation_service.dart';
+import '../data/services/image_extraction_service.dart';
+import '../data/services/nano_banana_service.dart';
+import '../data/services/video_analysis_service.dart';
+import '../domain/entities/manual.dart';
+import '../domain/entities/manual_step.dart';
+import '../domain/value_objects/manual_generation_progress_stage.dart';
+import 'manual_edit_service.dart'; // for allManualsProvider, manualProvider, manualRepositoryProvider
 
 /// Service that orchestrates the complete video analysis process
-class VideoAnalysisService {
-  final GeminiService _geminiService;
+class ManualCreationService {
+  final VideoAnalysisService _videoAnalysisService;
   final ManualRepository _manualRepository;
   final ImageExtractionService _imageExtractionService;
   final ImageAnnotationService _imageAnnotationService;
+  final Ref _ref;
   final Uuid _uuid = const Uuid();
 
-  VideoAnalysisService({
-    required GeminiService geminiService,
+  ManualCreationService({
+    required VideoAnalysisService videoAnalysisService,
     required ManualRepository manualRepository,
     required ImageExtractionService imageExtractionService,
     required ImageAnnotationService imageAnnotationService,
-  }) : _geminiService = geminiService, 
-       _manualRepository = manualRepository,
-       _imageExtractionService = imageExtractionService,
-       _imageAnnotationService = imageAnnotationService;
+    required Ref ref,
+  })  : _videoAnalysisService = videoAnalysisService,
+        _manualRepository = manualRepository,
+        _imageExtractionService = imageExtractionService,
+        _imageAnnotationService = imageAnnotationService,
+        _ref = ref;
 
   /// Analyzes a video and creates a complete manual
-  /// 
+  ///
   /// This method handles the complete workflow:
   /// 1. Calls Gemini API to analyze video
   /// 2. Creates a Manual entity with the extracted steps
   /// 3. Saves the manual to repository
-  /// 
+  ///
   /// Requirements: 2.1, 2.2, 2.3, 2.4
   Future<Result<Manual>> analyzeVideoAndCreateManual(
     VideoFile videoFile, {
@@ -72,7 +84,7 @@ class VideoAnalysisService {
         // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
         onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
 
-        final analysisResult = await _geminiService.analyzeVideo(
+        final analysisResult = await _videoAnalysisService.analyzeVideo(
           videoFile,
           manualInfo: sanitizedManualInfo,
         );
@@ -83,7 +95,7 @@ class VideoAnalysisService {
             updatedAt: DateTime.now(),
           );
           await _manualRepository.updateManual(failedManual);
-          
+
           return Result.failure(analysisResult.failure!);
         }
 
@@ -92,7 +104,8 @@ class VideoAnalysisService {
         // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
         onProgress?.call(ManualGenerationProgressStage.generatingImages);
 
-        final imageExtractionResult = await _imageExtractionService.extractImagesFromVideo(
+        final imageExtractionResult =
+            await _imageExtractionService.extractImagesFromVideo(
           videoPath: videoFile.path,
           steps: steps,
         );
@@ -102,7 +115,8 @@ class VideoAnalysisService {
           extractedImagePaths = imageExtractionResult.data!;
         } else {
           // Continue with empty image paths if extraction fails (Requirement 3.4)
-          print('Image extraction failed: ${imageExtractionResult.failure!.message}');
+          print(
+              'Image extraction failed: ${imageExtractionResult.failure!.message}');
         }
 
         // Step 3: Update steps with extracted image paths and annotate images
@@ -178,10 +192,15 @@ class VideoAnalysisService {
         );
 
         // Save completed manual
-        final updateResult = await _manualRepository.updateManual(completedManual);
+        final updateResult =
+            await _manualRepository.updateManual(completedManual);
         if (updateResult.isFailure) {
           return Result.failure(updateResult.failure!);
         }
+
+        // Invalidate providers so UI sees the new manual
+        _ref.invalidate(allManualsProvider);
+        _ref.invalidate(manualProvider(completedManual.id));
 
         onProgress?.call(ManualGenerationProgressStage.completed);
 
@@ -193,7 +212,7 @@ class VideoAnalysisService {
           updatedAt: DateTime.now(),
         );
         await _manualRepository.updateManual(failedManual);
-        
+
         return Result.failure(
           ApiFailure('Video analysis failed: $e'),
         );
@@ -206,7 +225,7 @@ class VideoAnalysisService {
   }
 
   /// Retries analysis for a failed manual
-  /// 
+  ///
   /// Requirements: 2.4 - Retry option for failed API calls
   Future<Result<Manual>> retryAnalysis(
     String manualId, {
@@ -272,3 +291,54 @@ class VideoAnalysisService {
     return 'mp4'; // Default fallback
   }
 }
+
+// ---------------------------------------------------------------------------
+// Infrastructure providers
+// ---------------------------------------------------------------------------
+
+final _geminiVideoAnalysisServiceProvider =
+    Provider<VideoAnalysisService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return GeminiVideoAnalysisService(
+    apiClient: apiClient,
+    apiKey: EnvConfig.geminiApiKey,
+  );
+});
+
+final _imageExtractionServiceProvider =
+    Provider<ImageExtractionService>((ref) {
+  return ImageExtractionService();
+});
+
+final _geminiImageServiceProvider = Provider<GeminiImageService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return GeminiImageService(
+    apiClient: apiClient,
+    apiKey: EnvConfig.geminiApiKey,
+  );
+});
+
+final _nanoBananaServiceProvider = Provider<NanoBananaService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return NanoBananaService(
+    apiClient: apiClient,
+    apiKey: EnvConfig.nanoBananaApiKey,
+    baseUrl: EnvConfig.nanoBananaApiBaseUrl,
+    fallbackService: ref.watch(_geminiImageServiceProvider),
+  );
+});
+
+final _imageAnnotationServiceProvider = Provider<ImageAnnotationService>((ref) {
+  return ref.watch(_nanoBananaServiceProvider);
+});
+
+/// Provider for ManualCreationService
+final manualCreationServiceProvider = Provider<ManualCreationService>((ref) {
+  return ManualCreationService(
+    videoAnalysisService: ref.watch(_geminiVideoAnalysisServiceProvider),
+    manualRepository: ref.watch(manualRepositoryProvider),
+    imageExtractionService: ref.watch(_imageExtractionServiceProvider),
+    imageAnnotationService: ref.watch(_imageAnnotationServiceProvider),
+    ref: ref,
+  );
+});
