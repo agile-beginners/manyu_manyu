@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entities/video_file.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/video/domain/entities/video_file.dart';
 
 void main() {
   group('VideoFile', () {

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../lib/features/video_upload/presentation/providers/video_upload_providers.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/video/presentation/providers/video_upload_controller.dart';
 
 void main() {
   group('VideoUploadProviders', () {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual_step.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/domain/entities/manual.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/domain/entities/manual_step.dart';
 
 void main() {
   group('Manual', () {
