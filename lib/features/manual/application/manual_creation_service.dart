@@ -18,7 +18,7 @@ import '../data/services/video_analysis_service.dart';
 import '../domain/entities/manual.dart';
 import '../domain/entities/manual_step.dart';
 import '../domain/value_objects/manual_generation_progress_stage.dart';
-import 'manual_edit_service.dart'; // for allManualsProvider, manualProvider, manualRepositoryProvider
+import 'manual_edit_service.dart';
 
 /// Service that orchestrates the complete video analysis process
 class ManualCreationService {
@@ -80,146 +80,162 @@ class ManualCreationService {
         return Result.failure(saveResult.failure!);
       }
 
-      try {
-        // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
-        onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
+      return _runAnalysis(manual, videoFile,
+          manualInfo: sanitizedManualInfo, onProgress: onProgress);
+    } catch (e) {
+      return Result.failure(
+        ApiFailure('Failed to create manual: $e'),
+      );
+    }
+  }
 
-        final analysisResult = await _videoAnalysisService.analyzeVideo(
-          videoFile,
-          manualInfo: sanitizedManualInfo,
-        );
-        if (analysisResult.isFailure) {
-          // Update manual status to failed
-          final failedManual = manual.copyWith(
-            status: ManualStatus.failed,
-            updatedAt: DateTime.now(),
-          );
-          await _manualRepository.updateManual(failedManual);
+  /// Core analysis workflow. Reuses [initialManual]'s id so both
+  /// [analyzeVideoAndCreateManual] and [retryAnalysis] write to the same record.
+  Future<Result<Manual>> _runAnalysis(
+    Manual initialManual,
+    VideoFile videoFile, {
+    String? manualInfo,
+    void Function(ManualGenerationProgressStage stage)? onProgress,
+  }) async {
+    try {
+      // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
+      onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
 
-          return Result.failure(analysisResult.failure!);
-        }
-
-        final steps = analysisResult.data!;
-
-        // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
-        onProgress?.call(ManualGenerationProgressStage.generatingImages);
-
-        final imageExtractionResult =
-            await _imageExtractionService.extractImagesFromVideo(
-          videoPath: videoFile.path,
-          steps: steps,
-        );
-
-        List<String> extractedImagePaths = [];
-        if (imageExtractionResult.isSuccess) {
-          extractedImagePaths = imageExtractionResult.data!;
-        } else {
-          // Continue with empty image paths if extraction fails (Requirement 3.4)
-          print(
-              'Image extraction failed: ${imageExtractionResult.failure!.message}');
-        }
-
-        // Step 3: Update steps with extracted image paths and annotate images
-        final imagePathsForSteps = List<String?>.generate(
-          steps.length,
-          (index) => index < extractedImagePaths.length
-              ? extractedImagePaths[index]
-              : null,
-        );
-
-        // Step 4: Annotate images in parallel (Requirements 4.1, 4.2, 4.3)
-        final annotationFutures = <Future<String?>>[];
-        for (int i = 0; i < steps.length; i++) {
-          final step = steps[i];
-          final imagePath = imagePathsForSteps[i];
-
-          if (imagePath == null) {
-            annotationFutures.add(Future.value(null));
-            continue;
-          }
-
-          annotationFutures.add(() async {
-            try {
-              final annotationResult =
-                  await _imageAnnotationService.generateAnnotatedImage(
-                originalImagePath: imagePath,
-                stepTitle: step.title,
-                stepDescription: step.description,
-                stepNumber: step.stepNumber,
-              );
-
-              if (annotationResult.isSuccess &&
-                  annotationResult.data != null) {
-                return annotationResult.data!;
-              }
-
-              final failureMessage =
-                  annotationResult.failure?.message ?? 'Unknown error';
-              print(
-                'Image annotation failed for step ${step.stepNumber}: $failureMessage',
-              );
-              // Fallback: use original image if annotation fails (Requirement 4.4)
-              return imagePath;
-            } catch (e) {
-              // Fallback: use original image on any error (Requirement 4.4)
-              print('Image annotation error for step ${step.stepNumber}: $e');
-              return imagePath;
-            }
-          }());
-        }
-
-        final annotatedImagePaths = await Future.wait(annotationFutures);
-
-        final processedSteps = <ManualStep>[];
-        for (int i = 0; i < steps.length; i++) {
-          final step = steps[i];
-
-          // Create updated step with image paths
-          final processedStep = step.copyWith(
-            imagePath: imagePathsForSteps[i],
-            annotatedImagePath: annotatedImagePaths[i],
-            isProcessed: true,
-          );
-
-          processedSteps.add(processedStep);
-        }
-
-        // Update manual with processed steps
-        final completedManual = manual.copyWith(
-          steps: processedSteps,
-          status: ManualStatus.draft,
-          updatedAt: DateTime.now(),
-        );
-
-        // Save completed manual
-        final updateResult =
-            await _manualRepository.updateManual(completedManual);
-        if (updateResult.isFailure) {
-          return Result.failure(updateResult.failure!);
-        }
-
-        // Invalidate providers so UI sees the new manual
-        _ref.invalidate(allManualsProvider);
-        _ref.invalidate(manualProvider(completedManual.id));
-
-        onProgress?.call(ManualGenerationProgressStage.completed);
-
-        return Result.success(completedManual);
-      } catch (e) {
-        // Update manual status to failed on any error
-        final failedManual = manual.copyWith(
+      final analysisResult = await _videoAnalysisService.analyzeVideo(
+        videoFile,
+        manualInfo: manualInfo,
+      );
+      if (analysisResult.isFailure) {
+        // Update manual status to failed
+        final failedManual = initialManual.copyWith(
           status: ManualStatus.failed,
           updatedAt: DateTime.now(),
         );
         await _manualRepository.updateManual(failedManual);
+        _ref.invalidate(allManualsProvider);
+        _ref.invalidate(manualProvider(initialManual.id));
 
-        return Result.failure(
-          ApiFailure('Video analysis failed: $e'),
-        );
+        return Result.failure(analysisResult.failure!);
       }
+
+      final steps = analysisResult.data!;
+
+      // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
+      onProgress?.call(ManualGenerationProgressStage.generatingImages);
+
+      final imageExtractionResult =
+          await _imageExtractionService.extractImagesFromVideo(
+        videoPath: videoFile.path,
+        steps: steps,
+      );
+
+      List<String> extractedImagePaths = [];
+      if (imageExtractionResult.isSuccess) {
+        extractedImagePaths = imageExtractionResult.data!;
+      } else {
+        // Continue with empty image paths if extraction fails (Requirement 3.4)
+        print(
+            'Image extraction failed: ${imageExtractionResult.failure!.message}');
+      }
+
+      // Step 3: Update steps with extracted image paths and annotate images
+      final imagePathsForSteps = List<String?>.generate(
+        steps.length,
+        (index) => index < extractedImagePaths.length
+            ? extractedImagePaths[index]
+            : null,
+      );
+
+      // Step 4: Annotate images in parallel (Requirements 4.1, 4.2, 4.3)
+      final annotationFutures = <Future<String?>>[];
+      for (int i = 0; i < steps.length; i++) {
+        final step = steps[i];
+        final imagePath = imagePathsForSteps[i];
+
+        if (imagePath == null) {
+          annotationFutures.add(Future.value(null));
+          continue;
+        }
+
+        annotationFutures.add(() async {
+          try {
+            final annotationResult =
+                await _imageAnnotationService.generateAnnotatedImage(
+              originalImagePath: imagePath,
+              stepTitle: step.title,
+              stepDescription: step.description,
+              stepNumber: step.stepNumber,
+            );
+
+            if (annotationResult.isSuccess &&
+                annotationResult.data != null) {
+              return annotationResult.data!;
+            }
+
+            final failureMessage =
+                annotationResult.failure?.message ?? 'Unknown error';
+            print(
+              'Image annotation failed for step ${step.stepNumber}: $failureMessage',
+            );
+            // Fallback: use original image if annotation fails (Requirement 4.4)
+            return imagePath;
+          } catch (e) {
+            // Fallback: use original image on any error (Requirement 4.4)
+            print('Image annotation error for step ${step.stepNumber}: $e');
+            return imagePath;
+          }
+        }());
+      }
+
+      final annotatedImagePaths = await Future.wait(annotationFutures);
+
+      final processedSteps = <ManualStep>[];
+      for (int i = 0; i < steps.length; i++) {
+        final step = steps[i];
+
+        // Create updated step with image paths
+        final processedStep = step.copyWith(
+          imagePath: imagePathsForSteps[i],
+          annotatedImagePath: annotatedImagePaths[i],
+          isProcessed: true,
+        );
+
+        processedSteps.add(processedStep);
+      }
+
+      // Update manual with processed steps, reusing the existing id
+      final completedManual = initialManual.copyWith(
+        steps: processedSteps,
+        status: ManualStatus.draft,
+        updatedAt: DateTime.now(),
+      );
+
+      // Save completed manual
+      final updateResult =
+          await _manualRepository.updateManual(completedManual);
+      if (updateResult.isFailure) {
+        return Result.failure(updateResult.failure!);
+      }
+
+      // Invalidate providers so UI sees the updated manual
+      _ref.invalidate(allManualsProvider);
+      _ref.invalidate(manualProvider(completedManual.id));
+
+      onProgress?.call(ManualGenerationProgressStage.completed);
+
+      return Result.success(completedManual);
     } catch (e) {
+      // Update manual status to failed on any error
+      final failedManual = initialManual.copyWith(
+        status: ManualStatus.failed,
+        updatedAt: DateTime.now(),
+      );
+      await _manualRepository.updateManual(failedManual);
+      _ref.invalidate(allManualsProvider);
+      _ref.invalidate(manualProvider(initialManual.id));
+
       return Result.failure(
-        ApiFailure('Failed to create manual: $e'),
+        ApiFailure('Video analysis failed: $e'),
       );
     }
   }
@@ -261,20 +277,18 @@ class ManualCreationService {
         createdAt: manual.createdAt,
       );
 
-      // Update status to generating
+      // Reset existing manual to generating status (reuse the same id)
       final generatingManual = manual.copyWith(
         status: ManualStatus.generating,
         updatedAt: DateTime.now(),
       );
       await _manualRepository.updateManual(generatingManual);
+      _ref.invalidate(allManualsProvider);
+      _ref.invalidate(manualProvider(manual.id));
 
-      // Retry analysis
-      return analyzeVideoAndCreateManual(
-        videoFile,
-        customTitle: manual.title,
-        manualInfo: manual.description,
-        onProgress: onProgress,
-      );
+      // Run analysis inline, reusing the existing manual id
+      return _runAnalysis(generatingManual, videoFile,
+          manualInfo: manual.description, onProgress: onProgress);
     } catch (e) {
       return Result.failure(
         ApiFailure('Failed to retry analysis: $e'),

@@ -19,13 +19,7 @@ class ManualExportService {
     if (manual == null) {
       return const Result.failure(ValidationFailure('Manual not found'));
     }
-    final exportResult =
-        await _ref.read(_pdfExportServiceProvider).exportManual(manual);
-    if (exportResult.isSuccess) {
-      _ref.invalidate(manualProvider(manualId));
-      _ref.invalidate(allManualsProvider);
-    }
-    return exportResult;
+    return _ref.read(_pdfExportServiceProvider).exportManual(manual);
   }
 }
 
