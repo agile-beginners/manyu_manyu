@@ -1,17 +1,15 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
-import '../../../manual_generation/domain/entities/manual.dart';
-import '../../../manual_generation/domain/entities/manual_step.dart';
-import '../../../manual_generation/domain/repositories/manual_repository.dart';
-import '../../domain/services/manual_edit_service.dart';
+import '../../../manual/domain/entities/manual.dart';
+import '../../../manual/domain/entities/manual_step.dart';
+import '../../../manual/data/repositories/manual_repository.dart';
 
 /// Data layer implementation of ManualEditService
-class ManualEditServiceDataImpl implements ManualEditService {
+class ManualEditServiceDataImpl {
   final ManualRepository _repository;
   
   const ManualEditServiceDataImpl(this._repository);
-  
-  @override
+
   Future<Result<Manual>> updateManualTitle(String manualId, String newTitle) async {
     try {
       // Validate title
@@ -48,7 +46,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Future<Result<Manual>> updateManualDescription(String manualId, String? newDescription) async {
     try {
       // Get existing manual
@@ -80,7 +77,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Future<Result<ManualStep>> updateStepTitle(String manualId, String stepId, String newTitle) async {
     try {
       // Validate title
@@ -120,7 +116,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Future<Result<ManualStep>> updateStepDescription(String manualId, String stepId, String newDescription) async {
     try {
       // Validate description
@@ -160,7 +155,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Future<Result<ManualStep>> updateStep(String manualId, ManualStep updatedStep) async {
     try {
       // Validate step
@@ -181,7 +175,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Future<Result<Manual>> reorderSteps(String manualId, List<String> stepIds) async {
     try {
       // Get existing manual
@@ -229,7 +222,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Result<bool> validateManual(Manual manual) {
     try {
       // Check title
@@ -256,7 +248,6 @@ class ManualEditServiceDataImpl implements ManualEditService {
     }
   }
   
-  @override
   Result<bool> validateStep(ManualStep step) {
     try {
       // Check title
