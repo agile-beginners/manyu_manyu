@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-import '../../../manual_generation/domain/entities/manual.dart';
-import '../../../manual_generation/domain/entities/manual_step.dart';
+import '../../../domain/entities/manual.dart';
+import '../../../domain/entities/manual_step.dart';
 
 /// Widget for displaying and managing the list of manual steps
 class StepListWidget extends StatefulWidget {

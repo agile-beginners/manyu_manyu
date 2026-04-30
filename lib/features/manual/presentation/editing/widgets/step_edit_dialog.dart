@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-import '../../../manual_generation/domain/entities/manual_step.dart';
+import '../../../domain/entities/manual_step.dart';
 
 /// Dialog for editing individual manual steps
 class StepEditDialog extends StatefulWidget {

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../manual_generation/domain/entities/manual_step.dart';
-import '../providers/manual_edit_providers.dart';
+import '../../../domain/entities/manual_step.dart';
+import '../providers/manual_edit_controller.dart';
 import '../widgets/manual_header_widget.dart';
 import '../widgets/step_list_widget.dart';
 import '../widgets/step_edit_dialog.dart';
@@ -26,7 +26,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
     super.initState();
     // Load the manual when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(manualEditNotifierProvider.notifier).loadManual(widget.manualId);
+      ref.read(manualEditControllerProvider.notifier).loadManual(widget.manualId);
     });
   }
 
@@ -44,7 +44,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
         step: step,
         onSave: (updatedStep) {
           ref
-              .read(manualEditNotifierProvider.notifier)
+              .read(manualEditControllerProvider.notifier)
               .updateStep(widget.manualId, updatedStep);
         },
       ),
@@ -53,7 +53,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final manualState = ref.watch(manualEditNotifierProvider);
+    final manualState = ref.watch(manualEditControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -72,19 +72,19 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
                   manual: manual,
                   onTitleChanged: (newTitle) {
                     ref
-                        .read(manualEditNotifierProvider.notifier)
+                        .read(manualEditControllerProvider.notifier)
                         .updateManualTitle(widget.manualId, newTitle);
                   },
                   onDescriptionChanged: (newDescription) {
                     ref
-                        .read(manualEditNotifierProvider.notifier)
+                        .read(manualEditControllerProvider.notifier)
                         .updateManualDescription(
                           widget.manualId,
                           newDescription,
                         );
                   },
                   onDownloadPdf: () {
-                    final notifier = ref.read(manualEditNotifierProvider.notifier);
+                    final notifier = ref.read(manualEditControllerProvider.notifier);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('PDFを生成しています...'),
@@ -180,7 +180,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
               ElevatedButton(
                 onPressed: () {
                   ref
-                      .read(manualEditNotifierProvider.notifier)
+                      .read(manualEditControllerProvider.notifier)
                       .loadManual(widget.manualId);
                 },
                 child: const Text('再試行'),

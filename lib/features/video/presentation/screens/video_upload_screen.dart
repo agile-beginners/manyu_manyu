@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../manual_editing/presentation/screens/manual_edit_screen.dart';
-import '../../../manual_generation/domain/entities/manual.dart';
-import '../../../manual_generation/presentation/providers/video_analysis_providers.dart';
-import '../../../manual_generation/presentation/states/video_analysis_state.dart';
+import '../../../manual/presentation/editing/screens/manual_edit_screen.dart';
+import '../../../manual/domain/entities/manual.dart';
+import '../../../manual/presentation/generation/providers/video_analysis_controller.dart';
+import '../../../manual/presentation/generation/states/video_analysis_state.dart';
 import '../../domain/entities/video_file.dart';
 import '../providers/video_upload_controller.dart';
 import '../widgets/file_selection_widget.dart';
@@ -23,7 +23,7 @@ class VideoUploadScreen extends ConsumerWidget {
     String? manualInfo,
   }) {
     ref
-        .read(videoAnalysisNotifierProvider.notifier)
+        .read(videoAnalysisControllerProvider.notifier)
         .analyzeVideo(uploadedVideo, manualInfo: manualInfo);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -42,8 +42,8 @@ class VideoUploadScreen extends ConsumerWidget {
       barrierDismissible: false,
       builder: (context) => Consumer(
         builder: (context, ref, child) {
-          final analysisState = ref.watch(videoAnalysisNotifierProvider);
-          final notifier = ref.read(videoAnalysisNotifierProvider.notifier);
+          final analysisState = ref.watch(videoAnalysisControllerProvider);
+          final notifier = ref.read(videoAnalysisControllerProvider.notifier);
           final theme = Theme.of(context);
           final colorScheme = theme.colorScheme;
 
@@ -166,7 +166,7 @@ class VideoUploadScreen extends ConsumerWidget {
     Manual manual,
   ) {
     // Reset analysis state before leaving the progress flow
-    ref.read(videoAnalysisNotifierProvider.notifier).reset();
+    ref.read(videoAnalysisControllerProvider.notifier).reset();
 
     // Show a brief confirmation toast/snackbar
     ScaffoldMessenger.of(context).showSnackBar(

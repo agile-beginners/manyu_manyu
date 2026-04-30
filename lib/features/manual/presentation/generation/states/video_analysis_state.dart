@@ -1,5 +1,5 @@
-import '../../domain/entities/manual.dart';
-import '../../domain/value_objects/manual_generation_progress_stage.dart';
+import '../../../domain/entities/manual.dart';
+import '../../../domain/value_objects/manual_generation_progress_stage.dart';
 
 /// Represents high-level phases while running the manual generation flow.
 enum VideoAnalysisPhase {

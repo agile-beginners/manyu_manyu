@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../../../manual_generation/domain/entities/manual.dart';
+import '../../../domain/entities/manual.dart';
 
 /// Widget for editing manual header information (title and description)
 class ManualHeaderWidget extends StatefulWidget {
