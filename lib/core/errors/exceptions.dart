@@ -1,45 +1,45 @@
-/// Base class for all exceptions in the application
+/// アプリケーション内の全例外の基底クラス
 abstract class AppException implements Exception {
   final String message;
   final String? code;
-  
+
   const AppException(this.message, {this.code});
-  
+
   @override
   String toString() => 'AppException: $message${code != null ? ' (Code: $code)' : ''}';
 }
 
-/// Network-related exceptions
+/// ネットワーク関連の例外
 class NetworkException extends AppException {
   const NetworkException(super.message, {super.code});
 }
 
-/// File operation exceptions
+/// ファイル操作の例外
 class FileException extends AppException {
   const FileException(super.message, {super.code});
 }
 
-/// API-related exceptions
+/// API関連の例外
 class ApiException extends AppException {
   const ApiException(super.message, {super.code});
 }
 
-/// Validation exceptions
+/// バリデーションの例外
 class ValidationException extends AppException {
   const ValidationException(super.message, {super.code});
 }
 
-/// Storage-related exceptions
+/// ストレージ関連の例外
 class StorageException extends AppException {
   const StorageException(super.message, {super.code});
 }
 
-/// Video processing exceptions
+/// 動画処理の例外
 class VideoProcessingException extends AppException {
   const VideoProcessingException(super.message, {super.code});
 }
 
-/// PDF generation exceptions
+/// PDF生成の例外
 class PdfGenerationException extends AppException {
   const PdfGenerationException(super.message, {super.code});
 }

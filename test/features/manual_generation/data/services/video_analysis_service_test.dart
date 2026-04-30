@@ -1,286 +1,287 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
+import 'package:tokyo_flutter_hackathon_2025/core/constants/app_constants.dart';
 import 'package:tokyo_flutter_hackathon_2025/core/errors/failures.dart';
-import 'package:tokyo_flutter_hackathon_2025/core/utils/result.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/image_extraction_service.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/video_analysis_service.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/entities/manual_step.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/repositories/manual_repository.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/gemini_service.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/domain/services/image_annotation_service.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entities/video_file.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/data/services/gemini_video_analysis_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/domain/entities/manual_step.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/video/domain/entities/video_file.dart';
 
-import 'video_analysis_service_test.mocks.dart';
+// Reuse MockApiClient generated in gemini_service_test.mocks.dart
+import 'gemini_service_test.mocks.dart';
 
-@GenerateNiceMocks([
-  MockSpec<GeminiService>(), 
-  MockSpec<ManualRepository>(),
-  MockSpec<ImageExtractionService>(),
-  MockSpec<ImageAnnotationService>(),
-])
 void main() {
-  // Provide dummy values for Result types
-  provideDummy<Result<void>>(const Result.success(null));
-  provideDummy<Result<Manual?>>(const Result.success(null));
-  provideDummy<Result<List<String>>>(const Result.success([]));
-  provideDummy<Result<String>>(const Result.success(''));
-  provideDummy<Result<List<ManualStep>>>(const Result.success([]));
-
-  group('VideoAnalysisService', () {
-    late VideoAnalysisService videoAnalysisService;
-    late MockGeminiService mockGeminiService;
-    late MockManualRepository mockManualRepository;
-    late MockImageExtractionService mockImageExtractionService;
-    late MockImageAnnotationService mockImageAnnotationService;
+  group('GeminiVideoAnalysisService (VideoAnalysisService contract)', () {
+    late GeminiVideoAnalysisService service;
+    late MockApiClient mockApiClient;
+    const testApiKey = 'test-api-key';
 
     setUp(() {
-      mockGeminiService = MockGeminiService();
-      mockManualRepository = MockManualRepository();
-      mockImageExtractionService = MockImageExtractionService();
-      mockImageAnnotationService = MockImageAnnotationService();
-      videoAnalysisService = VideoAnalysisService(
-        geminiService: mockGeminiService,
-        manualRepository: mockManualRepository,
-        imageExtractionService: mockImageExtractionService,
-        imageAnnotationService: mockImageAnnotationService,
+      mockApiClient = MockApiClient();
+      service = GeminiVideoAnalysisService(
+        apiClient: mockApiClient,
+        apiKey: testApiKey,
       );
     });
 
-    group('analyzeVideoAndCreateManual', () {
-      late VideoFile testVideoFile;
-      late List<ManualStep> testSteps;
-
-      setUp(() {
-        testVideoFile = VideoFile(
-          path: 'test_video.mp4',
-          name: 'test_video.mp4',
-          sizeInBytes: 1024 * 1024,
+    group('analyzeVideo', () {
+      test('should return failure when video file does not exist', () async {
+        final videoFile = VideoFile(
+          path: 'non_existent_file.mp4',
+          name: 'non_existent_file.mp4',
+          sizeInBytes: 1024,
           format: 'mp4',
-          durationMs: 30000,
           createdAt: DateTime.now(),
         );
 
-        testSteps = [
-          const ManualStep(
-            id: 'step1',
-            title: 'Step 1',
-            description: 'First step',
-            timestamp: 1000,
-            stepNumber: 1,
-          ),
-          const ManualStep(
-            id: 'step2',
-            title: 'Step 2',
-            description: 'Second step',
-            timestamp: 2000,
-            stepNumber: 2,
-          ),
-        ];
+        final result = await service.analyzeVideo(videoFile);
+
+        expect(result.isFailure, true);
+        expect(result.failure, isA<ValidationFailure>());
+        expect(result.failure!.message, contains('Video file does not exist'));
       });
 
-      test('should successfully create manual when analysis succeeds', () async {
-        // Arrange
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
-            .thenAnswer((_) async => Result.success(testSteps));
-        when(mockManualRepository.updateManual(any))
-            .thenAnswer((_) async => const Result.success(null));
+      test('should return failure for unsupported video format', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mkv');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
 
-        // Act
-        final result = await videoAnalysisService.analyzeVideoAndCreateManual(testVideoFile);
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mkv',
+          sizeInBytes: 1024,
+          format: 'mkv',
+          createdAt: DateTime.now(),
+        );
 
-        // Assert
-        expect(result.isSuccess, true);
-        expect(result.data, isNotNull);
-        expect(result.data!.steps.length, 2);
-        expect(result.data!.status, ManualStatus.draft);
-        expect(result.data!.videoPath, testVideoFile.path);
+        final result = await service.analyzeVideo(videoFile);
 
-        // Verify interactions
-        verify(mockManualRepository.saveManual(any)).called(1);
-        verify(mockGeminiService.analyzeVideo(testVideoFile, manualInfo: null)).called(1);
-        verify(mockManualRepository.updateManual(any)).called(1);
+        expect(result.isFailure, true);
+        expect(result.failure, isA<ValidationFailure>());
+        expect(result.failure!.message, contains('Unsupported video format'));
+
+        await tempDir.delete(recursive: true);
       });
 
-      test('should handle Gemini service failure', () async {
-        // Arrange
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
-            .thenAnswer((_) async => Result.failure(const ApiFailure('Analysis failed')));
-        when(mockManualRepository.updateManual(any))
-            .thenAnswer((_) async => const Result.success(null));
+      test('should return failure for oversized video file', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/large_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
 
-        // Act
-        final result = await videoAnalysisService.analyzeVideoAndCreateManual(testVideoFile);
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'large_video.mp4',
+          sizeInBytes: AppConstants.maxVideoSizeBytes + 1,
+          format: 'mp4',
+          createdAt: DateTime.now(),
+        );
 
-        // Assert
+        final result = await service.analyzeVideo(videoFile);
+
+        expect(result.isFailure, true);
+        expect(result.failure, isA<ValidationFailure>());
+        expect(result.failure!.message, contains('Video file too large'));
+
+        await tempDir.delete(recursive: true);
+      });
+
+      test('should return failure when API returns too many steps', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
+
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mp4',
+          sizeInBytes: 1024,
+          format: 'mp4',
+          createdAt: DateTime.now(),
+        );
+
+        final steps = List.generate(AppConstants.maxManualSteps + 1, (i) => {
+          'title': 'Step ${i + 1}',
+          'description': 'Description ${i + 1}',
+          'timestamp': (i + 1) * 1000,
+        });
+
+        final mockResponse = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {'text': jsonEncode({'title': 'Test Manual', 'steps': steps})}
+                ]
+              }
+            }
+          ]
+        };
+
+        when(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
+            .thenAnswer((_) async => mockResponse);
+
+        final result = await service.analyzeVideo(videoFile);
+
         expect(result.isFailure, true);
         expect(result.failure, isA<ApiFailure>());
-        expect(result.failure!.message, 'Analysis failed');
+        expect(result.failure!.message, contains('Too many steps extracted'));
 
-        // Verify that manual status was updated to failed
-        verify(mockManualRepository.updateManual(argThat(
-          predicate<Manual>((manual) => manual.status == ManualStatus.failed),
-        ))).called(1);
+        await tempDir.delete(recursive: true);
       });
 
-      test('should handle repository save failure', () async {
-        // Arrange
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => Result.failure(const StorageFailure('Save failed')));
+      test('should successfully analyze video and return steps', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
 
-        // Act
-        final result = await videoAnalysisService.analyzeVideoAndCreateManual(testVideoFile);
-
-        // Assert
-        expect(result.isFailure, true);
-        expect(result.failure, isA<StorageFailure>());
-        expect(result.failure!.message, 'Save failed');
-
-        // Verify that Gemini service was not called
-        verifyNever(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')));
-      });
-
-      test('should use custom title when provided', () async {
-        // Arrange
-        const customTitle = 'Custom Manual Title';
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
-            .thenAnswer((_) async => Result.success(testSteps));
-        when(mockManualRepository.updateManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-
-        // Act
-        final result = await videoAnalysisService.analyzeVideoAndCreateManual(
-          testVideoFile,
-          customTitle: customTitle,
-        );
-
-        // Assert
-        expect(result.isSuccess, true);
-        expect(result.data!.title, customTitle);
-      });
-
-      test('should forward manual info to Gemini service and store description', () async {
-        // Arrange
-        const manualInfo = ' 重要ポイントを詳しく説明してほしい ';
-        const sanitizedManualInfo = '重要ポイントを詳しく説明してほしい';
-
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
-            .thenAnswer((_) async => Result.success(testSteps));
-        when(mockManualRepository.updateManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-
-        // Act
-        final result = await videoAnalysisService.analyzeVideoAndCreateManual(
-          testVideoFile,
-          manualInfo: manualInfo,
-        );
-
-        // Assert
-        expect(result.isSuccess, true);
-        expect(result.data!.description, sanitizedManualInfo);
-        verify(mockGeminiService.analyzeVideo(
-          testVideoFile,
-          manualInfo: sanitizedManualInfo,
-        )).called(1);
-      });
-    });
-
-    group('retryAnalysis', () {
-      late Manual testManual;
-
-      setUp(() {
-        testManual = Manual(
-          id: 'manual1',
-          title: 'Test Manual',
-          steps: [],
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mp4',
+          sizeInBytes: 1024,
+          format: 'mp4',
           createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          videoPath: 'test_video.mp4',
-          videoDurationMs: 30000,
-          status: ManualStatus.failed,
         );
-      });
 
-      test('should successfully retry analysis', () async {
-        // Arrange
-        when(mockManualRepository.getManual('manual1'))
-            .thenAnswer((_) async => Result.success(testManual));
-        when(mockManualRepository.updateManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockManualRepository.saveManual(any))
-            .thenAnswer((_) async => const Result.success(null));
-        when(mockGeminiService.analyzeVideo(any, manualInfo: anyNamed('manualInfo')))
-            .thenAnswer((_) async => Result.success([
-              const ManualStep(
-                id: 'step1',
-                title: 'Retry Step',
-                description: 'Retry description',
-                timestamp: 1000,
-                stepNumber: 1,
-              ),
-            ]));
+        final mockResponse = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': jsonEncode({
+                      'title': 'Test Manual',
+                      'steps': [
+                        {'title': 'Step 1', 'description': 'First step', 'timestamp': 1000},
+                        {'title': 'Step 2', 'description': 'Second step', 'timestamp': 2000},
+                      ],
+                    }),
+                  }
+                ]
+              }
+            }
+          ]
+        };
 
-        // Act
-        final result = await videoAnalysisService.retryAnalysis('manual1');
+        when(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
+            .thenAnswer((_) async => mockResponse);
 
-        // Assert
+        final result = await service.analyzeVideo(videoFile);
+
         expect(result.isSuccess, true);
-        expect(result.data!.steps.length, 1);
-        expect(result.data!.status, ManualStatus.draft);
+        expect(result.data, isNotNull);
+        expect(result.data!.length, 2);
+        expect(result.data![0], isA<ManualStep>());
+        expect(result.data![0].title, 'Step 1');
+        expect(result.data![0].stepNumber, 1);
+        expect(result.data![1].title, 'Step 2');
+        expect(result.data![1].stepNumber, 2);
 
-        // Verify interactions
-        verify(mockManualRepository.getManual('manual1')).called(1);
-        verify(mockManualRepository.updateManual(argThat(
-          predicate<Manual>((manual) => manual.status == ManualStatus.generating),
-        ))).called(1);
+        await tempDir.delete(recursive: true);
       });
 
-      test('should handle manual not found', () async {
-        // Arrange
-        when(mockManualRepository.getManual('manual1'))
-            .thenAnswer((_) async => const Result.success(null));
+      test('should pass manualInfo to API call', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
 
-        // Act
-        final result = await videoAnalysisService.retryAnalysis('manual1');
-
-        // Assert
-        expect(result.isFailure, true);
-        expect(result.failure, isA<ValidationFailure>());
-        expect(result.failure!.message, 'Manual not found');
-      });
-
-      test('should handle manual without video path', () async {
-        // Arrange
-        final manualWithoutVideo = Manual(
-          id: testManual.id,
-          title: testManual.title,
-          steps: testManual.steps,
-          createdAt: testManual.createdAt,
-          updatedAt: testManual.updatedAt,
-          videoPath: null, // Explicitly set to null
-          videoDurationMs: testManual.videoDurationMs,
-          status: testManual.status,
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mp4',
+          sizeInBytes: 1024,
+          format: 'mp4',
+          createdAt: DateTime.now(),
         );
-        when(mockManualRepository.getManual('manual1'))
-            .thenAnswer((_) async => Result.success(manualWithoutVideo));
 
-        // Act
-        final result = await videoAnalysisService.retryAnalysis('manual1');
+        final mockResponse = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': jsonEncode({
+                      'title': 'Test',
+                      'steps': [
+                        {'title': 'Step 1', 'description': 'Desc', 'timestamp': 1000},
+                      ],
+                    }),
+                  }
+                ]
+              }
+            }
+          ]
+        };
 
-        // Assert
+        when(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
+            .thenAnswer((_) async => mockResponse);
+
+        final result = await service.analyzeVideo(videoFile, manualInfo: 'Extra context');
+
+        expect(result.isSuccess, true);
+        verify(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body'))).called(1);
+
+        await tempDir.delete(recursive: true);
+      });
+
+      test('should return failure when API throws exception', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
+
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mp4',
+          sizeInBytes: 1024,
+          format: 'mp4',
+          createdAt: DateTime.now(),
+        );
+
+        when(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
+            .thenThrow(Exception('Network error'));
+
+        final result = await service.analyzeVideo(videoFile);
+
         expect(result.isFailure, true);
-        expect(result.failure, isA<ValidationFailure>());
-        expect(result.failure!.message, 'No video path found for manual');
+        expect(result.failure, isA<ApiFailure>());
+        expect(result.failure!.message, contains('Failed after'));
+
+        await tempDir.delete(recursive: true);
+      });
+
+      test('should return failure when API response is malformed', () async {
+        final tempDir = Directory.systemTemp.createTempSync();
+        final testFile = File('${tempDir.path}/test_video.mp4');
+        await testFile.writeAsBytes([1, 2, 3, 4]);
+
+        final videoFile = VideoFile(
+          path: testFile.path,
+          name: 'test_video.mp4',
+          sizeInBytes: 1024,
+          format: 'mp4',
+          createdAt: DateTime.now(),
+        );
+
+        final mockResponse = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {'text': 'not valid json at all'}
+                ]
+              }
+            }
+          ]
+        };
+
+        when(mockApiClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
+            .thenAnswer((_) async => mockResponse);
+
+        final result = await service.analyzeVideo(videoFile);
+
+        expect(result.isFailure, true);
+        expect(result.failure, isA<ApiFailure>());
+
+        await tempDir.delete(recursive: true);
       });
     });
   });

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tokyo_flutter_hackathon_2025/main.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/home/presentation/screens/home_screen.dart';
 import '../utils/test_utils.dart';
 
 void main() {
@@ -26,7 +26,7 @@ void main() {
 
           // Create test widget with specific screen size and platform
           final testWidget = TestUtils.createTestWidgetWithSize(
-            child: const HomePage(),
+            child: const HomeScreen(),
             size: screenSize,
             platform: platform,
           );
@@ -146,7 +146,7 @@ void main() {
           final platform = testCase['platform'] as TargetPlatform;
 
           final testWidget = TestUtils.createTestWidgetWithSize(
-            child: const HomePage(),
+            child: const HomeScreen(),
             size: size,
             platform: platform,
           );
@@ -155,8 +155,8 @@ void main() {
           await tester.pumpAndSettle();
 
           // Verify UI renders correctly for each device category
-          expect(find.byType(HomePage), findsOneWidget,
-            reason: 'HomePage should render on $category device (${size.width}x${size.height})');
+          expect(find.byType(HomeScreen), findsOneWidget,
+            reason: 'HomeScreen should render on $category device (${size.width}x${size.height})');
           
           expect(find.text('Video Manual Generator'), findsWidgets,
             reason: 'Title should be visible on $category device');

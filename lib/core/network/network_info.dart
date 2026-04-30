@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
-/// Network connectivity checker
+/// ネットワーク接続チェッカー
 class NetworkInfo {
-  /// Checks if device has internet connection
+  /// デバイスのインターネット接続を確認する
   static Future<bool> hasInternetConnection() async {
     try {
       print('🔍 Checking internet connection...');
-      
-      // Try to connect to Google's DNS
+
+      // GoogleのDNSへの接続を試みる
       final result = await InternetAddress.lookup('google.com')
           .timeout(const Duration(seconds: 5));
       
@@ -25,7 +25,7 @@ class NetworkInfo {
     }
   }
   
-  /// Tests HTTP connectivity to a specific URL
+  /// 特定URLへのHTTP接続をテストする
   static Future<bool> canReachUrl(String url) async {
     try {
       print('🔍 Testing connectivity to: $url');
@@ -53,28 +53,28 @@ class NetworkInfo {
     }
   }
   
-  /// Comprehensive network diagnostics
+  /// 包括的なネットワーク診断
   static Future<Map<String, dynamic>> runNetworkDiagnostics() async {
     print('🔬 Running network diagnostics...');
-    
+
     final diagnostics = <String, dynamic>{};
-    
-    // Basic internet connectivity
+
+    // 基本的なインターネット接続
     diagnostics['hasInternet'] = await hasInternetConnection();
-    
-    // Test Google connectivity
+
+    // Googleへの接続テスト
     diagnostics['canReachGoogle'] = await canReachUrl('https://google.com');
-    
-    // Test Gemini API base URL
+
+    // Gemini APIベースURLへの接続テスト
     diagnostics['canReachGeminiApi'] = await canReachUrl('https://generativelanguage.googleapis.com');
-    
-    // Test specific Gemini API endpoint
+
+    // 特定のGemini APIエンドポイントへの接続テスト
     diagnostics['canReachGeminiEndpoint'] = await canReachUrl('https://generativelanguage.googleapis.com/v1beta/models');
-    
-    // Test alternative endpoints
+
+    // 代替エンドポイントへの接続テスト
     diagnostics['canReachGeminiV1'] = await canReachUrl('https://generativelanguage.googleapis.com/v1/models');
-    
-    // DNS resolution test
+
+    // DNS解決テスト
     try {
       final dnsResult = await InternetAddress.lookup('generativelanguage.googleapis.com')
           .timeout(const Duration(seconds: 5));

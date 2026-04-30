@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../../../lib/core/errors/failures.dart';
-import '../../../../../lib/core/network/api_client.dart';
-import '../../../../../lib/core/utils/result.dart';
-import '../../../../../lib/features/manual_generation/data/services/gemini_image_service.dart';
-import '../../../../../lib/features/manual_generation/data/services/nano_banana_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/core/errors/failures.dart';
+import 'package:tokyo_flutter_hackathon_2025/core/network/api_client.dart';
+import 'package:tokyo_flutter_hackathon_2025/core/utils/result.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/data/services/gemini_image_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/data/services/nano_banana_service.dart';
 
 // Simple mock implementation for testing
 class MockGeminiImageService extends GeminiImageService {

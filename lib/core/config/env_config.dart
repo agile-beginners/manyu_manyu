@@ -2,21 +2,21 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Environment configuration service
-/// Loads API keys and other configuration from .env file
+/// 環境設定サービス
+/// .envファイルからAPIキーやその他の設定を読み込む
 class EnvConfig {
   static bool _isInitialized = false;
 
-  /// Initialize the environment configuration
-  /// This should be called in main() before runApp()
+  /// 環境設定を初期化する
+  /// main()内でrunApp()より前に呼び出す必要がある
   static Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      // Load .env file
+      // .envファイルを読み込む
       await dotenv.load(fileName: '.env');
       _isInitialized = true;
-      
+
       if (kDebugMode) {
         print('✅ Environment configuration loaded successfully');
       }
@@ -25,29 +25,29 @@ class EnvConfig {
         print('⚠️  Warning: Could not load .env file: $e');
         print('💡 Make sure to copy .env.example to .env and fill in your API keys');
       }
-      
-      // In production or when .env file is missing, we can still try to use
-      // environment variables or dart-define values
+
+      // 本番環境または.envファイルが存在しない場合でも、
+      // 環境変数やdart-defineの値を使用できる
       _isInitialized = true;
     }
   }
 
-  /// Gets a configuration value with fallback options
-  /// 1. First tries .env file
-  /// 2. Then tries system environment variables
-  /// 3. Then tries dart-define values
-  /// 4. Finally uses default value if provided
+  /// フォールバックオプション付きで設定値を取得する
+  /// 1. まず.envファイルを試す
+  /// 2. 次にシステム環境変数を試す
+  /// 3. 次にdart-defineの値を試す
+  /// 4. 最後に提供されたデフォルト値を使用する
   static String _getValue(String key, {String? defaultValue}) {
-    // Try .env file first
+    // まず.envファイルを試す
     String? value = dotenv.env[key];
-    
-    // Fallback to system environment variables
+
+    // システム環境変数にフォールバック
     value ??= Platform.environment[key];
-    
-    // Fallback to dart-define (compile-time constants)
+
+    // dart-define（コンパイル時定数）にフォールバック
     value ??= String.fromEnvironment(key);
-    
-    // Use default value if provided
+
+    // 提供された場合はデフォルト値を使用
     value = value.isEmpty ? defaultValue : value;
     
     if (value == null || value.isEmpty) {
@@ -60,12 +60,12 @@ class EnvConfig {
     return value;
   }
 
-  /// Gemini API Key
+  /// Gemini APIキー
   static String get geminiApiKey {
     return _getValue('GEMINI_API_KEY');
   }
 
-  /// Gemini API Base URL
+  /// Gemini APIベースURL
   static String get geminiApiBaseUrl {
     return _getValue(
       'GEMINI_API_BASE_URL',
@@ -73,35 +73,35 @@ class EnvConfig {
     );
   }
 
-  /// Nano Banana API Key (fallback to Gemini if not provided)
+  /// Nano Banana APIキー（未指定の場合はGeminiにフォールバック）
   static String get nanoBananaApiKey {
     try {
       return _getValue('NANO_BANANA_API_KEY');
     } catch (e) {
-      // Fallback to Gemini API key if Nano Banana key is not provided
+      // Nano BananaキーがなければGemini APIキーにフォールバック
       return geminiApiKey;
     }
   }
 
-  /// Nano Banana API Base URL
+  /// Nano Banana APIベースURL
   static String get nanoBananaApiBaseUrl {
     return _getValue(
       'NANO_BANANA_API_BASE_URL',
-      defaultValue: 'https://api.nanobanana.com', // Placeholder URL
+      defaultValue: 'https://api.nanobanana.com', // プレースホルダーURL
     );
   }
 
-  /// Validates that all required configuration values are present
+  /// 必要な設定値が全て存在することを検証する
   static void validateConfiguration() {
     if (!_isInitialized) {
       throw Exception('EnvConfig not initialized. Call EnvConfig.initialize() first.');
     }
 
     try {
-      // Validate required API keys
+      // 必須APIキーを検証する
       geminiApiKey;
-      nanoBananaApiKey; // This will fallback to Gemini if not provided
-      
+      nanoBananaApiKey; // 未指定の場合はGeminiにフォールバック
+
       if (kDebugMode) {
         print('✅ All required API keys are configured');
       }
@@ -110,7 +110,7 @@ class EnvConfig {
     }
   }
 
-  /// Gets all configuration values for debugging (without sensitive data)
+  /// デバッグ用に全設定値を取得する（機密データを除く）
   static Map<String, String> getDebugInfo() {
     if (!_isInitialized) {
       return {'status': 'Not initialized'};
@@ -124,7 +124,7 @@ class EnvConfig {
     };
   }
 
-  /// Checks if a configuration value exists without throwing an exception
+  /// 例外を投げずに設定値の存在を確認する
   static bool _hasValue(String key) {
     try {
       _getValue(key);

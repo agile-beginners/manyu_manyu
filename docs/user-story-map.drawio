@@ -1,0 +1,125 @@
+<mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="2" value="マニュマニュ ユーザーストーリーマップ" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+      <mxGeometry x="10" y="0" width="500" height="25" as="geometry" />
+    </mxCell>
+
+    <!-- Row labels -->
+    <mxCell id="3" value="ユーザー行動" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="10" y="30" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="エピック" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="10" y="102" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="ストーリー" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="10" y="174" width="110" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- Horizontal separators -->
+    <mxCell id="6" value="" style="fillColor=#888888;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="10" y="90" width="1340" height="2" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="" style="fillColor=#888888;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="10" y="162" width="1340" height="2" as="geometry" />
+    </mxCell>
+
+    <!-- Vertical separators between groups -->
+    <mxCell id="8" value="" style="fillColor=#cccccc;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="299" y="30" width="2" height="254" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="" style="fillColor=#cccccc;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="649" y="30" width="2" height="254" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="" style="fillColor=#cccccc;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="999" y="30" width="2" height="254" as="geometry" />
+    </mxCell>
+
+    <!-- ===== GROUP 1: 動画を準備する ===== -->
+    <mxCell id="11" value="動画を準備する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;fontColor=#ffffff;strokeColor=#1e3a5f;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="130" y="30" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="動画のアップロード" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="130" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="動画ファイルを選択する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="130" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="アップロードの進捗を確認する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="130" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== GROUP 2: マニュアルを生成する ===== -->
+    <mxCell id="15" value="マニュアルを生成する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;fontColor=#ffffff;strokeColor=#1e3a5f;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="310" y="30" width="330" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="AI解析" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="コンテンツ抽出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="解析を開始する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="解析の完了を確認する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="抽出されたステップを確認する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="480" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="動画から画像を取得する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="480" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== GROUP 3: マニュアルを編集する ===== -->
+    <mxCell id="22" value="マニュアルを編集する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;fontColor=#ffffff;strokeColor=#1e3a5f;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="660" y="30" width="330" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="テキスト編集" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="660" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="画像編集" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="830" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="ステップのテキストを修正する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="ステップの順序を並び替える" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="画像に注釈を追加する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="830" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="28" value="画像をAIで編集する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="830" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ===== GROUP 4: マニュアルを出力する ===== -->
+    <mxCell id="29" value="マニュアルを出力する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;fontColor=#ffffff;strokeColor=#1e3a5f;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="30" width="330" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="プレビュー確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="PDF書き出し" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5b9bd5;fontColor=#ffffff;strokeColor=#5b9bd5;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="102" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="プレビューモードで閲覧する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="33" value="仕上がりを確認する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="PDFとしてエクスポートする" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="174" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="PDFを保存する" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;fontColor=#333333;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="234" width="160" height="50" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

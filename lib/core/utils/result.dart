@@ -1,51 +1,51 @@
 import '../errors/failures.dart';
 
-/// A generic result type that can represent either success or failure
+/// 成功または失敗を表すジェネリックな結果型
 sealed class Result<T> {
   const Result();
-  
-  /// Creates a successful result
+
+  /// 成功した結果を生成する
   const factory Result.success(T data) = Success<T>;
-  
-  /// Creates a failed result
+
+  /// 失敗した結果を生成する
   const factory Result.failure(Failure failure) = Failed<T>;
-  
-  /// Returns true if this result represents a success
+
+  /// この結果が成功を表す場合にtrueを返す
   bool get isSuccess => this is Success<T>;
-  
-  /// Returns true if this result represents a failure
+
+  /// この結果が失敗を表す場合にtrueを返す
   bool get isFailure => this is Failed<T>;
-  
-  /// Returns the data if successful, null otherwise
+
+  /// 成功の場合はデータを返し、そうでなければnullを返す
   T? get data => switch (this) {
     Success<T>(data: final data) => data,
     Failed<T>() => null,
   };
-  
-  /// Returns the failure if failed, null otherwise
+
+  /// 失敗の場合はFailureを返し、そうでなければnullを返す
   Failure? get failure => switch (this) {
     Success<T>() => null,
     Failed<T>(failure: final failure) => failure,
   };
-  
-  /// Transforms the data if successful, otherwise returns the same failure
+
+  /// 成功の場合はデータを変換し、そうでなければ同じ失敗を返す
   Result<U> map<U>(U Function(T data) transform) {
     return switch (this) {
       Success<T>(data: final data) => Result.success(transform(data)),
       Failed<T>(failure: final failure) => Result.failure(failure),
     };
   }
-  
-  /// Transforms the data if successful, otherwise returns the same failure
-  /// The transform function can return a Result, allowing for chaining
+
+  /// 成功の場合はデータを変換し、そうでなければ同じ失敗を返す
+  /// 変換関数はResultを返すことができ、チェーンが可能
   Result<U> flatMap<U>(Result<U> Function(T data) transform) {
     return switch (this) {
       Success<T>(data: final data) => transform(data),
       Failed<T>(failure: final failure) => Result.failure(failure),
     };
   }
-  
-  /// Executes the appropriate callback based on the result
+
+  /// 結果に基づいて適切なコールバックを実行する
   R fold<R>(
     R Function(Failure failure) onFailure,
     R Function(T data) onSuccess,
@@ -57,7 +57,7 @@ sealed class Result<T> {
   }
 }
 
-/// Represents a successful result
+/// 成功した結果を表す
 final class Success<T> extends Result<T> {
   @override
   final T data;
@@ -81,7 +81,7 @@ final class Success<T> extends Result<T> {
   Failure? get failure => null;
 }
 
-/// Represents a failed result
+/// 失敗した結果を表す
 final class Failed<T> extends Result<T> {
   @override
   final Failure failure;

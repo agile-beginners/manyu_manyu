@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../config/env_config.dart';
 
-/// Debug screen to check configuration status
-/// Only available in debug mode
+/// 設定状態を確認するデバッグ画面
+/// デバッグモードでのみ使用可能
 class ConfigDebugScreen extends StatelessWidget {
   const ConfigDebugScreen({super.key});
 

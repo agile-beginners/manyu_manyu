@@ -7,21 +7,21 @@ import 'package:mockito/mockito.dart';
 import 'package:tokyo_flutter_hackathon_2025/core/constants/app_constants.dart';
 import 'package:tokyo_flutter_hackathon_2025/core/errors/failures.dart';
 import 'package:tokyo_flutter_hackathon_2025/core/network/api_client.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/manual_generation/data/services/gemini_service.dart';
-import 'package:tokyo_flutter_hackathon_2025/features/video_upload/domain/entities/video_file.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/data/services/gemini_video_analysis_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/video/domain/entities/video_file.dart';
 
 import 'gemini_service_test.mocks.dart';
 
 @GenerateMocks([ApiClient])
 void main() {
-  group('GeminiService', () {
-    late GeminiService geminiService;
+  group('GeminiVideoAnalysisService', () {
+    late GeminiVideoAnalysisService geminiService;
     late MockApiClient mockApiClient;
     const testApiKey = 'test-api-key';
 
     setUp(() {
       mockApiClient = MockApiClient();
-      geminiService = GeminiService(
+      geminiService = GeminiVideoAnalysisService(
         apiClient: mockApiClient,
         apiKey: testApiKey,
       );
@@ -246,7 +246,7 @@ void main() {
         // Assert
         expect(result.isFailure, true);
         expect(result.failure, isA<ApiFailure>());
-        expect(result.failure!.message, contains('Failed to analyze video after'));
+        expect(result.failure!.message, contains('Failed after'));
 
         // Cleanup
         await tempDir.delete(recursive: true);

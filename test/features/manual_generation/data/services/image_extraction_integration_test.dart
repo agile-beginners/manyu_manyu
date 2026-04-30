@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../../../lib/features/manual_generation/data/services/image_extraction_service.dart';
-import '../../../../../lib/features/manual_generation/domain/entities/manual_step.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/data/services/image_extraction_service.dart';
+import 'package:tokyo_flutter_hackathon_2025/features/manual/domain/entities/manual_step.dart';
 
 void main() {
   // Initialize Flutter binding for integration tests
