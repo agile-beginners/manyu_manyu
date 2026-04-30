@@ -7,16 +7,16 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
-import '../../../video_upload/domain/entities/video_file.dart';
+import '../../../video/domain/entities/video_file.dart';
 import '../../domain/entities/manual_step.dart';
-import '../../domain/services/gemini_service.dart' as domain;
+import 'video_analysis_service.dart';
 
 /// Service for interacting with Gemini API for video analysis
-class GeminiService implements domain.GeminiService {
+class GeminiVideoAnalysisService implements VideoAnalysisService {
   final ApiClient _apiClient;
   final String _apiKey;
 
-  GeminiService({
+  GeminiVideoAnalysisService({
     required ApiClient apiClient,
     required String apiKey,
   })  : _apiClient = apiClient,
@@ -25,6 +25,7 @@ class GeminiService implements domain.GeminiService {
   /// Analyzes a video file and extracts manual steps
   ///
   /// Requirements: 2.1, 2.2, 2.3, 2.4
+  @override
   Future<Result<List<ManualStep>>> analyzeVideo(
     VideoFile videoFile, {
     String? manualInfo,

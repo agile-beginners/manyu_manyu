@@ -1,5 +1,5 @@
 import '../../../../core/utils/result.dart';
-import '../entities/manual.dart';
+import '../../domain/entities/manual.dart';
 
 /// Service that exports a manual to PDF.
 ///

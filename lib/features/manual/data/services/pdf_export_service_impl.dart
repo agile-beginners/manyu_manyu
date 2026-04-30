@@ -10,7 +10,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/manual.dart';
 import '../../domain/entities/manual_step.dart';
-import '../../domain/services/pdf_export_service.dart';
+import 'pdf_export_service.dart';
 
 /// Concrete implementation for exporting manuals to PDF.
 class PdfExportServiceImpl implements PdfExportService {

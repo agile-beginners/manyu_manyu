@@ -1,6 +1,6 @@
 import '../../../../core/utils/result.dart';
-import '../entities/manual.dart';
-import '../entities/manual_step.dart';
+import '../../domain/entities/manual.dart';
+import '../../domain/entities/manual_step.dart';
 
 /// Repository interface for manual operations
 abstract class ManualRepository {

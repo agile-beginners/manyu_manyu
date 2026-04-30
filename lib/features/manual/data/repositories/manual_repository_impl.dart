@@ -6,7 +6,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/manual.dart';
 import '../../domain/entities/manual_step.dart';
-import '../../domain/repositories/manual_repository.dart';
+import 'manual_repository.dart';
 
 /// Concrete implementation of ManualRepository using local storage
 class ManualRepositoryImpl implements ManualRepository {

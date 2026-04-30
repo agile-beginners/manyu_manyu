@@ -1,5 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'manual_status.dart';
 import 'manual_step.dart';
+
+export 'manual_status.dart';
 
 part 'manual.g.dart';
 
@@ -8,29 +11,29 @@ part 'manual.g.dart';
 class Manual {
   /// Unique identifier for the manual
   final String id;
-  
+
   /// Title of the manual
   final String title;
-  
+
   /// List of steps in the manual
   @JsonKey(toJson: _stepsToJson, fromJson: _stepsFromJson)
   final List<ManualStep> steps;
-  
+
   /// Timestamp when the manual was created
   final DateTime createdAt;
-  
+
   /// Timestamp when the manual was last updated
   final DateTime updatedAt;
-  
+
   /// Path to the original video file
   final String? videoPath;
-  
+
   /// Total duration of the video in milliseconds
   final int? videoDurationMs;
-  
+
   /// Status of the manual generation process
   final ManualStatus status;
-  
+
   /// Description or summary of the manual
   final String? description;
 
@@ -101,10 +104,10 @@ class Manual {
   /// Returns a new Manual with the step at the given index updated
   Manual updateStepAt(int index, ManualStep updatedStep) {
     if (index < 0 || index >= steps.length) return this;
-    
+
     final updatedSteps = List<ManualStep>.from(steps);
     updatedSteps[index] = updatedStep;
-    
+
     return copyWith(
       steps: updatedSteps,
       updatedAt: DateTime.now(),
@@ -115,7 +118,7 @@ class Manual {
   Manual updateStepById(String stepId, ManualStep updatedStep) {
     final index = steps.indexWhere((step) => step.id == stepId);
     if (index == -1) return this;
-    
+
     return updateStepAt(index, updatedStep);
   }
 
@@ -161,24 +164,4 @@ List<Map<String, dynamic>> _stepsToJson(List<ManualStep> steps) {
 
 List<ManualStep> _stepsFromJson(List<dynamic> json) {
   return json.map((stepJson) => ManualStep.fromJson(stepJson as Map<String, dynamic>)).toList();
-}
-
-/// Enum representing the status of a manual
-@JsonEnum()
-enum ManualStatus {
-  /// Manual is being created/generated
-  @JsonValue('generating')
-  generating,
-  
-  /// Manual is in draft state (can be edited)
-  @JsonValue('draft')
-  draft,
-  
-  /// Manual is completed and ready for use
-  @JsonValue('completed')
-  completed,
-  
-  /// Manual generation failed
-  @JsonValue('failed')
-  failed,
 }

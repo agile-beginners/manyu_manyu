@@ -7,8 +7,8 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
-import '../../domain/services/image_annotation_service.dart';
 import 'gemini_image_service.dart';
+import 'image_annotation_service.dart';
 
 /// Service for Nano Banana API image annotation
 /// Implements image annotation with arrows, text, and highlights
