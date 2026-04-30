@@ -4,7 +4,6 @@ import '../../../manual/domain/entities/manual.dart';
 import '../../../manual/domain/entities/manual_step.dart';
 import '../../../manual/data/repositories/manual_repository.dart';
 
-/// Data layer implementation of ManualEditService
 class ManualEditServiceDataImpl {
   final ManualRepository _repository;
   
