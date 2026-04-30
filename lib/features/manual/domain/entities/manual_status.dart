@@ -1,21 +1,21 @@
 import 'package:json_annotation/json_annotation.dart';
 
-/// Enum representing the status of a manual
+/// マニュアルのステータスを表す列挙型
 @JsonEnum()
 enum ManualStatus {
-  /// Manual is being created/generated
+  /// マニュアルが作成・生成中
   @JsonValue('generating')
   generating,
 
-  /// Manual is in draft state (can be edited)
+  /// マニュアルが下書き状態（編集可能）
   @JsonValue('draft')
   draft,
 
-  /// Manual is completed and ready for use
+  /// マニュアルが完成済みで使用可能
   @JsonValue('completed')
   completed,
 
-  /// Manual generation failed
+  /// マニュアルの生成が失敗した
   @JsonValue('failed')
   failed,
 }

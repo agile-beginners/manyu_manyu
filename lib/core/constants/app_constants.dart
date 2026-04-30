@@ -1,27 +1,27 @@
-/// Application-wide constants
+/// アプリケーション全体の定数
 class AppConstants {
-  // Gemini API configuration
+  // Gemini API設定
   static const String geminiApiBaseUrl =
       'https://generativelanguage.googleapis.com';
   static const String geminiModel = 'gemini-3-pro-preview';
   static const String geminiImageModel = 'gemini-3-pro-image-preview';
   static const String geminiApiVersion = 'v1beta';
 
-  // File constraints
+  // ファイル制約
   static const int maxVideoSizeBytes = 200 * 1024 * 1024; // 200MB
   static const List<String> supportedVideoFormats = ['mp4', 'mov', 'avi'];
   static const int maxManualSteps = 20;
 
-  // UI Constants
+  // UI定数
   static const double defaultPadding = 16.0;
   static const double smallPadding = 8.0;
   static const double largePadding = 24.0;
 
-  // Network
+  // ネットワーク
   static const int networkTimeoutSeconds = 300;
   static const int maxRetryAttempts = 3;
 
-  // Storage
+  // ストレージ
   static const String tempVideoDirectory = 'temp_videos';
   static const String extractedImagesDirectory = 'extracted_images';
   static const String annotatedImagesDirectory = 'annotated_images';

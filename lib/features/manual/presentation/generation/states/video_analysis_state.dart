@@ -1,7 +1,7 @@
 import '../../../domain/entities/manual.dart';
 import '../../../domain/value_objects/manual_generation_progress_stage.dart';
 
-/// Represents high-level phases while running the manual generation flow.
+/// マニュアル生成フロー実行中の高レベルなフェーズを表す
 enum VideoAnalysisPhase {
   idle,
   analyzingVideo,
@@ -10,7 +10,7 @@ enum VideoAnalysisPhase {
   error,
 }
 
-/// UI facing state for the video analysis progress dialog.
+/// 動画解析の進行状況ダイアログ向けのUI状態
 class VideoAnalysisState {
   final VideoAnalysisPhase phase;
   final bool isProcessing;
@@ -56,7 +56,7 @@ class VideoAnalysisState {
     );
   }
 
-  /// Convenience factory for creating a state based on progress callback events.
+  /// 進行状況コールバックのイベントをもとに状態を生成する便利ファクトリー
   factory VideoAnalysisState.fromProgress(
     ManualGenerationProgressStage stage,
   ) {
@@ -86,7 +86,7 @@ class VideoAnalysisState {
 
   bool get hasCompleted => phase == VideoAnalysisPhase.completed && manual != null;
 
-  /// Phase to show on the progress indicator (ignores the error sentinel).
+  /// 進行状況インジケーターに表示するフェーズ（エラー状態を無視する）
   VideoAnalysisPhase get displayPhase =>
       phase == VideoAnalysisPhase.error ? latestNonErrorPhase : phase;
 }

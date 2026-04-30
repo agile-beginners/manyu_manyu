@@ -12,7 +12,7 @@ import '../../domain/entities/manual.dart';
 import '../../domain/entities/manual_step.dart';
 import 'pdf_export_service.dart';
 
-/// Concrete implementation for exporting manuals to PDF.
+/// マニュアルをPDFにエクスポートするための具体的な実装。
 class PdfExportServiceImpl implements PdfExportService {
   pw.Font? _fontRegular;
   pw.Font? _fontBold;

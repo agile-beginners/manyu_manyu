@@ -12,7 +12,7 @@ import '../widgets/file_selection_widget.dart';
 import '../widgets/upload_progress_widget.dart';
 import '../widgets/upload_status_widget.dart';
 
-/// Screen for uploading video files
+/// 動画ファイルをアップロードする画面
 class VideoUploadScreen extends ConsumerWidget {
   const VideoUploadScreen({super.key});
 
@@ -165,10 +165,10 @@ class VideoUploadScreen extends ConsumerWidget {
     WidgetRef ref,
     Manual manual,
   ) {
-    // Reset analysis state before leaving the progress flow
+    // 進行状況フローを離れる前に解析状態をリセットする
     ref.read(videoAnalysisControllerProvider.notifier).reset();
 
-    // Show a brief confirmation toast/snackbar
+    // 完了確認のスナックバーを表示する
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('解析が完了しました。「${manual.title}」を編集します。'),
@@ -176,7 +176,7 @@ class VideoUploadScreen extends ConsumerWidget {
       ),
     );
 
-    // Navigate on the next microtask to avoid Navigator conflicts
+    // Navigator競合を避けるため次のマイクロタスクで遷移する
     Future.microtask(() {
       if (!context.mounted) return;
       Navigator.of(context).push(

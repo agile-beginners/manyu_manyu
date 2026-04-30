@@ -2,29 +2,29 @@ import 'dart:io';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/video_file.dart';
 
-/// Repository interface for video file operations
+/// 動画ファイル操作のリポジトリインターフェース
 abstract class VideoRepository {
-  /// Uploads a video file and returns the VideoFile metadata
+  /// 動画ファイルをアップロードしてVideoFileメタデータを返す
   Future<Result<VideoFile>> uploadVideo(File videoFile);
-  
-  /// Validates a video file format and size
+
+  /// 動画ファイルの形式とサイズを検証する
   Future<Result<bool>> validateVideo(File videoFile);
-  
-  /// Saves video file metadata to local storage
+
+  /// 動画ファイルのメタデータをローカルストレージに保存する
   Future<Result<void>> saveVideoMetadata(VideoFile videoFile);
-  
-  /// Retrieves video file metadata by path
+
+  /// パスで動画ファイルのメタデータを取得する
   Future<Result<VideoFile?>> getVideoMetadata(String path);
-  
-  /// Deletes a video file and its metadata
+
+  /// 動画ファイルとそのメタデータを削除する
   Future<Result<void>> deleteVideo(String path);
-  
-  /// Lists all uploaded video files
+
+  /// アップロードされた全動画ファイルの一覧を取得する
   Future<Result<List<VideoFile>>> getAllVideos();
-  
-  /// Gets the supported video formats
+
+  /// 対応している動画形式を取得する
   List<String> getSupportedFormats();
-  
-  /// Gets the maximum allowed file size in bytes
+
+  /// 許可される最大ファイルサイズ（バイト）を取得する
   int getMaxFileSizeBytes();
 }

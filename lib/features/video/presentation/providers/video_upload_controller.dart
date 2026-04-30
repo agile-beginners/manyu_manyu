@@ -5,12 +5,12 @@ import '../../data/repositories/video_repository_impl.dart';
 import '../../data/repositories/video_repository.dart';
 import '../../domain/entities/video_file.dart';
 
-/// Provider for VideoRepository
+/// VideoRepositoryのプロバイダー
 final videoRepositoryProvider = Provider<VideoRepository>((ref) {
   return VideoRepositoryImpl();
 });
 
-/// State class for video upload
+/// 動画アップロードの状態クラス
 class VideoUploadState {
   static const Object _manualInfoSentinel = Object();
 
@@ -64,20 +64,20 @@ class VideoUploadState {
   }
 }
 
-/// StateNotifier for managing video upload state
+/// 動画アップロードの状態を管理するStateNotifier
 class VideoUploadController extends StateNotifier<VideoUploadState> {
   final VideoRepository _repository;
 
   VideoUploadController(this._repository) : super(const VideoUploadState());
 
-  /// Selects a file for upload
+  /// アップロードするファイルを選択する
   void selectFile(File file) {
     state = state.copyWith(
       selectedFile: file,
     ).clearError().clearUpload();
   }
 
-  /// Uploads the selected video file
+  /// 選択した動画ファイルをアップロードする
   Future<void> uploadVideo(File videoFile) async {
     if (state.isUploading) return;
 
@@ -90,10 +90,10 @@ class VideoUploadController extends StateNotifier<VideoUploadState> {
     );
 
     try {
-      // Simulate upload progress
+      // アップロードの進行状況をシミュレートする
       await _simulateUploadProgress();
 
-      // Perform actual upload
+      // 実際のアップロードを実行する
       final result = await _repository.uploadVideo(videoFile);
 
       if (result.isSuccess) {
@@ -118,25 +118,25 @@ class VideoUploadController extends StateNotifier<VideoUploadState> {
     }
   }
 
-  /// Simulates upload progress for better UX
+  /// UX向上のためアップロードの進行状況をシミュレートする
   Future<void> _simulateUploadProgress() async {
     const totalSteps = 10;
     for (int i = 1; i <= totalSteps; i++) {
-      if (!state.isUploading) break; // Stop if upload was cancelled
+      if (!state.isUploading) break; // アップロードがキャンセルされた場合は停止する
       
       await Future.delayed(const Duration(milliseconds: 200));
       state = state.copyWith(
-        uploadProgress: i / totalSteps * 0.9, // Go up to 90%, then complete with actual upload
+        uploadProgress: i / totalSteps * 0.9, // 90%まで進め、その後実際のアップロードで完了する
       );
     }
   }
 
-  /// Clears the current error message
+  /// 現在のエラーメッセージをクリアする
   void clearError() {
     state = state.clearError();
   }
 
-  /// Updates the manual information provided by the user
+  /// ユーザーが入力したマニュアル情報を更新する
   void updateManualInfo(String? manualInfo) {
     final trimmedInfo = manualInfo?.trim();
     state = state.copyWith(
@@ -144,25 +144,25 @@ class VideoUploadController extends StateNotifier<VideoUploadState> {
     );
   }
 
-  /// Resets the upload state
+  /// アップロードの状態をリセットする
   void reset() {
     state = const VideoUploadState();
   }
 }
 
-/// Provider for video upload state
+/// 動画アップロード状態のプロバイダー
 final videoUploadStateProvider = StateNotifierProvider<VideoUploadController, VideoUploadState>((ref) {
   final repository = ref.watch(videoRepositoryProvider);
   return VideoUploadController(repository);
 });
 
-/// Provider for supported video formats
+/// 対応動画形式のプロバイダー
 final supportedFormatsProvider = Provider<List<String>>((ref) {
   final repository = ref.watch(videoRepositoryProvider);
   return repository.getSupportedFormats();
 });
 
-/// Provider for maximum file size
+/// 最大ファイルサイズのプロバイダー
 final maxFileSizeProvider = Provider<int>((ref) {
   final repository = ref.watch(videoRepositoryProvider);
   return repository.getMaxFileSizeBytes();

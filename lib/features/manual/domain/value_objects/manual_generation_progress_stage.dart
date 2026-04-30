@@ -1,12 +1,12 @@
-/// Represents the high level stages of the manual generation workflow.
+/// マニュアル生成ワークフローの高レベルなステージを表す。
 enum ManualGenerationProgressStage {
-  /// Gemini API is analyzing the uploaded video to extract steps.
+  /// Gemini APIがアップロードされた動画を解析してステップを抽出中。
   analyzingVideo,
 
-  /// Images are being extracted from the video and annotated for each step.
+  /// 各ステップの画像が動画から抽出されアノテーション処理中。
   generatingImages,
 
-  /// Manual generation has finished successfully.
+  /// マニュアル生成が正常に完了した。
   completed,
 }
 

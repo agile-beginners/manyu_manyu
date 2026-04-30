@@ -9,7 +9,7 @@ import '../../../../core/utils/result.dart';
 import 'video_repository.dart';
 import '../../domain/entities/video_file.dart';
 
-/// Concrete implementation of VideoRepository using local storage
+/// ローカルストレージを使用したVideoRepositoryの具体的な実装
 class VideoRepositoryImpl implements VideoRepository {
   static const String _videoMetadataFileName = 'video_metadata.json';
   static const List<String> _supportedFormats = ['mp4', 'mov', 'avi', 'mkv'];
@@ -20,35 +20,35 @@ class VideoRepositoryImpl implements VideoRepository {
   @override
   Future<Result<VideoFile>> uploadVideo(File videoFile) async {
     try {
-      // Validate the video first
+      // まず動画を検証する
       final validationResult = await validateVideo(videoFile);
       if (validationResult.isFailure) {
         return Result.failure(validationResult.failure!);
       }
 
-      // Get app documents directory
+      // アプリのドキュメントディレクトリを取得する
       final appDir = await getApplicationDocumentsDirectory();
       final videosDir = Directory('${appDir.path}/videos');
-      
-      // Create videos directory if it doesn't exist
+
+      // 動画ディレクトリが存在しない場合は作成する
       if (!await videosDir.exists()) {
         await videosDir.create(recursive: true);
       }
 
-      // Generate unique filename
+      // 一意なファイル名を生成する
       final originalName = videoFile.path.split('/').last;
       final extension = originalName.split('.').last.toLowerCase();
       final uniqueId = _uuid.v4();
       final newFileName = '$uniqueId.$extension';
       final newPath = '${videosDir.path}/$newFileName';
 
-      // Copy the file to app directory
+      // ファイルをアプリディレクトリにコピーする
       final copiedFile = await videoFile.copy(newPath);
-      
-      // Get file stats
+
+      // ファイルの統計情報を取得する
       final fileStat = await copiedFile.stat();
-      
-      // Create VideoFile metadata
+
+      // VideoFileのメタデータを作成する
       final videoFileMetadata = VideoFile(
         path: newPath,
         name: originalName,
@@ -57,14 +57,14 @@ class VideoRepositoryImpl implements VideoRepository {
         createdAt: DateTime.now(),
       );
 
-      // Save metadata
+      // メタデータを保存する
       final saveResult = await saveVideoMetadata(videoFileMetadata);
       if (saveResult.isFailure) {
-        // Clean up the copied file if metadata save fails
+        // メタデータ保存失敗時はコピーしたファイルをクリーンアップする
         try {
           await copiedFile.delete();
         } catch (e) {
-          // Ignore cleanup errors
+          // クリーンアップエラーは無視する
         }
         return Result.failure(saveResult.failure!);
       }
@@ -80,14 +80,14 @@ class VideoRepositoryImpl implements VideoRepository {
   @override
   Future<Result<bool>> validateVideo(File videoFile) async {
     try {
-      // Check if file exists
+      // ファイルの存在確認
       if (!await videoFile.exists()) {
         return Result.failure(
           const ValidationFailure('Video file does not exist'),
         );
       }
 
-      // Check file size
+      // ファイルサイズの確認
       final fileStat = await videoFile.stat();
       if (fileStat.size > _maxFileSizeBytes) {
         return Result.failure(
@@ -97,7 +97,7 @@ class VideoRepositoryImpl implements VideoRepository {
         );
       }
 
-      // Check file format
+      // ファイル形式の確認
       final fileName = videoFile.path.split('/').last;
       final extension = fileName.split('.').last.toLowerCase();
       
@@ -123,14 +123,14 @@ class VideoRepositoryImpl implements VideoRepository {
       
       List<VideoFile> existingVideos = [];
       
-      // Load existing metadata if file exists
+      // ファイルが存在する場合は既存のメタデータを読み込む
       if (await metadataFile.exists()) {
         final content = await metadataFile.readAsString();
         final List<dynamic> jsonList = jsonDecode(content);
         existingVideos = jsonList.map((json) => VideoFile.fromJson(json)).toList();
       }
       
-      // Add or update the video metadata
+      // 動画メタデータを追加または更新する
       final existingIndex = existingVideos.indexWhere((v) => v.path == videoFile.path);
       if (existingIndex != -1) {
         existingVideos[existingIndex] = videoFile;
@@ -138,7 +138,7 @@ class VideoRepositoryImpl implements VideoRepository {
         existingVideos.add(videoFile);
       }
       
-      // Save updated metadata
+      // 更新されたメタデータを保存する
       final jsonList = existingVideos.map((v) => v.toJson()).toList();
       await metadataFile.writeAsString(jsonEncode(jsonList));
       
@@ -172,13 +172,13 @@ class VideoRepositoryImpl implements VideoRepository {
   @override
   Future<Result<void>> deleteVideo(String path) async {
     try {
-      // Delete the video file
+      // 動画ファイルを削除する
       final videoFile = File(path);
       if (await videoFile.exists()) {
         await videoFile.delete();
       }
       
-      // Remove from metadata
+      // メタデータから削除する
       final appDir = await getApplicationDocumentsDirectory();
       final metadataFile = File('${appDir.path}/$_videoMetadataFileName');
       
@@ -213,7 +213,7 @@ class VideoRepositoryImpl implements VideoRepository {
       final List<dynamic> jsonList = jsonDecode(content);
       final videos = jsonList.map((json) => VideoFile.fromJson(json)).toList();
       
-      // Sort by creation date (newest first)
+      // 作成日でソートする（新しい順）
       videos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       
       return Result.success(videos);

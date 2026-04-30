@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Widget for displaying upload progress
+/// アップロードの進行状況を表示するウィジェット
 class UploadProgressWidget extends StatelessWidget {
   final double progress;
   final bool isUploading;
@@ -34,7 +34,7 @@ class UploadProgressWidget extends StatelessWidget {
         
         const SizedBox(height: 12),
         
-        // Progress bar
+        // プログレスバー
         LinearProgressIndicator(
           value: progress,
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -49,7 +49,7 @@ class UploadProgressWidget extends StatelessWidget {
         
         const SizedBox(height: 8),
         
-        // Status text
+        // ステータステキスト
         Text(
           _getStatusText(),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(

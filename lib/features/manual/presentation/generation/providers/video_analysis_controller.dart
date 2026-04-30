@@ -5,14 +5,14 @@ import '../../../application/manual_creation_service.dart';
 import '../../../domain/value_objects/manual_generation_progress_stage.dart';
 import '../states/video_analysis_state.dart';
 
-/// Controller for video analysis — delegates to [ManualCreationService].
+/// 動画解析のコントローラー — [ManualCreationService]に処理を委譲する
 class VideoAnalysisController extends StateNotifier<VideoAnalysisState> {
   final ManualCreationService _creationService;
 
   VideoAnalysisController(this._creationService)
       : super(const VideoAnalysisState.initial());
 
-  /// Starts video analysis and manual creation.
+  /// 動画解析とマニュアル作成を開始する
   Future<void> analyzeVideo(
     VideoFile videoFile, {
     String? customTitle,
@@ -68,19 +68,19 @@ class VideoAnalysisController extends StateNotifier<VideoAnalysisState> {
     }
   }
 
-  /// Resets the analysis state.
+  /// 解析状態をリセットする
   void reset() {
     state = const VideoAnalysisState.initial();
   }
 }
 
-/// Provider for [VideoAnalysisController].
+/// [VideoAnalysisController]のプロバイダー
 final videoAnalysisControllerProvider =
     StateNotifierProvider<VideoAnalysisController, VideoAnalysisState>((ref) {
   return VideoAnalysisController(ref.watch(manualCreationServiceProvider));
 });
 
-/// Convenience provider: true while analysis is running.
+/// 解析実行中にtrueを返す便利プロバイダー
 final isAnalysisInProgressProvider = Provider<bool>((ref) {
   return ref.watch(videoAnalysisControllerProvider).isProcessing;
 });

@@ -7,7 +7,7 @@ import '../../../application/manual_export_service.dart';
 import '../../../domain/entities/manual.dart';
 import '../../../domain/entities/manual_step.dart';
 
-/// Controller for managing manual editing state.
+/// マニュアル編集の状態を管理するコントローラー
 class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
   final Ref _ref;
 
@@ -17,7 +17,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
   ManualExportService get _exportService =>
       _ref.read(manualExportServiceProvider);
 
-  /// Loads a manual by ID.
+  /// IDでマニュアルを読み込む
   Future<void> loadManual(String manualId) async {
     state = const AsyncValue.loading();
     try {
@@ -28,7 +28,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Updates the manual title.
+  /// マニュアルのタイトルを更新する
   Future<void> updateManualTitle(String manualId, String newTitle) async {
     if (state.value == null) return;
     try {
@@ -44,7 +44,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Updates the manual description.
+  /// マニュアルの説明を更新する
   Future<void> updateManualDescription(
       String manualId, String? newDescription) async {
     if (state.value == null) return;
@@ -62,7 +62,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Updates a step's title.
+  /// ステップのタイトルを更新する
   Future<void> updateStepTitle(
       String manualId, String stepId, String newTitle) async {
     if (state.value == null) return;
@@ -84,7 +84,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Updates a step's description.
+  /// ステップの説明を更新する
   Future<void> updateStepDescription(
       String manualId, String stepId, String newDescription) async {
     if (state.value == null) return;
@@ -106,7 +106,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Updates a complete step.
+  /// ステップ全体を更新する
   Future<void> updateStep(String manualId, ManualStep updatedStep) async {
     if (state.value == null) return;
     try {
@@ -126,7 +126,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Reorders the steps in the manual.
+  /// マニュアル内のステップを並び替える
   Future<void> reorderSteps(String manualId, List<String> stepIds) async {
     if (state.value == null) return;
     try {
@@ -142,7 +142,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     }
   }
 
-  /// Validates the currently loaded manual.
+  /// 現在読み込まれているマニュアルを検証する
   Result<bool> validateManual() {
     if (state.value == null) {
       return const Result.failure(ValidationFailure('No manual loaded'));
@@ -150,12 +150,12 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     return _editService.validateManual(state.value!);
   }
 
-  /// Validates a specific step.
+  /// 特定のステップを検証する
   Result<bool> validateStep(ManualStep step) {
     return _editService.validateStep(step);
   }
 
-  /// Exports the manual to PDF and returns the saved file path.
+  /// マニュアルをPDFにエクスポートして保存ファイルパスを返す
   Future<Result<String>> exportManual(String manualId) async {
     try {
       return await _exportService.exportManual(manualId);
@@ -166,7 +166,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
   }
 }
 
-/// Provider for [ManualEditController].
+/// [ManualEditController]のプロバイダー
 final manualEditControllerProvider =
     StateNotifierProvider<ManualEditController, AsyncValue<Manual?>>((ref) {
   return ManualEditController(ref);

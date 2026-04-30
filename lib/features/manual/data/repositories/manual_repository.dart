@@ -2,44 +2,44 @@ import '../../../../core/utils/result.dart';
 import '../../domain/entities/manual.dart';
 import '../../domain/entities/manual_step.dart';
 
-/// Repository interface for manual operations
+/// マニュアル操作のリポジトリインターフェース
 abstract class ManualRepository {
-  /// Saves a manual to local storage
+  /// マニュアルをローカルストレージに保存する
   Future<Result<void>> saveManual(Manual manual);
-  
-  /// Retrieves a manual by its ID
+
+  /// IDでマニュアルを取得する
   Future<Result<Manual?>> getManual(String id);
-  
-  /// Updates an existing manual
+
+  /// 既存のマニュアルを更新する
   Future<Result<void>> updateManual(Manual manual);
-  
-  /// Deletes a manual by its ID
+
+  /// IDでマニュアルを削除する
   Future<Result<void>> deleteManual(String id);
-  
-  /// Lists all manuals
+
+  /// 全マニュアルを一覧取得する
   Future<Result<List<Manual>>> getAllManuals();
-  
-  /// Saves a manual step
+
+  /// マニュアルのステップを保存する
   Future<Result<void>> saveManualStep(String manualId, ManualStep step);
-  
-  /// Updates a manual step
+
+  /// マニュアルのステップを更新する
   Future<Result<void>> updateManualStep(String manualId, ManualStep step);
-  
-  /// Deletes a manual step
+
+  /// マニュアルのステップを削除する
   Future<Result<void>> deleteManualStep(String manualId, String stepId);
-  
-  /// Gets all steps for a manual
+
+  /// マニュアルの全ステップを取得する
   Future<Result<List<ManualStep>>> getManualSteps(String manualId);
-  
-  /// Searches manuals by title or description
+
+  /// タイトルまたは説明でマニュアルを検索する
   Future<Result<List<Manual>>> searchManuals(String query);
-  
-  /// Gets manuals by status
+
+  /// ステータスでマニュアルを取得する
   Future<Result<List<Manual>>> getManualsByStatus(ManualStatus status);
-  
-  /// Exports manual data as JSON
+
+  /// マニュアルデータをJSONとしてエクスポートする
   Future<Result<Map<String, dynamic>>> exportManualAsJson(String manualId);
-  
-  /// Imports manual data from JSON
+
+  /// JSONからマニュアルデータをインポートする
   Future<Result<Manual>> importManualFromJson(Map<String, dynamic> json);
 }

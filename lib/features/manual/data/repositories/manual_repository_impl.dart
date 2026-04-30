@@ -8,7 +8,7 @@ import '../../domain/entities/manual.dart';
 import '../../domain/entities/manual_step.dart';
 import 'manual_repository.dart';
 
-/// Concrete implementation of ManualRepository using local storage
+/// ローカルストレージを使用したManualRepositoryの具体的な実装
 class ManualRepositoryImpl implements ManualRepository {
   static const String _manualsFileName = 'manuals.json';
 
@@ -17,25 +17,25 @@ class ManualRepositoryImpl implements ManualRepository {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       final manualsFile = File('${appDir.path}/$_manualsFileName');
-      
+
       List<Manual> existingManuals = [];
-      
-      // Load existing manuals if file exists
+
+      // ファイルが存在する場合に既存マニュアルを読み込む
       if (await manualsFile.exists()) {
         final content = await manualsFile.readAsString();
         final List<dynamic> jsonList = jsonDecode(content);
         existingManuals = jsonList.map((json) => Manual.fromJson(json)).toList();
       }
-      
-      // Add or update the manual
+
+      // マニュアルを追加または更新する
       final existingIndex = existingManuals.indexWhere((m) => m.id == manual.id);
       if (existingIndex != -1) {
         existingManuals[existingIndex] = manual;
       } else {
         existingManuals.add(manual);
       }
-      
-      // Save updated manuals
+
+      // 更新されたマニュアルを保存する
       final jsonList = existingManuals.map((m) => m.toJson()).toList();
       await manualsFile.writeAsString(jsonEncode(jsonList));
       
@@ -68,7 +68,7 @@ class ManualRepositoryImpl implements ManualRepository {
 
   @override
   Future<Result<void>> updateManual(Manual manual) async {
-    // Update is the same as save for this implementation
+    // この実装では更新は保存と同じ
     return saveManual(manual);
   }
 
@@ -111,7 +111,7 @@ class ManualRepositoryImpl implements ManualRepository {
       final List<dynamic> jsonList = jsonDecode(content);
       final manuals = jsonList.map((json) => Manual.fromJson(json)).toList();
       
-      // Sort by updated date (newest first)
+      // 更新日時で並び替える（新しい順）
       manuals.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       
       return Result.success(manuals);
@@ -135,17 +135,17 @@ class ManualRepositoryImpl implements ManualRepository {
         );
       }
       
-      // Add or update the step
+      // ステップを追加または更新する
       final existingSteps = List<ManualStep>.from(manual.steps);
       final existingIndex = existingSteps.indexWhere((s) => s.id == step.id);
-      
+
       if (existingIndex != -1) {
         existingSteps[existingIndex] = step;
       } else {
         existingSteps.add(step);
       }
-      
-      // Sort steps by step number
+
+      // ステップをステップ番号で並び替える
       existingSteps.sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
       
       final updatedManual = manual.copyWith(
@@ -161,7 +161,7 @@ class ManualRepositoryImpl implements ManualRepository {
 
   @override
   Future<Result<void>> updateManualStep(String manualId, ManualStep step) async {
-    // Update is the same as save for this implementation
+    // この実装では更新は保存と同じ
     return saveManualStep(manualId, step);
   }
 
@@ -206,7 +206,7 @@ class ManualRepositoryImpl implements ManualRepository {
         return const Result.success([]);
       }
       
-      // Return steps sorted by step number
+      // ステップ番号で並び替えたステップを返す
       final sortedSteps = List<ManualStep>.from(manual.steps);
       sortedSteps.sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
       

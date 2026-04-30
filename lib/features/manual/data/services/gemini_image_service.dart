@@ -7,8 +7,8 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
 
-/// Service for Gemini API image generation and editing
-/// Uses the Nano Banana Pro (gemini-3-pro-image-preview) model
+/// Gemini APIを使用した画像生成・編集サービス
+/// Nano Banana Pro（gemini-3-pro-image-preview）モデルを使用
 class GeminiImageService {
   final ApiClient _apiClient;
   final String _apiKey;
@@ -17,10 +17,9 @@ class GeminiImageService {
     : _apiClient = apiClient,
       _apiKey = apiKey;
 
-  /// Generates an annotated image with arrows, text, and highlights
-  /// using Gemini's image generation capabilities
+  /// Geminiの画像生成機能を使って矢印・テキスト・ハイライト付きのアノテーション画像を生成する
   ///
-  /// Requirements: 4.1, 4.2, 4.3, 4.4
+  /// 要件: 4.1, 4.2, 4.3, 4.4
   Future<Result<String>> generateAnnotatedImage({
     required String originalImagePath,
     required String stepTitle,
@@ -32,7 +31,7 @@ class GeminiImageService {
       print('📁 元画像パス: $originalImagePath');
       print('📝 ステップタイトル: $stepTitle');
 
-      // Read the original image
+      // 元画像を読み込む
       final imageBytes = await _readImageFile(originalImagePath);
       if (imageBytes == null) {
         print('❌ 元画像の読み込みに失敗');
@@ -42,7 +41,7 @@ class GeminiImageService {
       }
       print('✅ 元画像読み込み完了: ${imageBytes.length} bytes');
 
-      // Generate annotated image using Gemini
+      // Geminiを使ってアノテーション付き画像を生成する
       final result = await _generateImageWithGemini(
         imageBytes: imageBytes,
         stepTitle: stepTitle,
@@ -52,11 +51,11 @@ class GeminiImageService {
 
       if (result.isFailure) {
         print('⚠️ Gemini画像生成失敗、元画像を使用: ${result.failure!.message}');
-        // Fallback: return original image path if generation fails
+        // フォールバック: 生成失敗時は元画像パスを返す
         return Result.success(originalImagePath);
       }
 
-      // Save the generated image
+      // 生成された画像を保存する
       final annotatedImagePath = await _saveGeneratedImage(
         result.data!,
         originalImagePath,
@@ -72,7 +71,7 @@ class GeminiImageService {
     }
   }
 
-  /// Reads image file as bytes
+  /// 画像ファイルをバイト列として読み込む
   Future<List<int>?> _readImageFile(String path) async {
     try {
       final file = File(path);
@@ -89,7 +88,7 @@ class GeminiImageService {
     }
   }
 
-  /// Generates annotated image using Gemini API
+  /// Gemini APIを使ってアノテーション付き画像を生成する
   Future<Result<List<int>>> _generateImageWithGemini({
     required List<int> imageBytes,
     required String stepTitle,
@@ -101,18 +100,18 @@ class GeminiImageService {
           '${AppConstants.geminiApiBaseUrl}/${AppConstants.geminiApiVersion}/models/${AppConstants.geminiImageModel}:generateContent';
       print('🌐 画像生成API エンドポイント (Nano Banana Pro): $url');
 
-      // Encode image as base64
+      // 画像をbase64エンコードする
       final base64Image = base64Encode(imageBytes);
       print('🔄 Base64エンコード完了: ${base64Image.length} 文字');
 
-      // Create prompt for image annotation
+      // 画像アノテーション用のプロンプトを作成する
       final prompt = _buildImageAnnotationPrompt(
         stepTitle: stepTitle,
         stepDescription: stepDescription,
         stepNumber: stepNumber,
       );
 
-      // Prepare request body for image generation
+      // 画像生成用のリクエストボディを準備する
       final requestBody = {
         'contents': [
           {
@@ -136,7 +135,7 @@ class GeminiImageService {
       print('  プロンプト長: ${prompt.length} 文字');
       print('  リクエストボディ: $requestBody');
 
-      // Make API call
+      // API呼び出しを行う
       print('📤 Gemini画像生成API呼び出し中...');
       final response = await _apiClient.post(
         url,
@@ -157,7 +156,7 @@ class GeminiImageService {
         print('  エラー: ${response['error']}');
       }
 
-      // Parse response and extract generated image
+      // レスポンスを解析して生成された画像を抽出する
       return _parseImageGenerationResponse(response);
     } catch (e) {
       print('❌ 画像生成API呼び出しエラー: $e');
@@ -168,7 +167,7 @@ class GeminiImageService {
     }
   }
 
-  /// Builds prompt for image annotation
+  /// 画像アノテーション用のプロンプトを構築する
   String _buildImageAnnotationPrompt({
     required String stepTitle,
     required String stepDescription,
@@ -203,7 +202,7 @@ class GeminiImageService {
     return prompt;
   }
 
-  /// Parses Gemini image generation response
+  /// Gemini画像生成レスポンスを解析する
   Future<Result<List<int>>> _parseImageGenerationResponse(
     Map<String, dynamic> response,
   ) async {
@@ -225,7 +224,7 @@ class GeminiImageService {
 
       print('📋 コンテンツキー: ${content.keys.toList()}');
 
-      // Check for inline_data with image
+      // 画像を含むinline_dataを確認する
       final parts = content['parts'] as List<dynamic>?;
       if (parts != null && parts.isNotEmpty) {
         for (final part in parts) {
@@ -257,8 +256,8 @@ class GeminiImageService {
         }
       }
 
-      // For now, we'll return a placeholder since the actual image generation
-      // API structure needs to be verified with real Gemini API documentation
+      // 実際のGemini APIドキュメントで画像生成APIの構造を確認する必要があるため、
+      // 現時点ではフォールバックを返す
       print('⚠️ 画像データが見つからない、フォールバックを使用');
       throw const ApiException(
         'Image data not found in response - using fallback',
@@ -272,7 +271,7 @@ class GeminiImageService {
     }
   }
 
-  /// Saves generated image to local storage
+  /// 生成された画像をローカルストレージに保存する
   Future<String> _saveGeneratedImage(
     List<int> imageBytes,
     String originalImagePath,
@@ -281,7 +280,7 @@ class GeminiImageService {
     try {
       print('💾 生成画像を保存中...');
 
-      // Create annotated images directory
+      // アノテーション用ディレクトリを作成する
       final originalFile = File(originalImagePath);
       final directory = originalFile.parent;
       final annotatedDir = Directory('${directory.path}/annotated');
@@ -291,14 +290,14 @@ class GeminiImageService {
         print('📁 アノテーション用ディレクトリ作成: ${annotatedDir.path}');
       }
 
-      // Generate new filename
+      // 新しいファイル名を生成する
       final originalName = originalFile.uri.pathSegments.last;
       final nameWithoutExtension = originalName.split('.').first;
       final extension = originalName.split('.').last;
       final annotatedFileName =
           '${nameWithoutExtension}_step${stepNumber}_annotated.$extension';
 
-      // Save annotated image
+      // アノテーション付き画像を保存する
       final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
       await annotatedFile.writeAsBytes(imageBytes);
 

@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../providers/video_upload_controller.dart';
 
-/// Widget for selecting video files
+/// 動画ファイルを選択するウィジェット
 class FileSelectionWidget extends ConsumerWidget {
   final File? selectedFile;
   final Function(File) onFileSelected;
@@ -28,7 +28,7 @@ class FileSelectionWidget extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // File selection area
+        // ファイル選択エリア
         if (selectedFile == null)
           InkWell(
             onTap: isEnabled ? _selectFile : null,
@@ -187,7 +187,7 @@ class FileSelectionWidget extends ConsumerWidget {
 
         const SizedBox(height: 16),
 
-        // Format and size info
+        // 形式とサイズの情報
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -225,7 +225,7 @@ class FileSelectionWidget extends ConsumerWidget {
         onFileSelected(file);
       }
     } catch (e) {
-      // Handle file picker errors
+      // ファイルピッカーのエラーを処理する
       debugPrint('Error selecting file: $e');
     }
   }

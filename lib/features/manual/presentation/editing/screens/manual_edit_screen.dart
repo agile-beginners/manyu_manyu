@@ -8,7 +8,7 @@ import '../widgets/manual_header_widget.dart';
 import '../widgets/step_list_widget.dart';
 import '../widgets/step_edit_dialog.dart';
 
-/// Screen for editing manual content
+/// マニュアルコンテンツを編集する画面
 class ManualEditScreen extends ConsumerStatefulWidget {
   final String manualId;
 
@@ -24,7 +24,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
   @override
   void initState() {
     super.initState();
-    // Load the manual when the screen initializes
+    // 画面初期化時にマニュアルを読み込む
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(manualEditControllerProvider.notifier).loadManual(widget.manualId);
     });
@@ -119,7 +119,7 @@ class _ManualEditScreenState extends ConsumerState<ManualEditScreen> {
                                   builder: (context) {
                                     return FilledButton.icon(
                                       onPressed: () {
-                                        // Calculate the button's position before closing the dialog
+                                        // ダイアログを閉じる前にボタンの位置を計算する
                                         final box = context.findRenderObject() as RenderBox?;
                                         Rect? sharePositionOrigin;
                                         if (box != null) {

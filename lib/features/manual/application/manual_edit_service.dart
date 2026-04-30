@@ -17,13 +17,13 @@ class ManualEditService {
   Future<Result<Manual>> updateManualTitle(
       String manualId, String newTitle) async {
     try {
-      // Validate title
+      // タイトルを検証する
       if (newTitle.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Title cannot be empty'));
       }
 
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _repository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -34,13 +34,13 @@ class ManualEditService {
         return const Result.failure(StorageFailure('Manual not found'));
       }
 
-      // Update manual with new title
+      // 新しいタイトルでマニュアルを更新する
       final updatedManual = manual.copyWith(
         title: newTitle.trim(),
         updatedAt: DateTime.now(),
       );
 
-      // Save updated manual
+      // 更新されたマニュアルを保存する
       final saveResult = await _repository.updateManual(updatedManual);
       if (saveResult.isFailure) {
         return Result.failure(saveResult.failure!);
@@ -59,7 +59,7 @@ class ManualEditService {
   Future<Result<Manual>> updateManualDescription(
       String manualId, String? newDescription) async {
     try {
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _repository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -70,13 +70,13 @@ class ManualEditService {
         return const Result.failure(StorageFailure('Manual not found'));
       }
 
-      // Update manual with new description
+      // 新しい説明でマニュアルを更新する
       final updatedManual = manual.copyWith(
         description: newDescription?.trim(),
         updatedAt: DateTime.now(),
       );
 
-      // Save updated manual
+      // 更新されたマニュアルを保存する
       final saveResult = await _repository.updateManual(updatedManual);
       if (saveResult.isFailure) {
         return Result.failure(saveResult.failure!);
@@ -95,13 +95,13 @@ class ManualEditService {
   Future<Result<ManualStep>> updateStepTitle(
       String manualId, String stepId, String newTitle) async {
     try {
-      // Validate title
+      // タイトルを検証する
       if (newTitle.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Step title cannot be empty'));
       }
 
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _repository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -112,16 +112,16 @@ class ManualEditService {
         return const Result.failure(StorageFailure('Manual not found'));
       }
 
-      // Find the step to update
+      // 更新するステップを見つける
       final step = manual.getStepById(stepId);
       if (step == null) {
         return const Result.failure(StorageFailure('Step not found'));
       }
 
-      // Update step with new title
+      // 新しいタイトルでステップを更新する
       final updatedStep = step.copyWith(title: newTitle.trim());
 
-      // Save updated step
+      // 更新されたステップを保存する
       final saveResult =
           await _repository.updateManualStep(manualId, updatedStep);
       if (saveResult.isFailure) {
@@ -141,13 +141,13 @@ class ManualEditService {
   Future<Result<ManualStep>> updateStepDescription(
       String manualId, String stepId, String newDescription) async {
     try {
-      // Validate description
+      // 説明を検証する
       if (newDescription.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Step description cannot be empty'));
       }
 
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _repository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -158,17 +158,17 @@ class ManualEditService {
         return const Result.failure(StorageFailure('Manual not found'));
       }
 
-      // Find the step to update
+      // 更新するステップを見つける
       final step = manual.getStepById(stepId);
       if (step == null) {
         return const Result.failure(StorageFailure('Step not found'));
       }
 
-      // Update step with new description
+      // 新しい説明でステップを更新する
       final updatedStep =
           step.copyWith(description: newDescription.trim());
 
-      // Save updated step
+      // 更新されたステップを保存する
       final saveResult =
           await _repository.updateManualStep(manualId, updatedStep);
       if (saveResult.isFailure) {
@@ -188,13 +188,13 @@ class ManualEditService {
   Future<Result<ManualStep>> updateStep(
       String manualId, ManualStep updatedStep) async {
     try {
-      // Validate step
+      // ステップを検証する
       final validationResult = validateStep(updatedStep);
       if (validationResult.isFailure) {
         return Result.failure(validationResult.failure!);
       }
 
-      // Save updated step
+      // 更新されたステップを保存する
       final saveResult =
           await _repository.updateManualStep(manualId, updatedStep);
       if (saveResult.isFailure) {
@@ -213,7 +213,7 @@ class ManualEditService {
   Future<Result<Manual>> reorderSteps(
       String manualId, List<String> stepIds) async {
     try {
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _repository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -224,13 +224,13 @@ class ManualEditService {
         return const Result.failure(StorageFailure('Manual not found'));
       }
 
-      // Validate that all step IDs exist
+      // 全てのステップIDが存在することを検証する
       if (stepIds.length != manual.steps.length) {
         return const Result.failure(
             ValidationFailure('Step count mismatch'));
       }
 
-      // Reorder steps according to the provided order
+      // 指定された順序でステップを並び替える
       final reorderedSteps = <ManualStep>[];
       for (int i = 0; i < stepIds.length; i++) {
         final step = manual.getStepById(stepIds[i]);
@@ -238,17 +238,17 @@ class ManualEditService {
           return Result.failure(
               StorageFailure('Step with ID ${stepIds[i]} not found'));
         }
-        // Update step number to match new order
+        // 新しい順序に合わせてステップ番号を更新する
         reorderedSteps.add(step.copyWith(stepNumber: i + 1));
       }
 
-      // Update manual with reordered steps
+      // 並び替えたステップでマニュアルを更新する
       final updatedManual = manual.copyWith(
         steps: reorderedSteps,
         updatedAt: DateTime.now(),
       );
 
-      // Save updated manual
+      // 更新されたマニュアルを保存する
       final saveResult = await _repository.updateManual(updatedManual);
       if (saveResult.isFailure) {
         return Result.failure(saveResult.failure!);
@@ -266,19 +266,19 @@ class ManualEditService {
 
   Result<bool> validateManual(Manual manual) {
     try {
-      // Check title
+      // タイトルを確認する
       if (manual.title.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Manual title cannot be empty'));
       }
 
-      // Check steps
+      // ステップを確認する
       if (manual.steps.isEmpty) {
         return const Result.failure(
             ValidationFailure('Manual must have at least one step'));
       }
 
-      // Validate each step
+      // 各ステップを検証する
       for (final step in manual.steps) {
         final stepValidation = validateStep(step);
         if (stepValidation.isFailure) {
@@ -295,25 +295,25 @@ class ManualEditService {
 
   Result<bool> validateStep(ManualStep step) {
     try {
-      // Check title
+      // タイトルを確認する
       if (step.title.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Step title cannot be empty'));
       }
 
-      // Check description
+      // 説明を確認する
       if (step.description.trim().isEmpty) {
         return const Result.failure(
             ValidationFailure('Step description cannot be empty'));
       }
 
-      // Check timestamp
+      // タイムスタンプを確認する
       if (step.timestamp < 0) {
         return const Result.failure(
             ValidationFailure('Step timestamp must be non-negative'));
       }
 
-      // Check step number
+      // ステップ番号を確認する
       if (step.stepNumber <= 0) {
         return const Result.failure(
             ValidationFailure('Step number must be positive'));
@@ -331,17 +331,17 @@ class ManualEditService {
 // Providers
 // ---------------------------------------------------------------------------
 
-/// Provider for ManualRepository
+/// ManualRepositoryのプロバイダー
 final manualRepositoryProvider = Provider<ManualRepository>((ref) {
   return ManualRepositoryImpl();
 });
 
-/// Provider for ManualEditService
+/// ManualEditServiceのプロバイダー
 final manualEditServiceProvider = Provider<ManualEditService>((ref) {
   return ManualEditService(ref);
 });
 
-/// Provider to get a specific manual by id
+/// 特定のマニュアルをidで取得するプロバイダー
 final manualProvider =
     FutureProvider.family<Manual?, String>((ref, manualId) async {
   final repo = ref.watch(manualRepositoryProvider);
@@ -350,7 +350,7 @@ final manualProvider =
   return result.data;
 });
 
-/// Provider to get all manuals
+/// 全マニュアルを取得するプロバイダー
 final allManualsProvider = FutureProvider<List<Manual>>((ref) async {
   final repo = ref.watch(manualRepositoryProvider);
   final result = await repo.getAllManuals();
@@ -358,13 +358,13 @@ final allManualsProvider = FutureProvider<List<Manual>>((ref) async {
   return result.data ?? [];
 });
 
-/// Provider for step count of a manual
+/// マニュアルのステップ数のプロバイダー
 final manualStepCountProvider =
     Provider.family<int, String>((ref, manualId) {
   return ref.watch(manualProvider(manualId)).valueOrNull?.stepCount ?? 0;
 });
 
-/// Provider for whether a manual can be exported
+/// マニュアルがエクスポート可能かどうかのプロバイダー
 final canExportManualProvider =
     Provider.family<bool, String>((ref, manualId) {
   final manual = ref.watch(manualProvider(manualId)).valueOrNull;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/entities/video_file.dart';
 
-/// Widget for displaying upload status (success or error)
+/// アップロード結果（成功またはエラー）を表示するウィジェット
 class UploadStatusWidget extends StatelessWidget {
   final VideoFile? uploadedVideo;
   final String? errorMessage;
@@ -86,7 +86,7 @@ class UploadStatusWidget extends StatelessWidget {
           
           const SizedBox(height: 20),
           
-          // Video file details
+          // 動画ファイルの詳細
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -119,7 +119,7 @@ class UploadStatusWidget extends StatelessWidget {
             const SizedBox(height: 20),
           ],
           
-          // Analysis start button
+          // 解析開始ボタン
           SizedBox(
             height: 50,
             child: FilledButton.icon(
@@ -226,7 +226,7 @@ class UploadStatusWidget extends StatelessWidget {
           
           const SizedBox(height: 20),
           
-          // Retry button
+          // 再試行ボタン
           if (onRetry != null)
             SizedBox(
               width: double.infinity,

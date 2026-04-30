@@ -1,46 +1,46 @@
 import 'dart:io';
 import 'package:uuid/uuid.dart';
 
-/// Utility functions for data operations
+/// データ操作のユーティリティ関数
 class DataUtils {
   static const Uuid _uuid = Uuid();
-  
-  /// Generates a unique ID
+
+  /// 一意のIDを生成する
   static String generateId() => _uuid.v4();
-  
-  /// Extracts file extension from a file path
+
+  /// ファイルパスから拡張子を取得する
   static String getFileExtension(String filePath) {
     return filePath.split('.').last.toLowerCase();
   }
-  
-  /// Gets the file name from a file path
+
+  /// ファイルパスからファイル名を取得する
   static String getFileName(String filePath) {
     return filePath.split('/').last;
   }
-  
-  /// Gets the file name without extension
+
+  /// 拡張子なしのファイル名を取得する
   static String getFileNameWithoutExtension(String filePath) {
     final fileName = getFileName(filePath);
     final lastDotIndex = fileName.lastIndexOf('.');
     if (lastDotIndex == -1) return fileName;
     return fileName.substring(0, lastDotIndex);
   }
-  
-  /// Formats file size in bytes to human readable format
+
+  /// バイト単位のファイルサイズを人間が読みやすい形式に変換する
   static String formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
-  
-  /// Formats duration in milliseconds to human readable format
+
+  /// ミリ秒単位の時間を人間が読みやすい形式に変換する
   static String formatDuration(int milliseconds) {
     final duration = Duration(milliseconds: milliseconds);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m ${seconds}s';
     } else if (minutes > 0) {
@@ -49,25 +49,25 @@ class DataUtils {
       return '${seconds}s';
     }
   }
-  
-  /// Validates if a string is a valid UUID
+
+  /// 文字列が有効なUUIDかどうかを検証する
   static bool isValidUuid(String uuid) {
     final uuidRegex = RegExp(
       r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
     );
     return uuidRegex.hasMatch(uuid);
   }
-  
-  /// Sanitizes a string to be used as a filename
+
+  /// 文字列をファイル名として使えるようサニタイズする
   static String sanitizeFileName(String fileName) {
-    // Remove or replace invalid characters
+    // 無効な文字を削除または置換する
     return fileName
         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
         .replaceAll(RegExp(r'\s+'), '_')
         .toLowerCase();
   }
-  
-  /// Creates a safe directory path
+
+  /// 安全なディレクトリパスを作成する
   static Future<Directory> createSafeDirectory(String path) async {
     final directory = Directory(path);
     if (!await directory.exists()) {
@@ -75,8 +75,8 @@ class DataUtils {
     }
     return directory;
   }
-  
-  /// Checks if a file exists and is readable
+
+  /// ファイルが存在して読み取り可能かどうかを確認する
   static Future<bool> isFileAccessible(String filePath) async {
     try {
       final file = File(filePath);
@@ -85,8 +85,8 @@ class DataUtils {
       return false;
     }
   }
-  
-  /// Gets the MIME type for a video file extension
+
+  /// 動画ファイル拡張子のMIMEタイプを取得する
   static String getVideoMimeType(String extension) {
     switch (extension.toLowerCase()) {
       case 'mp4':

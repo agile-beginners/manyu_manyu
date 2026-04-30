@@ -10,14 +10,14 @@ import '../../../../core/utils/result.dart';
 import 'gemini_image_service.dart';
 import 'image_annotation_service.dart';
 
-/// Service for Nano Banana API image annotation
-/// Implements image annotation with arrows, text, and highlights
-/// 
-/// Requirements: 4.1, 4.2, 4.3, 4.4
-/// - 4.1: Images are sent to annotation API with red arrows, text, circles
-/// - 4.2: Annotated images are generated and saved locally
-/// - 4.3: Image paths are added to step JSON when editing completes
-/// - 4.4: Original images are used when API communication fails
+/// Nano Banana APIを使用した画像アノテーションサービス
+/// 矢印、テキスト、ハイライトによる画像アノテーションを実装する
+///
+/// 要件: 4.1, 4.2, 4.3, 4.4
+/// - 4.1: 赤い矢印・テキスト・円を含む画像をアノテーションAPIに送信する
+/// - 4.2: アノテーション付き画像を生成してローカルに保存する
+/// - 4.3: 編集完了時にステップJSONへ画像パスを追加する
+/// - 4.4: API通信失敗時は元画像を使用する
 class NanoBananaService implements ImageAnnotationService {
   final ApiClient _apiClient;
   final String _apiKey;
@@ -42,7 +42,7 @@ class NanoBananaService implements ImageAnnotationService {
     required int stepNumber,
   }) async {
     try {
-      // Validate input parameters
+      // 入力パラメータを検証する
       final validationResult = _validateInputs(
         originalImagePath: originalImagePath,
         stepTitle: stepTitle,
@@ -60,7 +60,7 @@ class NanoBananaService implements ImageAnnotationService {
         );
       }
 
-      // Try Nano Banana API first
+      // まずNano Banana APIを試みる
       final nanoBananaResult = await _callNanoBananaApi(
         originalImagePath: originalImagePath,
         stepTitle: stepTitle,
@@ -72,7 +72,7 @@ class NanoBananaService implements ImageAnnotationService {
         return nanoBananaResult;
       }
 
-      // Fallback to Gemini service if Nano Banana fails
+      // Nano Banana失敗時はGeminiサービスにフォールバックする
       return await _handleFallback(
         originalImagePath: originalImagePath,
         stepTitle: stepTitle,
@@ -82,7 +82,7 @@ class NanoBananaService implements ImageAnnotationService {
       );
 
     } catch (e) {
-      // Ultimate fallback: return original image path
+      // 最終フォールバック: 元画像パスを返す
       return await _handleFallback(
         originalImagePath: originalImagePath,
         stepTitle: stepTitle,
@@ -93,14 +93,14 @@ class NanoBananaService implements ImageAnnotationService {
     }
   }
 
-  /// Validates input parameters
+  /// 入力パラメータを検証する
   Result<void> _validateInputs({
     required String originalImagePath,
     required String stepTitle,
     required String stepDescription,
     required int stepNumber,
   }) {
-    // Check if image file exists
+    // 画像ファイルの存在確認
     final file = File(originalImagePath);
     if (!file.existsSync()) {
       return Result.failure(
@@ -108,14 +108,14 @@ class NanoBananaService implements ImageAnnotationService {
       );
     }
 
-    // Validate step number
+    // ステップ番号を検証する
     if (stepNumber < 1 || stepNumber > AppConstants.maxManualSteps) {
       return Result.failure(
         ValidationFailure('Invalid step number: $stepNumber'),
       );
     }
 
-    // Validate required text fields
+    // 必須テキストフィールドを検証する
     if (stepTitle.trim().isEmpty) {
       return Result.failure(
         const ValidationFailure('Step title cannot be empty'),
@@ -131,7 +131,7 @@ class NanoBananaService implements ImageAnnotationService {
     return const Result.success(null);
   }
 
-  /// Calls Nano Banana API for image annotation
+  /// 画像アノテーションのためにNano Banana APIを呼び出す
   Future<Result<String>> _callNanoBananaApi({
     required String originalImagePath,
     required String stepTitle,
@@ -139,7 +139,7 @@ class NanoBananaService implements ImageAnnotationService {
     required int stepNumber,
   }) async {
     try {
-      // Read the original image
+      // 元画像を読み込む
       final imageBytes = await _readImageFile(originalImagePath);
       if (imageBytes == null) {
         return Result.failure(
@@ -147,19 +147,19 @@ class NanoBananaService implements ImageAnnotationService {
         );
       }
 
-      // Prepare multipart request for image upload
+      // 画像アップロード用のマルチパートリクエストを準備する
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$_baseUrl/v1/annotate'),
       );
 
-      // Add headers
+      // ヘッダーを追加する
       request.headers.addAll({
         'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'multipart/form-data',
       });
 
-      // Add image file
+      // 画像ファイルを追加する
       request.files.add(
         http.MultipartFile.fromBytes(
           'image',
@@ -168,34 +168,34 @@ class NanoBananaService implements ImageAnnotationService {
         ),
       );
 
-      // Add annotation parameters
+      // アノテーションパラメータを追加する
       request.fields.addAll({
         'step_number': stepNumber.toString(),
         'step_title': stepTitle,
         'step_description': stepDescription,
         'annotation_style': 'red_arrows_and_circles',
-        'highlight_color': '#FF0000', // Red color
+        'highlight_color': '#FF0000', // 赤色
         'add_step_number': 'true',
         'add_text_labels': 'true',
       });
 
-      // Send request with timeout
+      // タイムアウト付きでリクエストを送信する
       final streamedResponse = await request.send()
           .timeout(const Duration(seconds: AppConstants.networkTimeoutSeconds));
 
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // Parse successful response
+        // 成功レスポンスを解析する
         return await _parseNanoBananaResponse(response, originalImagePath, stepNumber);
       } else {
-        // API returned error status
+        // APIがエラーステータスを返した
         String errorMessage = 'HTTP ${response.statusCode}';
         try {
           final errorBody = jsonDecode(response.body) as Map<String, dynamic>;
           errorMessage = errorBody['message'] ?? errorMessage;
         } catch (_) {
-          // Use default error message if parsing fails
+          // パース失敗時はデフォルトのエラーメッセージを使用する
         }
         
         return Result.failure(
@@ -214,16 +214,16 @@ class NanoBananaService implements ImageAnnotationService {
     }
   }
 
-  /// Parses Nano Banana API response and saves annotated image
+  /// Nano Banana APIのレスポンスを解析してアノテーション付き画像を保存する
   Future<Result<String>> _parseNanoBananaResponse(
     http.Response response,
     String originalImagePath,
     int stepNumber,
   ) async {
     try {
-      // Check if response contains image data
+      // レスポンスに画像データが含まれるか確認する
       if (response.headers['content-type']?.startsWith('image/') == true) {
-        // Response is an image - save it directly
+        // レスポンスが画像の場合はそのまま保存する
         final annotatedImagePath = await _saveAnnotatedImage(
           response.bodyBytes,
           originalImagePath,
@@ -231,11 +231,11 @@ class NanoBananaService implements ImageAnnotationService {
         );
         return Result.success(annotatedImagePath);
       } else {
-        // Response is JSON - extract image URL or base64 data
+        // レスポンスがJSONの場合は画像URLまたはbase64データを抽出する
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
         
         if (responseData.containsKey('annotated_image_url')) {
-          // Download image from URL
+          // URLから画像をダウンロードする
           final imageUrl = responseData['annotated_image_url'] as String;
           final imageBytes = await _downloadImage(imageUrl);
           
@@ -248,7 +248,7 @@ class NanoBananaService implements ImageAnnotationService {
             return Result.success(annotatedImagePath);
           }
         } else if (responseData.containsKey('annotated_image_base64')) {
-          // Decode base64 image data
+          // base64画像データをデコードする
           final base64Data = responseData['annotated_image_base64'] as String;
           final imageBytes = base64Decode(base64Data);
           
@@ -271,20 +271,20 @@ class NanoBananaService implements ImageAnnotationService {
     }
   }
 
-  /// Downloads image from URL
+  /// URLから画像をダウンロードする
   Future<List<int>?> _downloadImage(String imageUrl) async {
     try {
       final response = await _apiClient.get(imageUrl);
-      // Note: ApiClient returns Map<String, dynamic>, but for image download
-      // we need raw bytes. This is a limitation of the current ApiClient.
-      // In a real implementation, we might need a separate method for binary downloads.
-      return null; // Placeholder - would need to implement binary download
+      // 注意: ApiClientはMap<String, dynamic>を返すが、画像ダウンロードには
+      // バイト列が必要。現在のApiClientの制限事項。
+      // 実際の実装ではバイナリダウンロード用の別メソッドが必要になる場合がある。
+      return null; // プレースホルダー - バイナリダウンロードの実装が必要
     } catch (e) {
       return null;
     }
   }
 
-  /// Reads image file as bytes
+  /// 画像ファイルをバイト列として読み込む
   Future<List<int>?> _readImageFile(String path) async {
     try {
       final file = File(path);
@@ -297,14 +297,14 @@ class NanoBananaService implements ImageAnnotationService {
     }
   }
 
-  /// Saves annotated image to local storage
+  /// アノテーション付き画像をローカルストレージに保存する
   Future<String> _saveAnnotatedImage(
     List<int> imageBytes,
     String originalImagePath,
     int stepNumber,
   ) async {
     try {
-      // Create annotated images directory
+      // アノテーション付き画像用ディレクトリを作成する
       final originalFile = File(originalImagePath);
       final directory = originalFile.parent;
       final annotatedDir = Directory('${directory.path}/annotated');
@@ -313,13 +313,13 @@ class NanoBananaService implements ImageAnnotationService {
         await annotatedDir.create(recursive: true);
       }
 
-      // Generate new filename
+      // 新しいファイル名を生成する
       final originalName = originalFile.uri.pathSegments.last;
       final nameWithoutExtension = originalName.split('.').first;
       final extension = originalName.split('.').last;
       final annotatedFileName = '${nameWithoutExtension}_step${stepNumber}_nano_banana.$extension';
       
-      // Save annotated image
+      // アノテーション付き画像を保存する
       final annotatedFile = File('${annotatedDir.path}/$annotatedFileName');
       await annotatedFile.writeAsBytes(imageBytes);
       
@@ -329,7 +329,7 @@ class NanoBananaService implements ImageAnnotationService {
     }
   }
 
-  /// Handles fallback to Gemini service or original image
+  /// Geminiサービスまたは元画像へのフォールバックを処理する
   Future<Result<String>> _handleFallback({
     required String originalImagePath,
     required String stepTitle,
@@ -338,7 +338,7 @@ class NanoBananaService implements ImageAnnotationService {
     required String error,
   }) async {
     try {
-      // Try Gemini service as fallback
+      // フォールバックとしてGeminiサービスを試みる
       final geminiResult = await _fallbackService.generateAnnotatedImage(
         originalImagePath: originalImagePath,
         stepTitle: stepTitle,
@@ -350,12 +350,12 @@ class NanoBananaService implements ImageAnnotationService {
         return geminiResult;
       }
 
-      // Ultimate fallback: return original image path
-      // This satisfies requirement 4.4: use original images when API communication fails
+      // 最終フォールバック: 元画像パスを返す
+      // 要件4.4を満たす: API通信失敗時は元画像を使用する
       return Result.success(originalImagePath);
 
     } catch (e) {
-      // Ultimate fallback: return original image path
+      // 最終フォールバック: 元画像パスを返す
       return Result.success(originalImagePath);
     }
   }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../domain/entities/manual_step.dart';
 
-/// Dialog for editing individual manual steps
+/// マニュアルの個別ステップを編集するダイアログ
 class StepEditDialog extends StatefulWidget {
   final String manualId;
   final ManualStep step;
@@ -31,7 +31,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
     _titleController = TextEditingController(text: widget.step.title);
     _descriptionController = TextEditingController(text: widget.step.description);
     
-    // Add listeners to track changes
+    // 変更追跡用のリスナーを追加する
     _titleController.addListener(_onTextChanged);
     _descriptionController.addListener(_onTextChanged);
   }
@@ -58,7 +58,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
     
-    // Validate input
+    // 入力を検証する
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -79,16 +79,16 @@ class _StepEditDialogState extends State<StepEditDialog> {
       return;
     }
     
-    // Create updated step
+    // 更新されたステップを作成する
     final updatedStep = widget.step.copyWith(
       title: title,
       description: description,
     );
     
-    // Call the save callback
+    // 保存コールバックを呼び出す
     widget.onSave(updatedStep);
-    
-    // Close dialog
+
+    // ダイアログを閉じる
     Navigator.of(context).pop();
   }
   
@@ -106,8 +106,8 @@ class _StepEditDialogState extends State<StepEditDialog> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close confirmation dialog
-                Navigator.of(context).pop(); // Close edit dialog
+                Navigator.of(context).pop(); // 確認ダイアログを閉じる
+                Navigator.of(context).pop(); // 編集ダイアログを閉じる
               },
               child: const Text('破棄'),
             ),
@@ -129,7 +129,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // ヘッダー
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -146,7 +146,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
             
             const SizedBox(height: 24),
             
-            // Step image (if available)
+            // ステップ画像（利用可能な場合）
             if (widget.step.annotatedImagePath != null || widget.step.imagePath != null)
               Container(
                 width: double.infinity,
@@ -165,7 +165,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
                 ),
               ),
             
-            // Title editing
+            // タイトル編集
             Text(
               'タイトル',
               style: Theme.of(context).textTheme.labelLarge,
@@ -189,7 +189,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
             
             const SizedBox(height: 24),
             
-            // Description editing
+            // 説明編集
             Text(
               '説明',
               style: Theme.of(context).textTheme.labelLarge,
@@ -218,7 +218,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
             
             const SizedBox(height: 24),
             
-            // Step metadata
+            // ステップのメタデータ
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -263,7 +263,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
             
             const SizedBox(height: 24),
             
-            // Action buttons
+            // アクションボタン
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -312,7 +312,7 @@ class _StepEditDialogState extends State<StepEditDialog> {
       );
     }
     
-    // Check if it's a local file
+    // ローカルファイルかどうかを確認する
     if (File(imagePath).existsSync()) {
       return Image.file(
         File(imagePath),
@@ -343,8 +343,8 @@ class _StepEditDialogState extends State<StepEditDialog> {
         },
       );
     }
-    
-    // If it's a network image or asset
+
+    // ネットワーク画像またはアセットの場合
     return Image.network(
       imagePath,
       fit: BoxFit.contain,

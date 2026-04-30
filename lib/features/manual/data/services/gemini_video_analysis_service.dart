@@ -11,7 +11,7 @@ import '../../../video/domain/entities/video_file.dart';
 import '../../domain/entities/manual_step.dart';
 import 'video_analysis_service.dart';
 
-/// Service for interacting with Gemini API for video analysis
+/// 動画解析のためにGemini APIと通信するサービス
 class GeminiVideoAnalysisService implements VideoAnalysisService {
   final ApiClient _apiClient;
   final String _apiKey;
@@ -22,9 +22,9 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
   })  : _apiClient = apiClient,
         _apiKey = apiKey;
 
-  /// Analyzes a video file and extracts manual steps
+  /// 動画ファイルを解析してマニュアルのステップを抽出する
   ///
-  /// Requirements: 2.1, 2.2, 2.3, 2.4
+  /// 要件: 2.1, 2.2, 2.3, 2.4
   @override
   Future<Result<List<ManualStep>>> analyzeVideo(
     VideoFile videoFile, {
@@ -39,22 +39,22 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
             '📝 Manual info provided (length: ${sanitizedManualInfo.length})');
       }
 
-      // Temporary: Use mock data for testing while API issues are resolved
-      const bool useMockData = false; // Set to false when API is working
+      // 一時的: API問題解決中のテスト用にモックデータを使用
+      const bool useMockData = false; // APIが動作する場合はfalseに設定
 
       if (useMockData) {
         print('🧪 Using mock data');
         return _generateMockSteps(videoFile);
       }
 
-      // Validate video file
+      // 動画ファイルを検証する
       final validationResult = _validateVideoFile(videoFile);
       if (validationResult.isFailure) {
         print('❌ Validation failed: ${validationResult.failure!.message}');
         return Result.failure(validationResult.failure!);
       }
 
-      // Prepare video for upload
+      // 動画をアップロード用に準備する
       final videoBytes = await _readVideoFile(videoFile.path);
       if (videoBytes == null) {
         print('❌ Failed to read video file');
@@ -63,7 +63,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
         );
       }
 
-      // Call Gemini API with retry mechanism
+      // リトライ機構付きでGemini APIを呼び出す
       final analysisResult = await _callGeminiApiWithRetry(
           videoBytes, videoFile, sanitizedManualInfo);
       if (analysisResult.isFailure) {
@@ -71,10 +71,10 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
         return Result.failure(analysisResult.failure!);
       }
 
-      // Parse API response
+      // APIレスポンスを解析する
       final steps = _parseGeminiResponse(analysisResult.data!);
 
-      // Validate step count (max 20 steps as per requirement 2.2)
+      // ステップ数を検証する（要件2.2に従い最大20ステップ）
       if (steps.length > AppConstants.maxManualSteps) {
         print(
             '❌ Too many steps: ${steps.length} > ${AppConstants.maxManualSteps}');
@@ -94,9 +94,9 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     }
   }
 
-  /// Validates the video file before processing
+  /// 処理前に動画ファイルを検証する
   Result<void> _validateVideoFile(VideoFile videoFile) {
-    // Check if file exists
+    // ファイルの存在確認
     final file = File(videoFile.path);
     if (!file.existsSync()) {
       return Result.failure(
@@ -104,7 +104,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       );
     }
 
-    // Check file format
+    // ファイル形式の確認
     if (!AppConstants.supportedVideoFormats
         .contains(videoFile.format.toLowerCase())) {
       return Result.failure(
@@ -112,7 +112,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       );
     }
 
-    // Check file size
+    // ファイルサイズの確認
     if (videoFile.sizeInBytes > AppConstants.maxVideoSizeBytes) {
       return Result.failure(
         ValidationFailure(
@@ -123,7 +123,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     return const Result.success(null);
   }
 
-  /// Reads video file as bytes
+  /// 動画ファイルをバイト列として読み込む
   Future<List<int>?> _readVideoFile(String path) async {
     try {
       final file = File(path);
@@ -133,7 +133,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     }
   }
 
-  /// Calls Gemini API with retry mechanism
+  /// リトライ機構付きでGemini APIを呼び出す
   Future<Result<Map<String, dynamic>>> _callGeminiApiWithRetry(
     List<int> videoBytes,
     VideoFile videoFile,
@@ -160,7 +160,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
         print('❌ API call failed: ${result.failure!.message}');
         lastException = Exception(result.failure!.message);
 
-        // Wait before retry (exponential backoff)
+        // リトライ前に待機する（指数バックオフ）
         if (attempts < AppConstants.maxRetryAttempts) {
           final waitTime = attempts * 2;
           print('⏳ Waiting ${waitTime}s before retry...');
@@ -170,7 +170,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
         print('❌ Exception on attempt $attempts: $e');
         lastException = e is Exception ? e : Exception(e.toString());
 
-        // Wait before retry
+        // リトライ前に待機する
         if (attempts < AppConstants.maxRetryAttempts) {
           final waitTime = attempts * 2;
           print('⏳ Waiting ${waitTime}s before retry...');
@@ -185,7 +185,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     return Result.failure(ApiFailure(errorMessage));
   }
 
-  /// Makes the actual API call to Gemini
+  /// Geminiへの実際のAPI呼び出しを行う
   Future<Result<Map<String, dynamic>>> _callGeminiApi(
     List<int> videoBytes,
     VideoFile videoFile,
@@ -210,7 +210,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     }
   }
 
-  /// Makes the actual HTTP request to a specific endpoint
+  /// 特定のエンドポイントへの実際のHTTPリクエストを行う
   Future<Result<Map<String, dynamic>>> _makeApiRequest(
     String url,
     List<int> videoBytes,
@@ -219,10 +219,10 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
   ) async {
     print('📤 Making API request...');
 
-    // Encode video as base64
+    // 動画をbase64エンコードする
     final base64Video = base64Encode(videoBytes);
 
-    // Prepare request body
+    // リクエストボディを準備する
     final requestBody = {
       'contents': [
         {
@@ -247,7 +247,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       }
     };
 
-    // Log request details
+    // リクエスト詳細をログ出力する
     print('📋 Request Details:');
     print('  URL: $url');
     print('  MIME Type: ${_getMimeType(videoFile.format)}');
@@ -259,7 +259,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
           '  Manual Info Preview: ${manualInfo.substring(0, manualInfo.length > 120 ? 120 : manualInfo.length)}${manualInfo.length > 120 ? '...' : ''}');
     }
 
-    // Make API call
+    // API呼び出しを行う
     final response = await _apiClient.post(
       url,
       headers: {
@@ -269,7 +269,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       body: requestBody,
     );
 
-    // Log response details
+    // レスポンス詳細をログ出力する
     print('📥 Response Details:');
     print('  Response Keys: ${response.keys.toList()}');
     if (response.containsKey('candidates')) {
@@ -282,7 +282,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     return Result.success(response);
   }
 
-  /// Builds the analysis prompt for Gemini
+  /// Gemini用の解析プロンプトを構築する
   String _buildAnalysisPrompt({String? manualInfo}) {
     final buffer = StringBuffer('''
 この動画を分析して、マニュアル作成のためのステップバイステップの手順を抽出してください。
@@ -321,7 +321,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     return buffer.toString();
   }
 
-  /// Gets MIME type for video format
+  /// 動画形式のMIMEタイプを取得する
   String _getMimeType(String format) {
     switch (format.toLowerCase()) {
       case 'mp4':
@@ -331,14 +331,14 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       case 'avi':
         return 'video/x-msvideo';
       default:
-        return 'video/mp4'; // Default fallback
+        return 'video/mp4'; // デフォルトのフォールバック
     }
   }
 
-  /// Parses Gemini API response and converts to ManualStep objects
+  /// GeminiのAPIレスポンスを解析してManualStepオブジェクトに変換する
   List<ManualStep> _parseGeminiResponse(Map<String, dynamic> response) {
     try {
-      // Extract content from Gemini response
+      // Geminiレスポンスからコンテンツを抽出する
       final candidates = response['candidates'] as List<dynamic>?;
       if (candidates == null || candidates.isEmpty) {
         throw const ApiException('No candidates in Gemini response');
@@ -362,10 +362,10 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       print('📄 Raw Response Text:');
       print(textPart);
 
-      // Clean the response text (remove code blocks if present)
+      // レスポンステキストをクリーニングする（コードブロックを削除）
       String cleanedText = textPart.trim();
 
-      // Remove markdown code blocks if present
+      // マークダウンのコードブロックを削除する
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText.replaceFirst('```json', '').trim();
       }
@@ -379,10 +379,10 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       print('📄 Cleaned Response Text:');
       print(cleanedText);
 
-      // Parse JSON from cleaned text response
+      // クリーニングされたテキストレスポンスからJSONを解析する
       final jsonResponse = jsonDecode(cleanedText) as Map<String, dynamic>;
 
-      // Validate required fields
+      // 必須フィールドを検証する
       if (!jsonResponse.containsKey('steps')) {
         throw const ApiException('Missing steps in Gemini response');
       }
@@ -394,7 +394,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
       for (int i = 0; i < stepsJson.length; i++) {
         final stepJson = stepsJson[i] as Map<String, dynamic>;
 
-        // Validate required fields for each step
+        // 各ステップの必須フィールドを検証する
         if (!stepJson.containsKey('title') ||
             !stepJson.containsKey('description') ||
             !stepJson.containsKey('timestamp')) {
@@ -422,7 +422,7 @@ class GeminiVideoAnalysisService implements VideoAnalysisService {
     }
   }
 
-  /// Generates mock steps for testing purposes
+  /// テスト目的でモックステップを生成する
   Result<List<ManualStep>> _generateMockSteps(VideoFile videoFile) {
     print('🎭 モックデータを生成中...');
 

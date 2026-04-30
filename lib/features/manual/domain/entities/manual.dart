@@ -6,35 +6,35 @@ export 'manual_status.dart';
 
 part 'manual.g.dart';
 
-/// Represents a complete manual with multiple steps
+/// 複数のステップを持つ完全なマニュアルを表す
 @JsonSerializable()
 class Manual {
-  /// Unique identifier for the manual
+  /// マニュアルの一意識別子
   final String id;
 
-  /// Title of the manual
+  /// マニュアルのタイトル
   final String title;
 
-  /// List of steps in the manual
+  /// マニュアル内のステップ一覧
   @JsonKey(toJson: _stepsToJson, fromJson: _stepsFromJson)
   final List<ManualStep> steps;
 
-  /// Timestamp when the manual was created
+  /// マニュアルが作成された日時
   final DateTime createdAt;
 
-  /// Timestamp when the manual was last updated
+  /// マニュアルが最後に更新された日時
   final DateTime updatedAt;
 
-  /// Path to the original video file
+  /// 元の動画ファイルのパス
   final String? videoPath;
 
-  /// Total duration of the video in milliseconds
+  /// 動画の総再生時間（ミリ秒）
   final int? videoDurationMs;
 
-  /// Status of the manual generation process
+  /// マニュアル生成プロセスのステータス
   final ManualStatus status;
 
-  /// Description or summary of the manual
+  /// マニュアルの説明またはサマリー
   final String? description;
 
   const Manual({
@@ -49,13 +49,13 @@ class Manual {
     this.description,
   });
 
-  /// Creates a Manual from JSON
+  /// JSONからManualを生成する
   factory Manual.fromJson(Map<String, dynamic> json) => _$ManualFromJson(json);
 
-  /// Converts Manual to JSON
+  /// ManualをJSONに変換する
   Map<String, dynamic> toJson() => _$ManualToJson(this);
 
-  /// Creates a copy of this Manual with updated fields
+  /// 更新されたフィールドでこのManualのコピーを作成する
   Manual copyWith({
     String? id,
     String? title,
@@ -80,19 +80,19 @@ class Manual {
     );
   }
 
-  /// Returns the number of steps in this manual
+  /// このマニュアルのステップ数を返す
   int get stepCount => steps.length;
 
-  /// Returns whether this manual has any steps
+  /// このマニュアルにステップが存在するかどうかを返す
   bool get hasSteps => steps.isNotEmpty;
 
-  /// Returns the step at the given index, or null if index is out of bounds
+  /// 指定インデックスのステップを返す。範囲外の場合はnullを返す
   ManualStep? getStepAt(int index) {
     if (index < 0 || index >= steps.length) return null;
     return steps[index];
   }
 
-  /// Returns the step with the given ID, or null if not found
+  /// 指定IDのステップを返す。見つからない場合はnullを返す
   ManualStep? getStepById(String stepId) {
     try {
       return steps.firstWhere((step) => step.id == stepId);
@@ -101,7 +101,7 @@ class Manual {
     }
   }
 
-  /// Returns a new Manual with the step at the given index updated
+  /// 指定インデックスのステップを更新した新しいManualを返す
   Manual updateStepAt(int index, ManualStep updatedStep) {
     if (index < 0 || index >= steps.length) return this;
 
@@ -114,7 +114,7 @@ class Manual {
     );
   }
 
-  /// Returns a new Manual with the step with the given ID updated
+  /// 指定IDのステップを更新した新しいManualを返す
   Manual updateStepById(String stepId, ManualStep updatedStep) {
     final index = steps.indexWhere((step) => step.id == stepId);
     if (index == -1) return this;
@@ -157,7 +157,7 @@ class Manual {
   }
 }
 
-// Helper functions for JSON serialization
+// JSONシリアライゼーション用のヘルパー関数
 List<Map<String, dynamic>> _stepsToJson(List<ManualStep> steps) {
   return steps.map((step) => step.toJson()).toList();
 }

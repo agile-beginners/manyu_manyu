@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../domain/entities/manual.dart';
 
-/// Widget for editing manual header information (title and description)
+/// マニュアルのヘッダー情報（タイトルと説明）を編集するウィジェット
 class ManualHeaderWidget extends StatefulWidget {
   final Manual manual;
   final Function(String) onTitleChanged;
@@ -36,7 +36,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
     _titleController = TextEditingController(text: widget.manual.title);
     _descriptionController = TextEditingController(text: widget.manual.description ?? '');
     
-    // Add listeners for real-time saving
+    // リアルタイム保存用のリスナーを追加する
     _titleController.addListener(_onTitleChanged);
     _descriptionController.addListener(_onDescriptionChanged);
   }
@@ -45,7 +45,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
   void didUpdateWidget(ManualHeaderWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Update controllers if manual data changed externally
+    // 外部からマニュアルデータが変更された場合にコントローラーを更新する
     if (oldWidget.manual.title != widget.manual.title && !_isTitleEditing) {
       _titleController.text = widget.manual.title;
     }
@@ -92,7 +92,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title editing
+          // タイトル編集
           Text(
             'タイトル',
             style: Theme.of(context).textTheme.labelLarge,
@@ -132,7 +132,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
           
           const SizedBox(height: 24),
           
-          // Description editing
+          // 説明編集
           Text(
             '説明',
             style: Theme.of(context).textTheme.labelLarge,
@@ -171,7 +171,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
           
           const SizedBox(height: 16),
           
-          // Manual metadata
+          // マニュアルのメタデータ
           Row(
             children: [
               Icon(
@@ -204,7 +204,7 @@ class _ManualHeaderWidgetState extends State<ManualHeaderWidget> {
 
           const SizedBox(height: 24),
 
-          // PDF Download Button
+          // PDFダウンロードボタン
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(

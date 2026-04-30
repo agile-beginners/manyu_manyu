@@ -9,44 +9,43 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/manual_step.dart';
 
-/// Service for extracting images from video at specific timestamps
+/// 特定のタイムスタンプで動画から画像を抽出するサービス
 class ImageExtractionService {
-  
-  /// Extracts images from video at specified timestamps
-  /// 
-  /// Requirements: 3.1, 3.2, 3.3, 3.4
+  /// 指定されたタイムスタンプで動画から画像を抽出する
+  ///
+  /// 要件: 3.1, 3.2, 3.3, 3.4
   Future<Result<List<String>>> extractImagesFromVideo({
     required String videoPath,
     required List<ManualStep> steps,
   }) async {
     try {
-      // Validate video file exists (Requirement 3.4)
+      // 動画ファイルの存在確認（要件3.4）
       if (!await _validateVideoFile(videoPath)) {
         return Result.failure(
           VideoProcessingFailure('Video file not found or inaccessible: $videoPath'),
         );
       }
 
-      // Create directory for extracted images (Requirement 3.2)
+      // 抽出画像用ディレクトリを作成する（要件3.2）
       final extractedImagesDir = await _createExtractedImagesDirectory();
-      
+
       final extractedImagePaths = <String>[];
-      
-      // Process each step to extract images (Requirement 3.1)
+
+      // 各ステップの画像を抽出する（要件3.1）
       for (final step in steps) {
         try {
-          // Extract image at timestamp
+          // タイムスタンプで画像を抽出する
           final imagePath = await _extractImageAtTimestamp(
             videoPath: videoPath,
             timestamp: step.timestamp,
             stepNumber: step.stepNumber,
             outputDirectory: extractedImagesDir.path,
           );
-          
+
           if (imagePath != null) {
             extractedImagePaths.add(imagePath);
           } else {
-            // Create placeholder image if extraction fails (Requirement 3.4)
+            // 抽出失敗時はプレースホルダー画像を作成する（要件3.4）
             final placeholderPath = await _createPlaceholderImage(
               stepNumber: step.stepNumber,
               outputDirectory: extractedImagesDir.path,
@@ -55,7 +54,7 @@ class ImageExtractionService {
             extractedImagePaths.add(placeholderPath);
           }
         } catch (e) {
-          // Skip this step on error and create placeholder (Requirement 3.4)
+          // エラー時はこのステップをスキップしてプレースホルダーを作成する（要件3.4）
           print('Error extracting image for step ${step.stepNumber}: $e');
           final placeholderPath = await _createPlaceholderImage(
             stepNumber: step.stepNumber,
@@ -74,7 +73,7 @@ class ImageExtractionService {
     }
   }
 
-  /// Creates directory for extracted images
+  /// 抽出画像用ディレクトリを作成する
   Future<Directory> _createExtractedImagesDirectory() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
@@ -88,15 +87,15 @@ class ImageExtractionService {
       
       return extractedImagesDir;
     } catch (e) {
-      // Fallback to system temp directory for testing
+      // テスト用にシステム一時ディレクトリにフォールバック
       final tempDir = await Directory.systemTemp.createTemp('extracted_images');
       return tempDir;
     }
   }
 
-  /// Extracts image at specific timestamp from video using VideoPlayerController
-  /// 
-  /// Requirements: 3.1 - Extract images from video at each timestamp
+  /// VideoPlayerControllerを使用して特定のタイムスタンプで動画から画像を抽出する
+  ///
+  /// 要件: 3.1 - 各タイムスタンプで動画から画像を抽出する
   Future<String?> _extractImageAtTimestamp({
     required String videoPath,
     required int timestamp,
@@ -130,16 +129,16 @@ class ImageExtractionService {
     }
   }
 
-  /// Creates minimal PNG bytes for a 1x1 transparent pixel
+  /// 1x1の透明ピクセルのための最小限のPNGバイト列を作成する
   Uint8List _createMinimalPngBytes() {
-    // Minimal PNG file (1x1 transparent pixel)
+    // 最小限のPNGファイル（1x1の透明ピクセル）
     return Uint8List.fromList([
-      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-      0x00, 0x00, 0x00, 0x0D, // IHDR chunk length
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNGシグネチャ
+      0x00, 0x00, 0x00, 0x0D, // IHDRチャンク長
       0x49, 0x48, 0x44, 0x52, // IHDR
-      0x00, 0x00, 0x00, 0x01, // Width: 1
-      0x00, 0x00, 0x00, 0x01, // Height: 1
-      0x08, 0x06, 0x00, 0x00, 0x00, // Bit depth: 8, Color type: 6 (RGBA), Compression: 0, Filter: 0, Interlace: 0
+      0x00, 0x00, 0x00, 0x01, // 幅: 1
+      0x00, 0x00, 0x00, 0x01, // 高さ: 1
+      0x08, 0x06, 0x00, 0x00, 0x00, // ビット深度: 8, カラータイプ: 6 (RGBA), 圧縮: 0, フィルタ: 0, インタレース: 0
       0x1F, 0x15, 0xC4, 0x89, // CRC
       0x00, 0x00, 0x00, 0x0A, // IDAT chunk length
       0x49, 0x44, 0x41, 0x54, // IDAT
@@ -151,24 +150,24 @@ class ImageExtractionService {
     ]);
   }
 
-  /// Creates a placeholder image when video extraction fails
-  /// 
-  /// Requirements: 3.4 - Handle errors by logging and skipping failed steps
+  /// 動画抽出失敗時にプレースホルダー画像を作成する
+  ///
+  /// 要件: 3.4 - エラーをログに記録して失敗したステップをスキップして処理する
   Future<String> _createPlaceholderImage({
     required int stepNumber,
     required String outputDirectory,
     required String reason,
   }) async {
     try {
-      // Create a placeholder image file
+      // プレースホルダー画像ファイルを作成する
       final placeholderPath = '$outputDirectory/step_${stepNumber}_placeholder.jpg';
       final placeholderFile = File(placeholderPath);
       
-      // Create minimal PNG bytes for placeholder
+      // プレースホルダー用の最小PNGバイト列を作成する
       final imageBytes = _createMinimalPngBytes();
       await placeholderFile.writeAsBytes(imageBytes);
       
-      // Also create a metadata file for debugging
+      // デバッグ用のメタデータファイルも作成する
       final metadataPath = '$outputDirectory/step_${stepNumber}_metadata.txt';
       final metadataFile = File(metadataPath);
       
@@ -185,9 +184,9 @@ class ImageExtractionService {
     }
   }
 
-  /// Validates that the video file exists and is accessible
-  /// 
-  /// Requirements: 3.4 - Handle errors appropriately
+  /// 動画ファイルが存在してアクセス可能かどうかを検証する
+  ///
+  /// 要件: 3.4 - エラーを適切に処理する
   Future<bool> _validateVideoFile(String videoPath) async {
     try {
       final file = File(videoPath);
@@ -198,7 +197,7 @@ class ImageExtractionService {
         return false;
       }
       
-      // Check if file is readable
+      // ファイルが読み取り可能かどうかを確認する
       final stat = await file.stat();
       if (stat.size == 0) {
         print('Video file is empty: $videoPath');
@@ -212,7 +211,7 @@ class ImageExtractionService {
     }
   }
 
-  /// Cleans up temporary files and directories
+  /// 一時ファイルとディレクトリをクリーンアップする
   Future<void> cleanupTempFiles() async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
@@ -226,11 +225,11 @@ class ImageExtractionService {
       }
     } catch (e) {
       print('Error cleaning up temp files: $e');
-      // In testing environment, this is expected to fail
+      // テスト環境では失敗が予想される
     }
   }
 
-  /// Gets the total number of frames that can be extracted
+  /// 抽出可能なフレームの総数を取得する
   Future<int> getEstimatedFrameCount(String videoPath) async {
     VideoPlayerController? controller;
     
@@ -239,7 +238,7 @@ class ImageExtractionService {
       await controller.initialize();
       
       final duration = controller.value.duration;
-      // Estimate based on typical frame rate (30 fps)
+      // 一般的なフレームレート（30fps）を基に推定する
       return (duration.inMilliseconds / 1000 * 30).round();
     } catch (e) {
       print('Error getting frame count: $e');

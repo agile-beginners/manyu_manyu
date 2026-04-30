@@ -1,14 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-
 import '../../../../core/config/env_config.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../core/providers/app_providers.dart';
 import '../../../../core/utils/result.dart';
 import '../../video/domain/entities/video_file.dart';
 import '../data/repositories/manual_repository.dart';
-import '../data/repositories/manual_repository_impl.dart';
 import '../data/services/gemini_image_service.dart';
 import '../data/services/gemini_video_analysis_service.dart';
 import '../data/services/image_annotation_service.dart';
@@ -20,7 +17,7 @@ import '../domain/entities/manual_step.dart';
 import '../domain/value_objects/manual_generation_progress_stage.dart';
 import 'manual_edit_service.dart';
 
-/// Service that orchestrates the complete video analysis process
+/// 動画解析の完全なプロセスを調整するサービス
 class ManualCreationService {
   final VideoAnalysisService _videoAnalysisService;
   final ManualRepository _manualRepository;
@@ -41,14 +38,12 @@ class ManualCreationService {
         _imageAnnotationService = imageAnnotationService,
         _ref = ref;
 
-  /// Analyzes a video and creates a complete manual
+  /// 動画を解析して完全なマニュアルを作成する
   ///
-  /// This method handles the complete workflow:
-  /// 1. Calls Gemini API to analyze video
-  /// 2. Creates a Manual entity with the extracted steps
-  /// 3. Saves the manual to repository
-  ///
-  /// Requirements: 2.1, 2.2, 2.3, 2.4
+  /// マニュアル作成のシナリオを調整する:
+  /// 1. Gemini APIを呼び出して動画を解析する
+  /// 2. 抽出したステップでManualエンティティを作成する
+  /// 3. マニュアルをリポジトリに保存する
   Future<Result<Manual>> analyzeVideoAndCreateManual(
     VideoFile videoFile, {
     String? customTitle,
@@ -58,7 +53,7 @@ class ManualCreationService {
     try {
       final sanitizedManualInfo = manualInfo?.trim();
 
-      // Create initial manual with generating status
+      // 生成中ステータスで初期マニュアルを作成する
       final manual = Manual(
         id: _uuid.v4(),
         title: customTitle ?? 'Manual from ${videoFile.name}',
@@ -74,7 +69,7 @@ class ManualCreationService {
                 : sanitizedManualInfo,
       );
 
-      // Save initial manual
+      // 初期マニュアルを保存する
       final saveResult = await _manualRepository.saveManual(manual);
       if (saveResult.isFailure) {
         return Result.failure(saveResult.failure!);
@@ -89,8 +84,8 @@ class ManualCreationService {
     }
   }
 
-  /// Core analysis workflow. Reuses [initialManual]'s id so both
-  /// [analyzeVideoAndCreateManual] and [retryAnalysis] write to the same record.
+  /// 解析ワークフローのコア処理。[initialManual]のidを再利用することで
+  /// [analyzeVideoAndCreateManual]と[retryAnalysis]が同じレコードに書き込む。
   Future<Result<Manual>> _runAnalysis(
     Manual initialManual,
     VideoFile videoFile, {
@@ -98,7 +93,7 @@ class ManualCreationService {
     void Function(ManualGenerationProgressStage stage)? onProgress,
   }) async {
     try {
-      // Step 1: Analyze video with Gemini API (Requirements 2.1, 2.2, 2.3)
+      // ステップ1: Gemini APIで動画を解析する（要件2.1, 2.2, 2.3）
       onProgress?.call(ManualGenerationProgressStage.analyzingVideo);
 
       final analysisResult = await _videoAnalysisService.analyzeVideo(
@@ -106,7 +101,7 @@ class ManualCreationService {
         manualInfo: manualInfo,
       );
       if (analysisResult.isFailure) {
-        // Update manual status to failed
+        // マニュアルのステータスを失敗に更新する
         final failedManual = initialManual.copyWith(
           status: ManualStatus.failed,
           updatedAt: DateTime.now(),
@@ -120,7 +115,7 @@ class ManualCreationService {
 
       final steps = analysisResult.data!;
 
-      // Step 2: Extract images from video at timestamps (Requirements 3.1, 3.2)
+      // ステップ2: タイムスタンプで動画から画像を抽出する（要件3.1, 3.2）
       onProgress?.call(ManualGenerationProgressStage.generatingImages);
 
       final imageExtractionResult =
@@ -133,12 +128,12 @@ class ManualCreationService {
       if (imageExtractionResult.isSuccess) {
         extractedImagePaths = imageExtractionResult.data!;
       } else {
-        // Continue with empty image paths if extraction fails (Requirement 3.4)
+        // 抽出失敗時は空の画像パスで続行する（要件3.4）
         print(
             'Image extraction failed: ${imageExtractionResult.failure!.message}');
       }
 
-      // Step 3: Update steps with extracted image paths and annotate images
+      // ステップ3: 抽出した画像パスでステップを更新し画像にアノテーションを付与する
       final imagePathsForSteps = List<String?>.generate(
         steps.length,
         (index) => index < extractedImagePaths.length
@@ -146,7 +141,7 @@ class ManualCreationService {
             : null,
       );
 
-      // Step 4: Annotate images in parallel (Requirements 4.1, 4.2, 4.3)
+      // ステップ4: 並列で画像にアノテーションを付与する（要件4.1, 4.2, 4.3）
       final annotationFutures = <Future<String?>>[];
       for (int i = 0; i < steps.length; i++) {
         final step = steps[i];
@@ -167,8 +162,7 @@ class ManualCreationService {
               stepNumber: step.stepNumber,
             );
 
-            if (annotationResult.isSuccess &&
-                annotationResult.data != null) {
+            if (annotationResult.isSuccess && annotationResult.data != null) {
               return annotationResult.data!;
             }
 
@@ -177,10 +171,10 @@ class ManualCreationService {
             print(
               'Image annotation failed for step ${step.stepNumber}: $failureMessage',
             );
-            // Fallback: use original image if annotation fails (Requirement 4.4)
+            // フォールバック: アノテーション失敗時は元画像を使用する（要件4.4）
             return imagePath;
           } catch (e) {
-            // Fallback: use original image on any error (Requirement 4.4)
+            // フォールバック: エラー発生時は元画像を使用する（要件4.4）
             print('Image annotation error for step ${step.stepNumber}: $e');
             return imagePath;
           }
@@ -193,7 +187,7 @@ class ManualCreationService {
       for (int i = 0; i < steps.length; i++) {
         final step = steps[i];
 
-        // Create updated step with image paths
+        // 画像パスで更新したステップを作成する
         final processedStep = step.copyWith(
           imagePath: imagePathsForSteps[i],
           annotatedImagePath: annotatedImagePaths[i],
@@ -203,21 +197,21 @@ class ManualCreationService {
         processedSteps.add(processedStep);
       }
 
-      // Update manual with processed steps, reusing the existing id
+      // 処理済みステップでマニュアルを更新する（既存のidを再利用）
       final completedManual = initialManual.copyWith(
         steps: processedSteps,
         status: ManualStatus.draft,
         updatedAt: DateTime.now(),
       );
 
-      // Save completed manual
+      // 完成したマニュアルを保存する
       final updateResult =
           await _manualRepository.updateManual(completedManual);
       if (updateResult.isFailure) {
         return Result.failure(updateResult.failure!);
       }
 
-      // Invalidate providers so UI sees the updated manual
+      // UIが更新されたマニュアルを表示できるようプロバイダーを無効化する
       _ref.invalidate(allManualsProvider);
       _ref.invalidate(manualProvider(completedManual.id));
 
@@ -225,7 +219,7 @@ class ManualCreationService {
 
       return Result.success(completedManual);
     } catch (e) {
-      // Update manual status to failed on any error
+      // エラー発生時はマニュアルのステータスを失敗に更新する
       final failedManual = initialManual.copyWith(
         status: ManualStatus.failed,
         updatedAt: DateTime.now(),
@@ -240,15 +234,15 @@ class ManualCreationService {
     }
   }
 
-  /// Retries analysis for a failed manual
+  /// 失敗したマニュアルの解析をリトライする
   ///
-  /// Requirements: 2.4 - Retry option for failed API calls
+  /// 要件: 2.4 - APIコール失敗時のリトライオプション
   Future<Result<Manual>> retryAnalysis(
     String manualId, {
     void Function(ManualGenerationProgressStage stage)? onProgress,
   }) async {
     try {
-      // Get existing manual
+      // 既存のマニュアルを取得する
       final manualResult = await _manualRepository.getManual(manualId);
       if (manualResult.isFailure) {
         return Result.failure(manualResult.failure!);
@@ -267,17 +261,17 @@ class ManualCreationService {
         );
       }
 
-      // Create VideoFile from manual data
+      // マニュアルデータからVideoFileを作成する
       final videoFile = VideoFile(
         path: manual.videoPath!,
         name: manual.title,
-        sizeInBytes: 0, // We don't have this info, but it's not critical for retry
+        sizeInBytes: 0, // この情報は持っていないが、リトライには必須でない
         format: _extractFormatFromPath(manual.videoPath!),
         durationMs: manual.videoDurationMs,
         createdAt: manual.createdAt,
       );
 
-      // Reset existing manual to generating status (reuse the same id)
+      // 既存のマニュアルを生成中ステータスにリセットする（同じidを再利用）
       final generatingManual = manual.copyWith(
         status: ManualStatus.generating,
         updatedAt: DateTime.now(),
@@ -286,7 +280,7 @@ class ManualCreationService {
       _ref.invalidate(allManualsProvider);
       _ref.invalidate(manualProvider(manual.id));
 
-      // Run analysis inline, reusing the existing manual id
+      // 既存のマニュアルidを再利用してインラインで解析を実行する
       return _runAnalysis(generatingManual, videoFile,
           manualInfo: manual.description, onProgress: onProgress);
     } catch (e) {
@@ -296,13 +290,13 @@ class ManualCreationService {
     }
   }
 
-  /// Extracts file format from file path
+  /// ファイルパスからファイル形式を抽出する
   String _extractFormatFromPath(String path) {
     final parts = path.split('.');
     if (parts.length > 1) {
       return parts.last.toLowerCase();
     }
-    return 'mp4'; // Default fallback
+    return 'mp4'; // デフォルトのフォールバック
   }
 }
 
@@ -319,8 +313,7 @@ final _geminiVideoAnalysisServiceProvider =
   );
 });
 
-final _imageExtractionServiceProvider =
-    Provider<ImageExtractionService>((ref) {
+final _imageExtractionServiceProvider = Provider<ImageExtractionService>((ref) {
   return ImageExtractionService();
 });
 
@@ -346,7 +339,7 @@ final _imageAnnotationServiceProvider = Provider<ImageAnnotationService>((ref) {
   return ref.watch(_nanoBananaServiceProvider);
 });
 
-/// Provider for ManualCreationService
+/// ManualCreationServiceのプロバイダー
 final manualCreationServiceProvider = Provider<ManualCreationService>((ref) {
   return ManualCreationService(
     videoAnalysisService: ref.watch(_geminiVideoAnalysisServiceProvider),

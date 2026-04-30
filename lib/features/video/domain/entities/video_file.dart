@@ -2,25 +2,25 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'video_file.g.dart';
 
-/// Represents a video file with metadata
+/// メタデータを持つ動画ファイルを表す
 @JsonSerializable()
 class VideoFile {
-  /// Path to the video file
+  /// 動画ファイルのパス
   final String path;
-  
-  /// Original name of the video file
+
+  /// 動画ファイルの元のファイル名
   final String name;
-  
-  /// Size of the video file in bytes
+
+  /// 動画ファイルのサイズ（バイト）
   final int sizeInBytes;
-  
-  /// Format/extension of the video file (e.g., 'mp4', 'mov', 'avi')
+
+  /// 動画ファイルの形式・拡張子（例: 'mp4', 'mov', 'avi'）
   final String format;
-  
-  /// Duration of the video in milliseconds
+
+  /// 動画の長さ（ミリ秒）
   final int? durationMs;
-  
-  /// Timestamp when the file was created/uploaded
+
+  /// ファイルが作成・アップロードされたタイムスタンプ
   final DateTime createdAt;
 
   const VideoFile({
@@ -32,13 +32,13 @@ class VideoFile {
     required this.createdAt,
   });
 
-  /// Creates a VideoFile from JSON
+  /// JSONからVideoFileを生成する
   factory VideoFile.fromJson(Map<String, dynamic> json) => _$VideoFileFromJson(json);
 
-  /// Converts VideoFile to JSON
+  /// VideoFileをJSONに変換する
   Map<String, dynamic> toJson() => _$VideoFileToJson(this);
 
-  /// Creates a copy of this VideoFile with updated fields
+  /// フィールドを更新したVideoFileのコピーを生成する
   VideoFile copyWith({
     String? path,
     String? name,

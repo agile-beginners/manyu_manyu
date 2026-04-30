@@ -4,13 +4,13 @@ import 'package:http/http.dart' as http;
 import '../constants/app_constants.dart';
 import '../errors/exceptions.dart';
 
-/// HTTP client wrapper for API calls
+/// APIコール用HTTPクライアントラッパー
 class ApiClient {
   final http.Client _client;
-  
+
   ApiClient({http.Client? client}) : _client = client ?? http.Client();
-  
-  /// GET request
+
+  /// GETリクエスト
   Future<Map<String, dynamic>> get(
     String url, {
     Map<String, String>? headers,
@@ -33,7 +33,7 @@ class ApiClient {
     }
   }
   
-  /// POST request
+  /// POSTリクエスト
   Future<Map<String, dynamic>> post(
     String url, {
     Map<String, String>? headers,
@@ -63,7 +63,7 @@ class ApiClient {
     }
   }
   
-  /// PUT request
+  /// PUTリクエスト
   Future<Map<String, dynamic>> put(
     String url, {
     Map<String, String>? headers,
@@ -88,7 +88,7 @@ class ApiClient {
     }
   }
   
-  /// DELETE request
+  /// DELETEリクエスト
   Future<Map<String, dynamic>> delete(
     String url, {
     Map<String, String>? headers,
@@ -111,7 +111,7 @@ class ApiClient {
     }
   }
   
-  /// Multipart request for file uploads
+  /// ファイルアップロード用マルチパートリクエスト
   Future<Map<String, dynamic>> multipartRequest(
     String method,
     String url, {
@@ -189,7 +189,7 @@ class ApiClient {
           }
         }
       } catch (_) {
-        // Use default error message if parsing fails
+        // パース失敗時はデフォルトのエラーメッセージを使用
       }
       
       throw ApiException(

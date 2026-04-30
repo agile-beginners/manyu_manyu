@@ -1,14 +1,14 @@
 import '../../../../core/utils/result.dart';
 
-/// Interface for image annotation service
+/// 画像アノテーションサービスのインターフェース
 abstract class ImageAnnotationService {
-  /// Generates an annotated image with arrows, text, and highlights
-  /// 
-  /// Requirements: 4.1, 4.2, 4.3, 4.4
-  /// - 4.1: Images are sent to annotation API with red arrows, text, circles
-  /// - 4.2: Annotated images are generated and saved locally
-  /// - 4.3: Image paths are added to step JSON when editing completes
-  /// - 4.4: Original images are used when API communication fails
+  /// 矢印、テキスト、ハイライトを含むアノテーション付き画像を生成する
+  ///
+  /// 要件: 4.1, 4.2, 4.3, 4.4
+  /// - 4.1: 赤い矢印・テキスト・円を含む画像をアノテーションAPIに送信する
+  /// - 4.2: アノテーション付き画像を生成してローカルに保存する
+  /// - 4.3: 編集完了時にステップJSONへ画像パスを追加する
+  /// - 4.4: API通信失敗時は元画像を使用する
   Future<Result<String>> generateAnnotatedImage({
     required String originalImagePath,
     required String stepTitle,

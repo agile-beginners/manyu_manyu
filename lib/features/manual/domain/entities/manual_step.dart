@@ -2,31 +2,31 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'manual_step.g.dart';
 
-/// Represents a single step in a manual
+/// マニュアル内の1つのステップを表す
 @JsonSerializable()
 class ManualStep {
-  /// Unique identifier for the step
+  /// ステップの一意識別子
   final String id;
-  
-  /// Title of the step
+
+  /// ステップのタイトル
   final String title;
-  
-  /// Detailed description of the step
+
+  /// ステップの詳細説明
   final String description;
-  
-  /// Timestamp in the video where this step occurs (in milliseconds)
+
+  /// このステップが発生する動画内のタイムスタンプ（ミリ秒）
   final int timestamp;
-  
-  /// Path to the image associated with this step (optional)
+
+  /// このステップに関連する画像のパス（省略可）
   final String? imagePath;
-  
-  /// Path to the annotated image (processed by Nano Banana API)
+
+  /// アノテーション済み画像のパス（Nano Banana APIで処理済み）
   final String? annotatedImagePath;
-  
-  /// Order/sequence number of this step in the manual
+
+  /// マニュアル内のこのステップの順序番号
   final int stepNumber;
-  
-  /// Whether this step has been processed by AI
+
+  /// このステップがAIによって処理済みかどうか
   final bool isProcessed;
 
   const ManualStep({
@@ -40,13 +40,13 @@ class ManualStep {
     this.isProcessed = false,
   });
 
-  /// Creates a ManualStep from JSON
+  /// JSONからManualStepを生成する
   factory ManualStep.fromJson(Map<String, dynamic> json) => _$ManualStepFromJson(json);
 
-  /// Converts ManualStep to JSON
+  /// ManualStepをJSONに変換する
   Map<String, dynamic> toJson() => _$ManualStepToJson(this);
 
-  /// Creates a copy of this ManualStep with updated fields
+  /// 更新されたフィールドでこのManualStepのコピーを作成する
   ManualStep copyWith({
     String? id,
     String? title,

@@ -3,9 +3,9 @@ import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
 import '../errors/exceptions.dart';
 
-/// Utility class for file operations
+/// ファイル操作のユーティリティクラス
 class FileUtils {
-  /// Gets the application documents directory
+  /// アプリケーションのドキュメントディレクトリを取得する
   static Future<Directory> getAppDocumentsDirectory() async {
     try {
       return await getApplicationDocumentsDirectory();
@@ -13,8 +13,8 @@ class FileUtils {
       throw StorageException('Failed to get documents directory: $e');
     }
   }
-  
-  /// Gets the temporary directory
+
+  /// 一時ディレクトリを取得する
   static Future<Directory> getTempDirectory() async {
     try {
       return await getTemporaryDirectory();
@@ -22,8 +22,8 @@ class FileUtils {
       throw StorageException('Failed to get temporary directory: $e');
     }
   }
-  
-  /// Creates a directory if it doesn't exist
+
+  /// 存在しない場合はディレクトリを作成する
   static Future<Directory> createDirectory(String path) async {
     try {
       final directory = Directory(path);
@@ -35,27 +35,27 @@ class FileUtils {
       throw StorageException('Failed to create directory: $e');
     }
   }
-  
-  /// Gets the file extension from a file path
+
+  /// ファイルパスから拡張子を取得する
   static String getFileExtension(String filePath) {
     final lastDotIndex = filePath.lastIndexOf('.');
     if (lastDotIndex == -1) return '';
     return filePath.substring(lastDotIndex + 1).toLowerCase();
   }
-  
-  /// Validates if a file is a supported video format
+
+  /// ファイルがサポートされる動画形式かどうかを検証する
   static bool isValidVideoFormat(String filePath) {
     final extension = getFileExtension(filePath);
     return AppConstants.supportedVideoFormats.contains(extension);
   }
-  
-  /// Validates if a file size is within limits
+
+  /// ファイルサイズが制限内かどうかを検証する
   static bool isValidFileSize(File file) {
     final sizeInBytes = file.lengthSync();
     return sizeInBytes <= AppConstants.maxVideoSizeBytes;
   }
-  
-  /// Gets the file size in bytes
+
+  /// ファイルサイズをバイト単位で取得する
   static int getFileSize(File file) {
     try {
       return file.lengthSync();
@@ -63,8 +63,8 @@ class FileUtils {
       throw FileException('Failed to get file size: $e');
     }
   }
-  
-  /// Deletes a file if it exists
+
+  /// 存在する場合はファイルを削除する
   static Future<void> deleteFile(String filePath) async {
     try {
       final file = File(filePath);
@@ -75,8 +75,8 @@ class FileUtils {
       throw FileException('Failed to delete file: $e');
     }
   }
-  
-  /// Deletes a directory and all its contents
+
+  /// ディレクトリとその全内容を削除する
   static Future<void> deleteDirectory(String directoryPath) async {
     try {
       final directory = Directory(directoryPath);
@@ -87,8 +87,8 @@ class FileUtils {
       throw StorageException('Failed to delete directory: $e');
     }
   }
-  
-  /// Copies a file to a new location
+
+  /// ファイルを新しい場所にコピーする
   static Future<File> copyFile(String sourcePath, String destinationPath) async {
     try {
       final sourceFile = File(sourcePath);
@@ -98,8 +98,8 @@ class FileUtils {
       throw FileException('Failed to copy file: $e');
     }
   }
-  
-  /// Reads file as bytes
+
+  /// ファイルをバイト列として読み込む
   static Future<List<int>> readFileAsBytes(String filePath) async {
     try {
       final file = File(filePath);
@@ -108,8 +108,8 @@ class FileUtils {
       throw FileException('Failed to read file: $e');
     }
   }
-  
-  /// Writes bytes to file
+
+  /// バイト列をファイルに書き込む
   static Future<File> writeBytesToFile(String filePath, List<int> bytes) async {
     try {
       final file = File(filePath);

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/entities/manual.dart';
 import '../../../domain/entities/manual_step.dart';
 
-/// Widget for displaying and managing the list of manual steps
+/// マニュアルのステップ一覧を表示・管理するウィジェット
 class StepListWidget extends StatefulWidget {
   final Manual manual;
   final Function(ManualStep) onStepTap;
@@ -53,7 +53,7 @@ class _StepListWidgetState extends State<StepListWidget> {
 
     return Column(
       children: [
-        // Header with step count
+        // ステップ数付きのヘッダー
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
@@ -67,7 +67,7 @@ class _StepListWidgetState extends State<StepListWidget> {
           ),
         ),
 
-        // Steps list
+        // ステップ一覧
         Expanded(
           child: _buildNormalList(),
         ),
@@ -245,7 +245,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       return buildPlaceholder(Icons.image_not_supported);
     }
 
-    // Check if it's a local file
+    // ローカルファイルかどうかを確認する
     if (File(imagePath).existsSync()) {
       return Container(
         width: maxWidth,
@@ -262,7 +262,7 @@ class _StepListWidgetState extends State<StepListWidget> {
       );
     }
 
-    // If it's a network image or asset
+    // ネットワーク画像またはアセットの場合
     return Container(
       width: maxWidth,
       color: backgroundColor,
