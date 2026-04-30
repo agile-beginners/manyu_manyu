@@ -37,7 +37,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
         state = AsyncValue.data(result.data);
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -55,7 +55,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
         state = AsyncValue.data(result.data);
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -70,10 +70,14 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
       final result =
           await _editService.updateStepTitle(manualId, stepId, newTitle);
       if (result.isSuccess) {
-        await loadManual(manualId);
+        final currentManual = state.value;
+        if (currentManual != null) {
+          final updatedManual = currentManual.updateStepById(stepId, result.data!);
+          state = AsyncValue.data(updatedManual);
+        }
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -88,10 +92,14 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
       final result = await _editService.updateStepDescription(
           manualId, stepId, newDescription);
       if (result.isSuccess) {
-        await loadManual(manualId);
+        final currentManual = state.value;
+        if (currentManual != null) {
+          final updatedManual = currentManual.updateStepById(stepId, result.data!);
+          state = AsyncValue.data(updatedManual);
+        }
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -104,10 +112,14 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
     try {
       final result = await _editService.updateStep(manualId, updatedStep);
       if (result.isSuccess) {
-        await loadManual(manualId);
+        final currentManual = state.value;
+        if (currentManual != null) {
+          final updatedManual = currentManual.updateStepById(updatedStep.id, result.data!);
+          state = AsyncValue.data(updatedManual);
+        }
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -123,7 +135,7 @@ class ManualEditController extends StateNotifier<AsyncValue<Manual?>> {
         state = AsyncValue.data(result.data);
       } else {
         state = AsyncValue.error(
-            result.failure.toString(), StackTrace.current);
+            result.failure!.toString(), StackTrace.current);
       }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -159,50 +171,3 @@ final manualEditControllerProvider =
     StateNotifierProvider<ManualEditController, AsyncValue<Manual?>>((ref) {
   return ManualEditController(ref);
 });
-
-/// Provider for tracking editing state of individual fields.
-final editingStateProvider = StateProvider<Map<String, bool>>((ref) {
-  return {};
-});
-
-/// Provider for tracking unsaved changes.
-final unsavedChangesProvider = StateProvider<bool>((ref) {
-  return false;
-});
-
-/// Provider for auto-save functionality.
-final autoSaveProvider = Provider<AutoSaveService>((ref) {
-  final editService = ref.watch(manualEditServiceProvider);
-  return AutoSaveService(editService);
-});
-
-/// Service for handling auto-save functionality.
-class AutoSaveService {
-  final ManualEditService _editService;
-
-  AutoSaveService(this._editService);
-
-  /// Auto-saves a manual title change.
-  Future<Result<Manual>> autoSaveManualTitle(
-      String manualId, String newTitle) async {
-    return _editService.updateManualTitle(manualId, newTitle);
-  }
-
-  /// Auto-saves a manual description change.
-  Future<Result<Manual>> autoSaveManualDescription(
-      String manualId, String? newDescription) async {
-    return _editService.updateManualDescription(manualId, newDescription);
-  }
-
-  /// Auto-saves a step title change.
-  Future<Result<ManualStep>> autoSaveStepTitle(
-      String manualId, String stepId, String newTitle) async {
-    return _editService.updateStepTitle(manualId, stepId, newTitle);
-  }
-
-  /// Auto-saves a step description change.
-  Future<Result<ManualStep>> autoSaveStepDescription(
-      String manualId, String stepId, String newDescription) async {
-    return _editService.updateStepDescription(manualId, stepId, newDescription);
-  }
-}
